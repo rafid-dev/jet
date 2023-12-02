@@ -1,0 +1,36 @@
+# Compiled object files
+*.o
+*.obj
+*.bin
+
+# Executables
+bin/
+
+# Build directory
+build/
+
+# Dependency and package management directories
+vendor/
+lib/
+libs/
+
+# macOS-specific
+.DS_Store
+
+# Linux-specific
+*.out
+*.so
+*.a
+
+# Windows-specific
+Thumbs.db
+
+# NN specific
+*.binpack
+*.ckpt
+*.nnue
+*.net
+*.nn
+dataset/
+net/
+finals/
