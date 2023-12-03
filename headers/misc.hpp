@@ -6,38 +6,43 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
+#include <chrono>
 #include <iostream>
 #include <vector>
 
-namespace chess {
-    namespace misc {
-        inline void printBitboard(Bitboard bb) {
-            std::bitset<NUM_SQUARES> b(bb);
-            std::string              str_bitset = b.to_string();
+namespace misc {
+    inline void printBitboard(chess::Bitboard bb) {
+        std::bitset<chess::NUM_SQUARES> b(bb);
+        std::string                     str_bitset = b.to_string();
 
-            for (int i = 0; i < NUM_SQUARES; i += 8) {
-                std::string x = str_bitset.substr(i, 8);
-                reverse(x.begin(), x.end());
-                std::cout << x << '\n';
-            }
-
-            std::cout << '\n' << std::endl;
+        for (int i = 0; i < chess::NUM_SQUARES; i += 8) {
+            std::string x = str_bitset.substr(i, 8);
+            reverse(x.begin(), x.end());
+            std::cout << x << '\n';
         }
 
-        inline std::vector<std::string_view> split(std::string_view str, char delimiter) {
-            std::vector<std::string_view> result;
-            size_t                        start = 0;
-            size_t                        end   = str.find(delimiter);
+        std::cout << '\n' << std::endl;
+    }
 
-            while (end != std::string_view::npos) {
-                result.push_back(str.substr(start, end - start));
-                start = end + 1;
-                end   = str.find(delimiter, start);
-            }
+    inline std::vector<std::string_view> split(std::string_view str, char delimiter) {
+        std::vector<std::string_view> result;
+        size_t                        start = 0;
+        size_t                        end   = str.find(delimiter);
 
-            result.push_back(str.substr(start));
-
-            return result;
+        while (end != std::string_view::npos) {
+            result.push_back(str.substr(start, end - start));
+            start = end + 1;
+            end   = str.find(delimiter, start);
         }
-    } // namespace misc
-} // namespace chess
+
+        result.push_back(str.substr(start));
+
+        return result;
+    }
+
+    template <typename Duration = std::chrono::milliseconds>
+    inline double tick() {
+        return (double) std::chrono::duration_cast<Duration>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+
+} // namespace misc

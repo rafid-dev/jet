@@ -52,7 +52,7 @@ namespace chess {
         }
 
         template <Color c, MoveGenType mt>
-        void generatePawnMoves(const Board& board, Movelist& moves) {
+        void generatePawnMoves(const Board& board, Movelist& moves, Bitboard enemy_occ) {
             Bitboard pawns = board.bitboard(c, PieceType::PAWN);
 
             constexpr Direction UP         = c == Color::WHITE ? Direction::NORTH : Direction::SOUTH;
@@ -66,8 +66,8 @@ namespace chess {
 
             constexpr Bitboard RANK_3 = c == Color::WHITE ? attacks::MASK_RANK[int(Rank::RANK_3)] : attacks::MASK_RANK[int(Rank::RANK_6)];
 
-            Bitboard left_attacks  = attacks::pawnLeftAttacks<c>(pawns) & board.them(c);
-            Bitboard right_attacks = attacks::pawnRightAttacks<c>(pawns) & board.them(c);
+            Bitboard left_attacks  = attacks::pawnLeftAttacks<c>(pawns) & enemy_occ;
+            Bitboard right_attacks = attacks::pawnRightAttacks<c>(pawns) & enemy_occ;
             Bitboard single_pushes = attacks::shift<UP>(pawns) & ~board.occupied();
 
             // promotion moves
@@ -112,14 +112,14 @@ namespace chess {
                 // single push
                 while (single_pushes) {
                     Square to = poplsb(single_pushes);
-                    moves.add(Move::make<Move::NORMAL>(static_cast<Square>(to - UP), to));
+                    moves.add(Move::make<Move::NORMAL>(static_cast<Square>(to + DOWN), to));
                 }
 
                 // double push
 
                 while (double_pushes) {
                     Square to = poplsb(double_pushes);
-                    moves.add(Move::make<Move::NORMAL>(static_cast<Square>(to - UP - UP), to));
+                    moves.add(Move::make<Move::NORMAL>(static_cast<Square>(to + DOWN + DOWN), to));
                 }
             }
 
@@ -127,6 +127,7 @@ namespace chess {
                 // left attacks
                 while (left_attacks) {
                     Square to = poplsb(left_attacks);
+
                     moves.add(Move::make<Move::NORMAL>(static_cast<Square>(to + DOWN_RIGHT), to));
                 }
 
@@ -166,6 +167,9 @@ namespace chess {
             if constexpr (mt == MoveGenType::CAPTURE) {
                 return 0ULL;
             }
+            if (seen & (1ULL << kingSq)) {
+                return 0ULL;
+            }
 
             constexpr Rank RANK_1 = c == Color::WHITE ? Rank::RANK_1 : Rank::RANK_8;
 
@@ -189,7 +193,7 @@ namespace chess {
                     const Bitboard withoutRook        = board.occupied() & ~(1ull << rookFromSq);
                     const Bitboard withoutKing        = board.occupied() & ~(1ull << kingSq);
 
-                    if ((NOT_ATTACKED_PATH & EMPTY_NOT_ATTACKED) == NOT_ATTACKED_PATH && ((NOT_OCCUPIED_PATH) & ~board.occupied()) == NOT_OCCUPIED_PATH && !((1ull << rookToSq) & (withoutRook & withoutKing)) &&
+                    if ((NOT_ATTACKED_PATH & EMPTY_NOT_ATTACKED) == NOT_ATTACKED_PATH && ((NOT_OCCUPIED_PATH & ~board.occupied()) == NOT_OCCUPIED_PATH) && !((1ull << rookToSq) & (withoutRook & withoutKing)) &&
                         !((1ull << kingToSq) & (seen | (withoutRook & ~(1ull << kingSq))))) {
                         moves |= (1ull << rookFromSq);
                     }
@@ -232,7 +236,7 @@ namespace chess {
 
                 while (castlingMoves) {
                     Square to = poplsb(castlingMoves);
-                    moves.add(Move::make(kingSq, to));
+                    moves.add(Move::make<Move::CASTLING>(kingSq, to));
                 }
             }
 
@@ -243,7 +247,7 @@ namespace chess {
             });
 
             // Generate pawn moves
-            generatePawnMoves<c, mt>(board, moves);
+            generatePawnMoves<c, mt>(board, moves, them);
 
             // Generate bishop moves
             Bitboard bishops = board.bitboard(c, PieceType::BISHOP);

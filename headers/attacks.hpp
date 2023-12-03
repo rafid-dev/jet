@@ -29,6 +29,7 @@ namespace chess {
             0x200000000, 0x500000000, 0xa00000000, 0x1400000000, 0x2800000000, 0x5000000000, 0xa000000000, 0x4000000000,
             0x20000000000, 0x50000000000, 0xa0000000000, 0x140000000000, 0x280000000000, 0x500000000000, 0xa00000000000, 0x400000000000,
             0x2000000000000, 0x5000000000000, 0xa000000000000, 0x14000000000000, 0x28000000000000, 0x50000000000000, 0xa0000000000000, 0x40000000000000,
+
             0x200000000000000, 0x500000000000000, 0xa00000000000000, 0x1400000000000000, 0x2800000000000000, 0x5000000000000000, 0xa000000000000000, 0x4000000000000000,
             0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0
             },
@@ -40,8 +41,7 @@ namespace chess {
             0x200000000, 0x500000000, 0xa00000000, 0x1400000000, 0x2800000000, 0x5000000000, 0xa000000000, 0x4000000000,
             0x20000000000, 0x50000000000, 0xa0000000000, 0x140000000000, 0x280000000000, 0x500000000000, 0xa00000000000, 0x400000000000,
             0x2000000000000, 0x5000000000000, 0xa000000000000, 0x14000000000000, 0x28000000000000, 0x50000000000000, 0xa0000000000000, 0x40000000000000
-            }
-        };
+        }};
 
         static constexpr Bitboard KNIGHT_ATTACKS[NUM_SQUARES] = {
             0x20400, 0x50800, 0xa1100, 0x142200, 0x284400, 0x508800, 0xa01000, 0x402000,
@@ -194,18 +194,18 @@ namespace chess {
     template <Color c>
     inline Bitboard attacks::pawnLeftAttacks(const Bitboard b) {
         if constexpr (c == Color::WHITE) {
-            return (b & ~MASK_FILE[0]) << 7;
+            return (b << 7) & ~MASK_FILE[7];
         } else {
-            return (b & ~MASK_FILE[0]) >> 9;
+            return (b >> 7) & ~MASK_FILE[0];
         }
     }
 
     template <Color c>
     inline Bitboard attacks::pawnRightAttacks(const Bitboard b) {
         if constexpr (c == Color::WHITE) {
-            return (b & ~MASK_FILE[7]) << 9;
+            return (b << 9) & ~MASK_FILE[0];
         } else {
-            return (b & ~MASK_FILE[7]) >> 7;
+            return (b >> 9) & ~MASK_FILE[7];
         }
     }
 

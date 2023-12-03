@@ -1,3 +1,6 @@
+#pragma once
+
+#include "attacks.hpp"
 #include "bitboards.hpp"
 #include "misc.hpp"
 #include "move.hpp"
@@ -12,6 +15,8 @@ namespace chess {
 
     class Board {
     public:
+        int makeMoveCalled   = 0;
+        int unmakeMoveCalled = 0;
         using CastlingRights = std::array<std::array<bool, 2>, 2>;
 
     private:
@@ -57,6 +62,10 @@ namespace chess {
 
         constexpr Bitboard bitboard(PieceType pt) const {
             return bitboard(Color::WHITE, pt) | bitboard(Color::BLACK, pt);
+        }
+
+        constexpr Bitboard bitboard(Piece p) const {
+            return bitboard(pieceToColor(p), pieceToPieceType(p));
         }
 
         bool makeMove(const Move& move);
@@ -142,18 +151,22 @@ namespace chess {
     };
 
     constexpr void Board::placePiece(Piece p, Square sq) {
+        assert(m_pieces[sq] == Piece::NONE);
+
         m_pieces[sq] = p;
         m_bitboards[static_cast<int>(pieceToColor(p))][static_cast<int>(pieceToPieceType(p))] |= (1ULL << sq);
         occ_all |= (1ULL << sq);
     }
 
     constexpr void Board::removePiece(Piece p, Square sq) {
+        assert(m_pieces[sq] != Piece::NONE);
+
         m_pieces[sq] = Piece::NONE;
         m_bitboards[static_cast<int>(pieceToColor(p))][static_cast<int>(pieceToPieceType(p))] &= ~(1ULL << sq);
         occ_all &= ~(1ULL << sq);
     }
 
-    Board::Board(std::string_view fen) {
+    inline Board::Board(std::string_view fen) {
         setFen(fen);
     }
 
@@ -302,6 +315,8 @@ namespace chess {
         m_halfMoveClock++;
         m_plies++;
 
+        makeMoveCalled++;
+
         m_enPassant = Square(Square::NO_SQ);
 
         if (capture) {
@@ -336,7 +351,7 @@ namespace chess {
 
             const auto possible_ep = static_cast<Square>(int(move.to()) ^ 8);
 
-            if (std::abs(int(move.to() - move.from())) == 16) {
+            if (std::abs(int(move.to()) - int(move.from())) == 16) {
                 Bitboard ep_mask = attacks::pawn(possible_ep, m_turn);
 
                 if (ep_mask & bitboard(~m_turn, PieceType::PAWN)) {
@@ -388,7 +403,7 @@ namespace chess {
         return true;
     }
 
-    void Board::unmakeMove(const Move& move) {
+    inline void Board::unmakeMove(const Move& move) {
         const auto prev = m_states.back();
         m_states.pop_back();
 
@@ -401,11 +416,14 @@ namespace chess {
 
         m_turn = ~m_turn;
 
+        unmakeMoveCalled++;
+
         if (move.type() == Move::CASTLING) {
             const bool king_side = move.to() > move.from();
 
-            const auto rookFromSq = Square(king_side ? File::FILE_F : File::FILE_D, move.from().rank());
-            const auto kingToSq   = Square(king_side ? File::FILE_G : File::FILE_C, move.from().rank());
+            const Rank backRank   = m_turn == Color::WHITE ? Rank::RANK_1 : Rank::RANK_8;
+            const auto rookFromSq = Square(king_side ? File::FILE_F : File::FILE_D, backRank);
+            const auto kingToSq   = Square(king_side ? File::FILE_G : File::FILE_C, backRank);
 
             const auto rook = at(rookFromSq);
             const auto king = at(kingToSq);
@@ -429,11 +447,9 @@ namespace chess {
             }
 
             return;
+
         } else {
             const auto piece = at(move.to());
-
-            assert(piece != Piece::NONE);
-            assert(at(move.from()) == Piece::NONE);
 
             removePiece(piece, move.to());
             placePiece(piece, move.from());
@@ -442,8 +458,6 @@ namespace chess {
         if (move.type() == Move::ENPASSANT) {
             const auto pawn   = colorPiece(~m_turn, PieceType::PAWN);
             const auto pawnTo = static_cast<Square>(int(move.to()) ^ 8);
-
-            assert(at(pawnTo) == Piece::NONE);
 
             placePiece(pawn, pawnTo);
 

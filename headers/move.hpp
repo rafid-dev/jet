@@ -72,7 +72,15 @@ namespace chess {
     };
 
     constexpr std::ostream& operator<<(std::ostream& os, const Move& move) {
-        os << move.from() << move.to();
+        Square from = move.from();
+        Square to   = move.to();
+
+        if (move.type() == Move::CASTLING) {
+            to = Square(to > from ? File::FILE_G : File::FILE_C, from.rank());
+        }
+
+        os << from;
+        os << to;
 
         if (move.isPromotion()) {
             os << pieceTypeToChar(move.promoted());

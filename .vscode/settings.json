@@ -53,6 +53,21 @@
         "unordered_map": "cpp",
         "functional": "cpp",
         "charconv": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "fstream": "cpp",
+        "sstream": "cpp",
+        "iomanip": "cpp",
+        "xlocmon": "cpp",
+        "xloctime": "cpp",
+        "chrono": "cpp",
+        "forward_list": "cpp",
+        "format": "cpp",
+        "locale": "cpp",
+        "mutex": "cpp",
+        "ratio": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "xlocbuf": "cpp",
+        "xlocmes": "cpp"
     }
 }
