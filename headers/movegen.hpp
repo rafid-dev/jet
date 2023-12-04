@@ -8,50 +8,80 @@ namespace chess {
     namespace movegen {
         enum class MoveGenType : uint8_t { ALL, QUIET, CAPTURE };
 
-        template <Color c>
-        inline Bitboard checkMask(const Board& board, Square sq, int& double_check) {
+        // Helper function to handle attacks of a specific piece type and update the double check count
+        template <Color side, PieceType pieceType>
+        inline Bitboard handlePieceAttacks(const Board& board, Square square, int& doubleCheckCount) {
+            // Get attacks for the specified piece type on the given square
+            Bitboard pieceAttacks = attacks::getAttacks<pieceType>(square) & board.bitboard(~side, pieceType);
+
+            // Update double check count if there are attacks from the piece
+            doubleCheckCount += bool(pieceAttacks);
+
+            return pieceAttacks;
+        }
+
+        // Helper function to handle slider attacks and update the double check count
+        inline Bitboard handleSliderAttacks(Square square, Bitboard sliderAttacks, int& doubleCheckCount) {
             Bitboard mask = 0ULL;
-            double_check  = 0;
 
-            const Bitboard oppKnight = board.bitboard(~c, PieceType::KNIGHT);
-            const Bitboard oppBishop = board.bitboard(~c, PieceType::BISHOP);
-            const Bitboard oppRook   = board.bitboard(~c, PieceType::ROOK);
-            const Bitboard oppQueen  = board.bitboard(~c, PieceType::QUEEN);
-            const Bitboard oppPawns  = board.bitboard(~c, PieceType::PAWN);
+            // Process each slider attack
+            while (sliderAttacks) {
+                // Get the target square of the slider attack
+                const Square targetSquare = poplsb(sliderAttacks);
 
-            Bitboard knightAttacks = attacks::knight(sq) & oppKnight;
+                // Include the target square and squares between in the check mask
+                mask |= squaresBetween(square, targetSquare) | targetSquare.bb();
 
-            double_check += bool(knightAttacks);
-            mask |= knightAttacks;
-
-            Bitboard pawnAttacks = attacks::pawn(sq, c) & oppPawns;
-
-            double_check += bool(pawnAttacks);
-            mask |= pawnAttacks;
-
-            Bitboard bishopAttacks = attacks::bishop(sq, board.occupied()) & (oppBishop | oppQueen);
-
-            if (bishopAttacks) {
-                const auto index = poplsb(bishopAttacks);
-
-                mask |= attacks::SQUARES_BETWEEN_BB[sq][index] | (1ULL << index);
-                double_check++;
-            }
-
-            Bitboard rookAttacks = attacks::rook(sq, board.occupied()) & (oppRook | oppQueen);
-
-            if (rookAttacks) {
-                const auto index = poplsb(rookAttacks);
-
-                mask |= attacks::SQUARES_BETWEEN_BB[sq][index] | (1ULL << index);
-                double_check++;
-            }
-
-            if (!mask) {
-                return DEFAULT_CHECKMASK;
+                // Increment double check count
+                doubleCheckCount++;
             }
 
             return mask;
+        }
+
+        // Generates the check mask for a given square
+        template <Color side>
+        inline Bitboard generateCheckMask(const Board& board, Square square, int& doubleCheckCount) {
+            Bitboard mask    = 0ULL;
+            doubleCheckCount = 0;
+
+            // Handle knight attacks
+            mask |= handlePieceAttacks<side, PieceType::KNIGHT>(board, square, doubleCheckCount);
+
+            // Handle pawn attacks
+            mask |= handlePieceAttacks<side, PieceType::PAWN>(board, square, doubleCheckCount);
+
+            // Handle bishop and queen attacks
+            Bitboard bishopAndQueenAttacks = attacks::bishop(square, board.occupied()) & (board.bitboard(~side, PieceType::BISHOP) | board.bitboard(~side, PieceType::QUEEN));
+            mask |= handleSliderAttacks(square, bishopAndQueenAttacks, doubleCheckCount);
+
+            // Handle rook and queen attacks
+            Bitboard rookAndQueenAttacks = attacks::rook(square, board.occupied()) & (board.bitboard(~side, PieceType::ROOK) | board.bitboard(~side, PieceType::QUEEN));
+            mask |= handleSliderAttacks(square, rookAndQueenAttacks, doubleCheckCount);
+
+            // Return the final check mask or a default mask if no checks are found
+            return (mask != 0ULL) ? mask : DEFAULT_CHECKMASK;
+        }
+
+        template <Color c, PieceType pt>
+        inline Bitboard generatePinMask(const Board& board, Square kingSq, Bitboard them, Bitboard us) {
+            Bitboard pinMask = 0;
+
+            const Bitboard oppositeSlider = board.bitboard<~c, PieceType::QUEEN>() | board.bitboard<~c, pt>();
+
+            Bitboard sliderAttacks = attacks::getAttacks<pt>(kingSq) & oppositeSlider;
+
+            while (sliderAttacks) {
+                const auto index = poplsb(sliderAttacks);
+
+                const Bitboard possible_pin = squaresBetween(kingSq, index) | index.bb();
+
+                if (popcount(possible_pin & us) == 1) {
+                    pinMask |= possible_pin;
+                }
+            }
+
+            return pinMask;
         }
 
         template <Color c>
@@ -444,75 +474,6 @@ namespace chess {
             return moves;
         }
 
-        // generate psuedo legal moves
-        template <Color c, MoveGenType mt>
-        void generateMoves(const Board& board, Movelist& moves) {
-            Bitboard us          = board.us(c);
-            Bitboard them        = board.them(c);
-            Bitboard all         = us | them;
-            Bitboard enemy_empty = ~us;
-
-            Bitboard moveableSquare;
-
-            if constexpr (mt == MoveGenType::ALL) {
-                moveableSquare = ~us;
-            } else if constexpr (mt == MoveGenType::CAPTURE) {
-                moveableSquare = them;
-            } else if constexpr (mt == MoveGenType::QUIET) {
-                moveableSquare = ~all;
-            }
-
-            Bitboard seen   = seenSquares<~c>(board, enemy_empty, all);
-            Square   kingSq = board.kingSq(c);
-
-            // clang-format off
-
-            constexpr Rank RANK_1 = c == Color::WHITE ? Rank::RANK_1 : Rank::RANK_8;
-
-            // Generate king moves and castling moves
-            generateAndAddMoves(moves, makeBitboard(kingSq), [&](Square from) {
-                 return attacks::king(from) & moveableSquare & ~seen; 
-            });
-
-            if (board.hasCastlingRights(c) && (kingSq.rank() == RANK_1)) {
-                Bitboard castlingMoves = generateCastlingMoves<c, mt>(board, kingSq, seen, all);
-
-                while (castlingMoves) {
-                    Square to = poplsb(castlingMoves);
-                    moves.add(Move::make<Move::CASTLING>(kingSq, to));
-                }
-            }
-
-            // Generate pawn moves
-            generatePawnMoves<c, mt>(board, moves, them, all);
-
-            // Generate knight moves
-            Bitboard knights = board.bitboard<c, PieceType::KNIGHT>();
-            generateAndAddMoves(moves, knights, [&](Square from) { 
-                return attacks::knight(from) & moveableSquare; 
-            });
-
-            // Generate bishop moves
-            Bitboard bishops = board.bitboard<c, PieceType::BISHOP>();
-            generateAndAddMoves(moves, bishops, [&](Square from) {
-                return attacks::bishop(from, all) & moveableSquare;
-            });
-
-            // Generate rook moves
-            Bitboard rooks = board.bitboard<c, PieceType::ROOK>();
-            generateAndAddMoves(moves, rooks, [&](Square from) {
-                return attacks::rook(from, all) & moveableSquare;
-            });
-
-            // Generate queen moves
-            Bitboard queens = board.bitboard<c, PieceType::QUEEN>();
-            generateAndAddMoves(moves, queens, [&](Square from) {
-                return attacks::queen(from, all) & moveableSquare;
-            });
-
-            // clang-format on
-        }
-
         // generate legal moves
         template <Color c, MoveGenType mt>
         void generateLegalMovess(const Board& board, Movelist& moves) {
@@ -525,9 +486,9 @@ namespace chess {
 
             const auto kingSq = board.kingSq(c);
 
-            Bitboard checkMask = movegen::checkMask<c>(board, kingSq, double_check);
-            Bitboard pinHV     = movegen::pinMaskRooks<c>(board, kingSq, them, us);
-            Bitboard pinD      = movegen::pinMaskBishops<c>(board, kingSq, them, us);
+            Bitboard checkMask = generateCheckMask<c>(board, kingSq, double_check);
+            Bitboard pinHV     = pinMaskRooks<c>(board, kingSq, them, us);
+            Bitboard pinD      = pinMaskBishops<c>(board, kingSq, them, us);
 
             assert(double_check <= 2);
 

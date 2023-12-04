@@ -52,9 +52,6 @@ namespace perft {
         }
     };
 
-    void startSuite(const std::string& name, const uint64_t max);
-    void start(const std::string& fen, const int depth = 1);
-    void speedTest(const std::string_view& fen = chess::START_FEN, const int depth = 7);
 
     void bulkSuite(const std::string& name, const uint64_t max);
     void startBulk(const std::string& fen, const int depth = 1);

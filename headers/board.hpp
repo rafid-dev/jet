@@ -13,61 +13,7 @@
 
 namespace chess {
 
-    // enum CastlingSide : uint8_t { KING_SIDE, QUEEN_SIDE };
-
-    // static constexpr inline Square castlingKingToSquare(CastlingSide side, Color c) {
-    //     if (side == CastlingSide::KING_SIDE) {
-    //         return relativeSquare(Square::SQ_G1, c);
-    //     } else {
-    //         return relativeSquare(Square::SQ_C1, c);
-    //     }
-    // }
-    // static constexpr inline Square castlingRookFromSquare(CastlingSide side, Color c) {
-    //     if (side == CastlingSide::KING_SIDE) {
-    //         return relativeSquare(Square::SQ_H1, c);
-    //     } else {
-    //         return relativeSquare(Square::SQ_A1, c);
-    //     }
-    // }
-    // static constexpr inline Square castlingRookToSquare(CastlingSide side, Color c) {
-    //     if (side == CastlingSide::KING_SIDE) {
-    //         return relativeSquare(Square::SQ_F1, c);
-    //     } else {
-    //         return relativeSquare(Square::SQ_D1, c);
-    //     }
-    // }
-
-    // template <Color c>
-    // static constexpr inline Square castlingKingToSquare(CastlingSide side) {
-    //     if (side == CastlingSide::KING_SIDE) {
-    //         return relativeSquare<c>(Square::SQ_G1);
-    //     } else {
-    //         return relativeSquare<c>(Square::SQ_C1);
-    //     }
-    // }
-
-    // template <Color c>
-    // static constexpr inline Square castlingRookFromSquare(CastlingSide side) {
-    //     if (side == CastlingSide::KING_SIDE) {
-    //         return relativeSquare<c>(Square::SQ_H1);
-    //     } else {
-    //         return relativeSquare<c>(Square::SQ_A1);
-    //     }
-    // }
-
-    // template <Color c>
-    // static constexpr inline Square castlingRookToSquare(CastlingSide side) {
-    //     if (side == CastlingSide::KING_SIDE) {
-    //         return relativeSquare<c>(Square::SQ_F1);
-    //     } else {
-    //         return relativeSquare<c>(Square::SQ_D1);
-    //     }
-    // }
-
     class Board {
-    public:
-        // using CastlingRights = std::array<std::array<bool, 2>, 2>;
-
     private:
         std::array<Piece, NUM_SQUARES> m_pieces{};
         Bitboard                       m_bitboards[2][NUM_PIECE_TYPES]{};
@@ -218,6 +164,23 @@ namespace chess {
 
         constexpr void placePiece(Piece p, Square sq);
         constexpr void removePiece(Piece p, Square sq);
+
+        constexpr inline Bitboard checkers() const {
+            const auto occ     = occupied();
+            const auto king_sq = kingSq(m_turn);
+
+            // clang-format off
+            return 
+            (attacks::pawn(king_sq, ~m_turn) & bitboard(~m_turn, PieceType::PAWN)) |
+            (attacks::knight(king_sq) & bitboard(~m_turn, PieceType::KNIGHT)) |
+            (attacks::king(king_sq) & bitboard(~m_turn, PieceType::KING)) | 
+            (attacks::bishop(king_sq, occ) &
+             (bitboard(~m_turn, PieceType::BISHOP) | bitboard(~m_turn, PieceType::QUEEN))) |
+            (attacks::rook(king_sq, occ) & (bitboard(~m_turn, PieceType::ROOK) | 
+            bitboard(~m_turn, PieceType::QUEEN)));
+
+            // clang-format on
+        }
 
         U64 hash() const {
             return m_hash;
@@ -543,17 +506,6 @@ namespace chess {
         m_hash ^= zobrist::sideKey();
 
         m_turn = ~m_turn;
-    }
-
-    inline bool Board::makeMovePsuedoLegal(const Move& move) {
-        makeMove(move);
-
-        if (isAttacked(kingSq(~m_turn), m_turn)) {
-            unmakeMove(move);
-            return false;
-        }
-
-        return true;
     }
 
     inline void Board::unmakeMove(const Move& move) {

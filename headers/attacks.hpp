@@ -139,6 +139,25 @@ namespace chess {
             return KING_ATTACKS[sq];
         }
 
+        template <PieceType pt>
+        static constexpr Bitboard getAttacks(Square sq, Bitboard occupied = 0) {
+            if constexpr (pt == PieceType::PAWN) {
+                return pawn(sq, Color::WHITE) | pawn(sq, Color::BLACK);
+            } else if constexpr (pt == PieceType::KNIGHT) {
+                return knight(sq);
+            } else if constexpr (pt == PieceType::BISHOP) {
+                return bishop(sq, occupied);
+            } else if constexpr (pt == PieceType::ROOK) {
+                return rook(sq, occupied);
+            } else if constexpr (pt == PieceType::QUEEN) {
+                return queen(sq, occupied);
+            } else if constexpr (pt == PieceType::KING) {
+                return king(sq);
+            } else {
+                return 0ULL;
+            }
+        }
+
         static void generatePawnAttacks();
         static void generateKnightAttacks();
         static void generateKingAttacks();
