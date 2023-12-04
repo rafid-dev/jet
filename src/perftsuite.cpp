@@ -240,6 +240,8 @@ namespace perft {
         uint64_t passes    = 0;
         uint64_t totalTime = 0;
 
+        uint64_t totalNodes = 0;
+
         auto start_time = misc::tick();
 
         while (std::getline(file, line)) {
@@ -281,6 +283,7 @@ namespace perft {
                 }
 
                 totalTime += time_elapsed;
+                totalNodes += nodes;
 
                 std::cout << "\033[0m" << std::endl;
             }
@@ -291,7 +294,7 @@ namespace perft {
         std::cout << "Total passes: " << passes << std::endl;
         std::cout << "Total fails: " << fails << std::endl;
         std::cout << "Total time: " << totalTime << "ms" << std::endl;
-        std::cout << "Average time: " << totalTime / count << "ms" << std::endl;
+        std::cout << "Average speed: " << static_cast<uint64_t>(1000.0f * totalNodes / (totalTime + 1)) << " NPS" << std::endl;
     }
 
     void startBulk(const std::string& fen, const int depth) {
