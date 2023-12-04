@@ -141,20 +141,56 @@ namespace chess {
             return seen;
         }
 
+        inline void addPromotionMoves(Square from, Square to, Movelist& moves) {
+            moves.add(Move::make<Move::PROMOTION>(from, to, PieceType::QUEEN));
+            moves.add(Move::make<Move::PROMOTION>(from, to, PieceType::ROOK));
+            moves.add(Move::make<Move::PROMOTION>(from, to, PieceType::BISHOP));
+            moves.add(Move::make<Move::PROMOTION>(from, to, PieceType::KNIGHT));
+        }
+
+        template <Color c, MoveGenType mt>
+        inline void generatePromotionMoves(const Bitboard pawns, const Bitboard single_push, const Bitboard left_attacks, const Bitboard right_attacks, Movelist& moves) {
+            constexpr Bitboard RANK_7 = toBitboard<relativeRank<c, Rank::RANK_7>()>();
+            constexpr Bitboard RANK_8 = toBitboard<relativeRank<c, Rank::RANK_8>()>();
+
+            constexpr Direction DOWN       = relativeDirection<c, Direction::SOUTH>();
+            constexpr Direction DOWN_LEFT  = relativeDirection<c, Direction::SOUTH_WEST>();
+            constexpr Direction DOWN_RIGHT = relativeDirection<c, Direction::SOUTH_EAST>();
+
+            if (pawns & RANK_7) {
+                Bitboard promotions       = single_push & RANK_8;
+                Bitboard promotions_left  = left_attacks & RANK_8;
+                Bitboard promotions_right = right_attacks & RANK_8;
+
+                while (mt != MoveGenType::QUIET && promotions) {
+                    Square to = poplsb(promotions);
+                    addPromotionMoves(to + DOWN, to, moves);
+                }
+
+                while (mt != MoveGenType::CAPTURE && promotions_right) {
+                    Square to = poplsb(promotions_right);
+                    addPromotionMoves(to + DOWN_LEFT, to, moves);
+                }
+
+                while (mt != MoveGenType::CAPTURE && promotions_left) {
+                    Square to = poplsb(promotions_left);
+                    addPromotionMoves(to + DOWN_RIGHT, to, moves);
+                }
+            }
+        }
+
         template <Color c, MoveGenType mt, bool Legal = false>
         void generatePawnMoves(const Board& board, Movelist& moves, Bitboard enemy_occ, Bitboard pinD = 0ULL, Bitboard pinHV = 0ULL, Bitboard checkMask = 0ULL) {
             Bitboard pawns = board.bitboard(c, PieceType::PAWN);
 
-            constexpr Direction UP         = c == Color::WHITE ? Direction::NORTH : Direction::SOUTH;
-            constexpr Direction DOWN       = c == Color::WHITE ? Direction::SOUTH : Direction::NORTH;
-            constexpr Direction DOWN_LEFT  = c == Color::WHITE ? Direction::SOUTH_WEST : Direction::NORTH_EAST;
-            constexpr Direction DOWN_RIGHT = c == Color::WHITE ? Direction::SOUTH_EAST : Direction::NORTH_WEST;
+            constexpr Direction UP         = relativeDirection<c, Direction::NORTH>();
+            constexpr Direction DOWN       = relativeDirection<c, Direction::SOUTH>();
+            constexpr Direction DOWN_LEFT  = relativeDirection<c, Direction::SOUTH_WEST>();
+            constexpr Direction DOWN_RIGHT = relativeDirection<c, Direction::SOUTH_EAST>();
 
-            constexpr Bitboard RANK_7 = c == Color::WHITE ? attacks::MASK_RANK[int(Rank::RANK_7)] : attacks::MASK_RANK[int(Rank::RANK_2)];
-
-            constexpr Bitboard RANK_8 = c == Color::WHITE ? attacks::MASK_RANK[int(Rank::RANK_8)] : attacks::MASK_RANK[int(Rank::RANK_1)];
-
-            constexpr Bitboard RANK_3 = c == Color::WHITE ? attacks::MASK_RANK[int(Rank::RANK_3)] : attacks::MASK_RANK[int(Rank::RANK_6)];
+            constexpr Bitboard RANK_7 = toBitboard<relativeRank<c, Rank::RANK_7>()>();
+            constexpr Bitboard RANK_8 = toBitboard<relativeRank<c, Rank::RANK_8>()>();
+            constexpr Bitboard RANK_3 = toBitboard<relativeRank<c, Rank::RANK_3>()>();
 
             if constexpr (Legal) {
                 const Bitboard pawns_lr = pawns & ~pinHV;
@@ -183,36 +219,8 @@ namespace chess {
                                     (attacks::shift<UP>(single_push_pinned & RANK_3) & ~board.occupied())) &
                                     checkMask;
 
-                if (pawns & RANK_7){
-                    Bitboard promotions = single_push & RANK_8;
-                    Bitboard promotions_left = left_attacks & RANK_8;
-                    Bitboard promotions_right = right_attacks & RANK_8;
-
-                    while (mt != MoveGenType::QUIET && promotions) {
-                        Square to = poplsb(promotions);
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN), to, PieceType::QUEEN));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN), to, PieceType::ROOK));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN), to, PieceType::BISHOP));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN), to, PieceType::KNIGHT));
-                    }
-
-                    while (mt != MoveGenType::CAPTURE && promotions_right) {
-                        Square to = poplsb(promotions_right);
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_LEFT), to, PieceType::QUEEN));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_LEFT), to, PieceType::ROOK));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_LEFT), to, PieceType::BISHOP));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_LEFT), to, PieceType::KNIGHT));
-                    }
-
-                    while (mt != MoveGenType::CAPTURE && promotions_left) {
-                        Square to = poplsb(promotions_left);
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_RIGHT), to, PieceType::QUEEN));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_RIGHT), to, PieceType::ROOK));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_RIGHT), to, PieceType::BISHOP));
-                        moves.add(Move::make<Move::PROMOTION>(static_cast<Square>(to + DOWN_RIGHT), to, PieceType::KNIGHT));
-                    }
-                }
                 // clang-format on
+                generatePromotionMoves<c, mt>(pawns, single_push, left_attacks, right_attacks, moves);
 
                 // rule out to-promoted moves
                 single_push &= ~RANK_8;
@@ -258,7 +266,7 @@ namespace chess {
                         const Square   kingSq         = board.kingSq(c);
 
                         const Bitboard kingMask       = 
-                        (1ULL << kingSq) & attacks::MASK_RANK[static_cast<int>(ep_pawn.rank())];
+                        (1ULL << kingSq) & MASK_RANK[static_cast<int>(ep_pawn.rank())];
 
                         const Bitboard enemyQueenRook = 
                         board.bitboard(~c, PieceType::QUEEN) | board.bitboard(~c, PieceType::ROOK);
@@ -441,7 +449,7 @@ namespace chess {
 
                 if constexpr (Legal) {
                     if ((NOT_ATTACKED_PATH & EMPTY_NOT_ATTACKED) == NOT_ATTACKED_PATH && ((NOT_OCCUPIED_PATH & ~board.occupied()) == NOT_OCCUPIED_PATH) &&
-                        !((1ull << rookFromSq) & pinHV & attacks::MASK_RANK[static_cast<int>(kingSq.rank())]) && !((1ull << rookToSq) & (withoutRook & withoutKing)) &&
+                        !((1ull << rookFromSq) & pinHV & MASK_RANK[static_cast<int>(kingSq.rank())]) && !((1ull << rookToSq) & (withoutRook & withoutKing)) &&
                         !((1ull << kingToSq) & (seen | (withoutRook & ~(1ull << kingSq))))) {
                         moves |= (1ull << rookFromSq);
                     }

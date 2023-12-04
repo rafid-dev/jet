@@ -52,6 +52,71 @@ namespace chess {
         return old;
     }
 
+    template <Color c>
+    constexpr Rank relativeRank(Rank r) {
+        if constexpr (c == Color::WHITE) {
+            return r;
+        } else {
+            return static_cast<Rank>(static_cast<int>(r) ^ 7);
+        }
+    }
+
+    template <Color c>
+    constexpr File relativeFile(File f) {
+        if constexpr (c == Color::WHITE) {
+            return f;
+        } else {
+            return static_cast<File>(static_cast<int>(f) ^ 7);
+        }
+    }
+
+    template <Color c, Rank r>
+    constexpr Rank relativeRank() {
+        if constexpr (c == Color::WHITE) {
+            return r;
+        } else {
+            return static_cast<Rank>(static_cast<int>(r) ^ 7);
+        }
+    }
+
+    template <Color c, File f>
+    constexpr File relativeFile() {
+        if constexpr (c == Color::WHITE) {
+            return f;
+        } else {
+            return static_cast<File>(static_cast<int>(f) ^ 7);
+        }
+    }
+
+    // clang-format off
+    static constexpr Bitboard MASK_RANK[8] = {
+        0xff, 0xff00, 0xff0000, 0xff000000, 0xff00000000, 0xff0000000000, 0xff000000000000, 0xff00000000000000
+    };
+
+    static constexpr Bitboard MASK_FILE[8] = {
+        0x101010101010101, 0x202020202020202, 0x404040404040404, 0x808080808080808, 0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080,
+    };
+
+    // clang-format on
+
+    static inline constexpr Bitboard toBitboard(Rank r) {
+        return MASK_RANK[static_cast<int>(r)];
+    }
+
+    static inline constexpr Bitboard toBitboard(File f) {
+        return MASK_FILE[static_cast<int>(f)];
+    }
+
+    template <Rank r>
+    static inline constexpr Bitboard toBitboard() {
+        return MASK_RANK[static_cast<int>(r)];
+    }
+
+    template <File f>
+    static inline constexpr Bitboard toBitboard() {
+        return MASK_FILE[static_cast<int>(f)];
+    }
+
     class Square {
     private:
         uint8_t m_sq;

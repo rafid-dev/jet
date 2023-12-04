@@ -10,17 +10,6 @@ namespace chess {
 
     // clang-format off
 
-    enum class Direction : int8_t {
-        NORTH      = 8,
-        WEST       = -1,
-        SOUTH      = -8,
-        EAST       = 1,
-        NORTH_EAST = 9,
-        NORTH_WEST = 7,
-        SOUTH_WEST = -9,
-        SOUTH_EAST = -7
-    };
-
     enum class PieceType : uint8_t { PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, NONE };
 
     enum class Piece : uint8_t {
@@ -39,16 +28,43 @@ namespace chess {
         NONE
     };
 
-
-
     enum class Color : uint8_t { WHITE, BLACK, NO_COLOR };
 
-    // clang-format on
 
     constexpr Color operator~(Color c) {
         return Color(static_cast<uint8_t>(c) ^ 1);
     }
 
+    enum class Direction : int8_t { 
+        NORTH = 8, 
+        WEST = -1, 
+        SOUTH = -8, 
+        EAST = 1,
+        NORTH_EAST = 9, 
+        NORTH_WEST = 7, 
+        SOUTH_WEST = -9, 
+        SOUTH_EAST = -7 
+    };
+
+    template <Color c>
+    constexpr Direction relativeDirection(Direction d) {
+        if constexpr (c == Color::WHITE) {
+            return d;
+        } else {
+            return static_cast<Direction>(-static_cast<int8_t>(d));
+        }
+    }
+
+    template <Color c, Direction d>
+    constexpr Direction relativeDirection() {
+        if constexpr (c == Color::WHITE) {
+            return d;
+        } else {
+            return static_cast<Direction>(-static_cast<int8_t>(d));
+        }
+    }
+
+    // clang-format on
     constexpr uint8_t  NUM_SQUARES       = 64;
     constexpr uint8_t  NUM_COLORS        = 2;
     constexpr uint8_t  NUM_PIECES        = 12;
