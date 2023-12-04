@@ -13,6 +13,55 @@ namespace chess {
 
     enum CastlingSide : uint8_t { KING_SIDE, QUEEN_SIDE };
 
+    static constexpr inline Square castlingKingToSquare(CastlingSide side, Color c) {
+        if (side == CastlingSide::KING_SIDE) {
+            return relativeSquare(Square::SQ_G1, c);
+        } else {
+            return relativeSquare(Square::SQ_C1, c);
+        }
+    }
+    static constexpr inline Square castlingRookFromSquare(CastlingSide side, Color c) {
+        if (side == CastlingSide::KING_SIDE) {
+            return relativeSquare(Square::SQ_H1, c);
+        } else {
+            return relativeSquare(Square::SQ_A1, c);
+        }
+    }
+    static constexpr inline Square castlingRookToSquare(CastlingSide side, Color c) {
+        if (side == CastlingSide::KING_SIDE) {
+            return relativeSquare(Square::SQ_F1, c);
+        } else {
+            return relativeSquare(Square::SQ_D1, c);
+        }
+    }
+
+    template <Color c>
+    static constexpr inline Square castlingKingToSquare(CastlingSide side) {
+        if (side == CastlingSide::KING_SIDE) {
+            return relativeSquare<c>(Square::SQ_G1);
+        } else {
+            return relativeSquare<c>(Square::SQ_C1);
+        }
+    }
+
+    template <Color c>
+    static constexpr inline Square castlingRookFromSquare(CastlingSide side) {
+        if (side == CastlingSide::KING_SIDE) {
+            return relativeSquare<c>(Square::SQ_H1);
+        } else {
+            return relativeSquare<c>(Square::SQ_A1);
+        }
+    }
+
+    template <Color c>
+    static constexpr inline Square castlingRookToSquare(CastlingSide side) {
+        if (side == CastlingSide::KING_SIDE) {
+            return relativeSquare<c>(Square::SQ_F1);
+        } else {
+            return relativeSquare<c>(Square::SQ_D1);
+        }
+    }
+
     class Board {
     public:
         int makeMoveCalled   = 0;
@@ -68,6 +117,16 @@ namespace chess {
             return bitboard(pieceToColor(p), pieceToPieceType(p));
         }
 
+        template <Color c>
+        constexpr Bitboard bitboard(PieceType pt) const {
+            return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
+        }
+
+        template <Color c, PieceType pt>
+        constexpr inline Bitboard bitboard() const {
+            return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
+        }
+
         void makeMove(const Move& move);
         bool makeMovePsuedoLegal(const Move& move);
         void unmakeMove(const Move& move);
@@ -111,6 +170,11 @@ namespace chess {
 
         constexpr Square kingSq(Color c) const {
             return lsb(bitboard(c, PieceType::KING));
+        }
+
+        template <Color c>
+        constexpr Square kingSq() const {
+            return lsb(bitboard<c>(PieceType::KING));
         }
 
         constexpr Square enPassant() const {

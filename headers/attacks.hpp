@@ -445,4 +445,8 @@ namespace chess {
 
         initSquaresBetween();
     }
+
+    constexpr inline Bitboard squaresBetween(Square a, Square b) {
+        return attacks::SQUARES_BETWEEN_BB[a][b];
+    }
 } // namespace chess

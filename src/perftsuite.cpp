@@ -90,13 +90,13 @@ namespace perft {
             if (count > max) {
                 break;
             }
-            count++;
 
             EpdInfo info(line);
 
             for (const auto& depthnodes : info.fetch()) {
                 std::cout << "\033[0m" << std::endl;
                 std::cout << "testing: " << info.fen();
+                count++;
 
                 chess::Board board(info.fen());
 
@@ -246,13 +246,13 @@ namespace perft {
             if (count > max) {
                 break;
             }
-            count++;
 
             EpdInfo info(line);
 
             for (const auto& depthnodes : info.fetch()) {
                 std::cout << "\033[0m" << std::endl;
                 std::cout << "testing: " << info.fen();
+                count++;
 
                 chess::Board board(info.fen());
 

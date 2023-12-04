@@ -156,6 +156,11 @@ namespace chess {
         return static_cast<Piece>(static_cast<uint8_t>(c) * 6 + static_cast<uint8_t>(pt));
     }
 
+    template<Color c, PieceType pt>
+    constexpr Piece colorPiece() {
+        return static_cast<Piece>(static_cast<uint8_t>(c) * 6 + static_cast<uint8_t>(pt));
+    }
+
     static constexpr std::string_view START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 } // namespace chess

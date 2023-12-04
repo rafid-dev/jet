@@ -155,11 +155,15 @@ namespace chess {
         }
 
     public:
-        constexpr File file() const {
+        constexpr inline Bitboard bb() const {
+            return 1ULL << m_sq;
+        }
+
+        constexpr inline File file() const {
             return static_cast<File>(m_sq & 7);
         }
 
-        constexpr Rank rank() const {
+        constexpr inline Rank rank() const {
             return static_cast<Rank>(m_sq >> 3);
         }
 
@@ -333,6 +337,11 @@ namespace chess {
     }
 
     constexpr Square relativeSquare(Square sq, Color c) {
+        return static_cast<Square>(static_cast<int>(sq) ^ (static_cast<int>(c) * 56));
+    }
+
+    template <Color c>
+    constexpr Square relativeSquare(Square sq) {
         return static_cast<Square>(static_cast<int>(sq) ^ (static_cast<int>(c) * 56));
     }
 
