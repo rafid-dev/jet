@@ -399,9 +399,9 @@ namespace chess {
                     continue;
                 }
 
-                const Square kingToSq   = castlingKingToSquare<c>(castleSide);
-                const Square rookToSq   = castlingRookToSquare<c>(castleSide);
-                const Square rookFromSq = castlingRookFromSquare<c>(castleSide);
+                const Square kingToSq   = CastlingRights::kingTo<c>(castleSide);
+                const Square rookToSq   = CastlingRights::rookTo<c>(castleSide);
+                const Square rookFromSq = CastlingRights::rookFrom<c>(castleSide);
 
                 const Bitboard rookFromSqBB = rookFromSq.bb();
 

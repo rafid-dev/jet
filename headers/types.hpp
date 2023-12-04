@@ -30,7 +30,6 @@ namespace chess {
 
     enum class Color : uint8_t { WHITE, BLACK, NO_COLOR };
 
-
     constexpr Color operator~(Color c) {
         return Color(static_cast<uint8_t>(c) ^ 1);
     }

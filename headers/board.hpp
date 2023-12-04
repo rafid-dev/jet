@@ -2,6 +2,7 @@
 
 #include "attacks.hpp"
 #include "bitboards.hpp"
+#include "castling.hpp"
 #include "misc.hpp"
 #include "move.hpp"
 #include "types.hpp"
@@ -12,60 +13,60 @@
 
 namespace chess {
 
-    enum CastlingSide : uint8_t { KING_SIDE, QUEEN_SIDE };
+    // enum CastlingSide : uint8_t { KING_SIDE, QUEEN_SIDE };
 
-    static constexpr inline Square castlingKingToSquare(CastlingSide side, Color c) {
-        if (side == CastlingSide::KING_SIDE) {
-            return relativeSquare(Square::SQ_G1, c);
-        } else {
-            return relativeSquare(Square::SQ_C1, c);
-        }
-    }
-    static constexpr inline Square castlingRookFromSquare(CastlingSide side, Color c) {
-        if (side == CastlingSide::KING_SIDE) {
-            return relativeSquare(Square::SQ_H1, c);
-        } else {
-            return relativeSquare(Square::SQ_A1, c);
-        }
-    }
-    static constexpr inline Square castlingRookToSquare(CastlingSide side, Color c) {
-        if (side == CastlingSide::KING_SIDE) {
-            return relativeSquare(Square::SQ_F1, c);
-        } else {
-            return relativeSquare(Square::SQ_D1, c);
-        }
-    }
+    // static constexpr inline Square castlingKingToSquare(CastlingSide side, Color c) {
+    //     if (side == CastlingSide::KING_SIDE) {
+    //         return relativeSquare(Square::SQ_G1, c);
+    //     } else {
+    //         return relativeSquare(Square::SQ_C1, c);
+    //     }
+    // }
+    // static constexpr inline Square castlingRookFromSquare(CastlingSide side, Color c) {
+    //     if (side == CastlingSide::KING_SIDE) {
+    //         return relativeSquare(Square::SQ_H1, c);
+    //     } else {
+    //         return relativeSquare(Square::SQ_A1, c);
+    //     }
+    // }
+    // static constexpr inline Square castlingRookToSquare(CastlingSide side, Color c) {
+    //     if (side == CastlingSide::KING_SIDE) {
+    //         return relativeSquare(Square::SQ_F1, c);
+    //     } else {
+    //         return relativeSquare(Square::SQ_D1, c);
+    //     }
+    // }
 
-    template <Color c>
-    static constexpr inline Square castlingKingToSquare(CastlingSide side) {
-        if (side == CastlingSide::KING_SIDE) {
-            return relativeSquare<c>(Square::SQ_G1);
-        } else {
-            return relativeSquare<c>(Square::SQ_C1);
-        }
-    }
+    // template <Color c>
+    // static constexpr inline Square castlingKingToSquare(CastlingSide side) {
+    //     if (side == CastlingSide::KING_SIDE) {
+    //         return relativeSquare<c>(Square::SQ_G1);
+    //     } else {
+    //         return relativeSquare<c>(Square::SQ_C1);
+    //     }
+    // }
 
-    template <Color c>
-    static constexpr inline Square castlingRookFromSquare(CastlingSide side) {
-        if (side == CastlingSide::KING_SIDE) {
-            return relativeSquare<c>(Square::SQ_H1);
-        } else {
-            return relativeSquare<c>(Square::SQ_A1);
-        }
-    }
+    // template <Color c>
+    // static constexpr inline Square castlingRookFromSquare(CastlingSide side) {
+    //     if (side == CastlingSide::KING_SIDE) {
+    //         return relativeSquare<c>(Square::SQ_H1);
+    //     } else {
+    //         return relativeSquare<c>(Square::SQ_A1);
+    //     }
+    // }
 
-    template <Color c>
-    static constexpr inline Square castlingRookToSquare(CastlingSide side) {
-        if (side == CastlingSide::KING_SIDE) {
-            return relativeSquare<c>(Square::SQ_F1);
-        } else {
-            return relativeSquare<c>(Square::SQ_D1);
-        }
-    }
+    // template <Color c>
+    // static constexpr inline Square castlingRookToSquare(CastlingSide side) {
+    //     if (side == CastlingSide::KING_SIDE) {
+    //         return relativeSquare<c>(Square::SQ_F1);
+    //     } else {
+    //         return relativeSquare<c>(Square::SQ_D1);
+    //     }
+    // }
 
     class Board {
     public:
-        using CastlingRights = std::array<std::array<bool, 2>, 2>;
+        // using CastlingRights = std::array<std::array<bool, 2>, 2>;
 
     private:
         std::array<Piece, NUM_SQUARES> m_pieces{};
@@ -78,15 +79,11 @@ namespace chess {
         int     m_plies         = 0;
 
         // Castling rights
-        // bool m_castlingRights[2][2] = {{true, true}, {true, true}};
-        CastlingRights m_castlingRights{};
+        CastlingRights m_castlingRights;
 
         // clang-format off
         int getCastlingHashIndex() const {
-            return hasCastlingRights(Color::WHITE, CastlingSide::KING_SIDE) 
-            + 2 * hasCastlingRights(Color::WHITE, CastlingSide::QUEEN_SIDE) 
-            + 4 * hasCastlingRights(Color::BLACK, CastlingSide::KING_SIDE) 
-            + 8 * hasCastlingRights(Color::BLACK, CastlingSide::QUEEN_SIDE);
+            return m_castlingRights.index();
         }
         // clang-format on
 
@@ -202,11 +199,11 @@ namespace chess {
         }
 
         constexpr bool hasCastlingRights(Color c, CastlingSide side) const {
-            return m_castlingRights[static_cast<int>(c)][static_cast<int>(side)];
+            return m_castlingRights.hasCastlingRights(c, side);
         }
 
         constexpr bool hasCastlingRights(Color c) const {
-            return m_castlingRights[static_cast<int>(c)][KING_SIDE] || m_castlingRights[static_cast<int>(c)][QUEEN_SIDE];
+            return m_castlingRights.hasCastlingRights(c);
         }
 
         constexpr uint8_t halfMoveClock() const {
@@ -349,7 +346,9 @@ namespace chess {
             m_enPassant = Square(Square::NO_SQ);
         }
 
-        std::memset(m_castlingRights.data(), 0, sizeof(m_castlingRights));
+        // std::memset(m_castlingRights.data(), 0, sizeof(m_castlingRights));
+
+        m_castlingRights.clear();
 
         for (char c : castling) {
             if (c == '-') {
@@ -357,9 +356,9 @@ namespace chess {
             }
 
             if (c == 'K' || c == 'k') {
-                m_castlingRights[static_cast<int>(c == 'k')][0] = true;
+                m_castlingRights.setCastlingRights(static_cast<Color>(c == 'K'), CastlingSide::KING_SIDE);
             } else if (c == 'Q' || c == 'q') {
-                m_castlingRights[static_cast<int>(c == 'q')][1] = true;
+                m_castlingRights.setCastlingRights(static_cast<Color>(c == 'Q'), CastlingSide::QUEEN_SIDE);
             }
         }
 
@@ -391,21 +390,21 @@ namespace chess {
 
         os << "Castling Rights: ";
 
-        if (castlingRights[0][0]) {
+        if (castlingRights.hasCastlingRights(Color::WHITE, CastlingSide::KING_SIDE)) {
             // White can castle kingside
             os << 'K';
         }
-        if (castlingRights[0][1]) {
+        if (castlingRights.hasCastlingRights(Color::WHITE, CastlingSide::QUEEN_SIDE)) {
             // White can castle queenside
             os << 'Q';
         }
 
-        if (castlingRights[1][0]) {
+        if (castlingRights.hasCastlingRights(Color::BLACK, CastlingSide::KING_SIDE)) {
             // Black can castle kingside
             os << 'k';
         }
 
-        if (castlingRights[1][1]) {
+        if (castlingRights.hasCastlingRights(Color::BLACK, CastlingSide::QUEEN_SIDE)) {
             // Black can castle queenside
             os << 'q';
         }
@@ -450,8 +449,7 @@ namespace chess {
                     int t = static_cast<int>(~m_turn);
                     int s = static_cast<int>(side);
 
-                    m_castlingRights[t][s] = false;
-
+                    m_castlingRights.removeCastlingRights(~m_turn, side);
                     m_hash ^= zobrist::castlingIndex(t + s);
                 }
             }
@@ -460,8 +458,11 @@ namespace chess {
         if (pt == PieceType::KING && hasCastlingRights(m_turn)) {
             m_hash ^= zobrist::castlingKey(getCastlingHashIndex());
 
-            m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(CastlingSide::KING_SIDE)]  = false;
-            m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(CastlingSide::QUEEN_SIDE)] = false;
+            // m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(CastlingSide::KING_SIDE)]  = false;
+            // m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(CastlingSide::QUEEN_SIDE)] = false;
+
+            m_castlingRights.removeCastlingRights(m_turn, CastlingSide::KING_SIDE);
+            m_castlingRights.removeCastlingRights(m_turn, CastlingSide::QUEEN_SIDE);
 
             m_hash ^= zobrist::castlingKey(getCastlingHashIndex());
 
@@ -470,7 +471,9 @@ namespace chess {
             const auto side    = move.from() > king_sq ? CastlingSide::KING_SIDE : CastlingSide::QUEEN_SIDE;
 
             if (hasCastlingRights(m_turn, side)) {
-                m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(side)] = false;
+                // m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(side)] = false;
+
+                m_castlingRights.removeCastlingRights(m_turn, side);
 
                 m_hash ^= zobrist::castlingIndex(static_cast<int>(m_turn) + static_cast<int>(side));
             }
