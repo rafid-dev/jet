@@ -49,11 +49,12 @@ namespace chess {
         return Color(static_cast<uint8_t>(c) ^ 1);
     }
 
-    constexpr uint8_t NUM_SQUARES     = 64;
-    constexpr uint8_t NUM_COLORS      = 2;
-    constexpr uint8_t NUM_PIECES      = 12;
-    constexpr uint8_t NUM_PIECE_TYPES = 6;
-    constexpr int     MAX_MOVES       = 256;
+    constexpr uint8_t  NUM_SQUARES       = 64;
+    constexpr uint8_t  NUM_COLORS        = 2;
+    constexpr uint8_t  NUM_PIECES        = 12;
+    constexpr uint8_t  NUM_PIECE_TYPES   = 6;
+    constexpr int      MAX_MOVES         = 256;
+    constexpr Bitboard DEFAULT_CHECKMASK = 0xFFFFFFFFFFFFFFFF;
 
     // clang-format off
     constexpr std::string_view squareToString[64] = {

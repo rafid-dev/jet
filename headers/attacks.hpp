@@ -449,5 +449,4 @@ namespace chess {
 
         initSquaresBetween();
     }
-
 } // namespace chess

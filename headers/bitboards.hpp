@@ -1,7 +1,6 @@
 #pragma once
 
 #include "square.hpp"
-#include <immintrin.h>
 #include <iostream>
 
 namespace chess {

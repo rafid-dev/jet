@@ -68,7 +68,8 @@ namespace chess {
             return bitboard(pieceToColor(p), pieceToPieceType(p));
         }
 
-        bool makeMove(const Move& move);
+        void makeMove(const Move& move);
+        bool makeMovePsuedoLegal(const Move& move);
         void unmakeMove(const Move& move);
 
         constexpr bool isAttacked(Square sq, Color c) const {
@@ -305,7 +306,7 @@ namespace chess {
         return os;
     }
 
-    inline bool Board::makeMove(const Move& move) {
+    inline void Board::makeMove(const Move& move) {
         const bool      capture  = at(move.to()) != Piece::NONE && move.type() != Move::CASTLING;
         const Piece     captured = at(move.to());
         const PieceType pt       = pieceToPieceType(at(move.from()));
@@ -394,6 +395,10 @@ namespace chess {
         }
 
         m_turn = ~m_turn;
+    }
+
+    inline bool Board::makeMovePsuedoLegal(const Move& move) {
+        makeMove(move);
 
         if (isAttacked(kingSq(~m_turn), m_turn)) {
             unmakeMove(move);
