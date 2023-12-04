@@ -5,6 +5,7 @@
 #include "misc.hpp"
 #include "move.hpp"
 #include "types.hpp"
+#include "zobrist.hpp"
 
 #include <cassert>
 #include <charconv>
@@ -64,8 +65,6 @@ namespace chess {
 
     class Board {
     public:
-        int makeMoveCalled   = 0;
-        int unmakeMoveCalled = 0;
         using CastlingRights = std::array<std::array<bool, 2>, 2>;
 
     private:
@@ -82,6 +81,15 @@ namespace chess {
         // bool m_castlingRights[2][2] = {{true, true}, {true, true}};
         CastlingRights m_castlingRights{};
 
+        // clang-format off
+        int getCastlingHashIndex() const {
+            return hasCastlingRights(Color::WHITE, CastlingSide::KING_SIDE) 
+            + 2 * hasCastlingRights(Color::WHITE, CastlingSide::QUEEN_SIDE) 
+            + 4 * hasCastlingRights(Color::BLACK, CastlingSide::KING_SIDE) 
+            + 8 * hasCastlingRights(Color::BLACK, CastlingSide::QUEEN_SIDE);
+        }
+        // clang-format on
+
         // Zobrist Hash
         U64 m_hash  = 0;
         U64 occ_all = 0;
@@ -92,11 +100,11 @@ namespace chess {
             U64            hash           = 0;
             CastlingRights castling       = {};
             Square         enpassant      = Square(Square::NO_SQ);
-            uint8_t        half_moves     = 0;
+            uint8_t        halfMoves      = 0;
             Piece          captured_piece = Piece::NONE;
 
-            State(const U64& hash, const CastlingRights& castling, const Square& enpassant, const uint8_t& half_moves, const Piece& captured_piece)
-                : hash(hash), castling(castling), enpassant(enpassant), half_moves(half_moves), captured_piece(captured_piece) {
+            State(const U64& hash, const CastlingRights& castling, const Square& enpassant, const uint8_t& halfMoves, const Piece& captured_piece)
+                : hash(hash), castling(castling), enpassant(enpassant), halfMoves(halfMoves), captured_piece(captured_piece) {
             }
         };
 
@@ -213,6 +221,45 @@ namespace chess {
 
         constexpr void placePiece(Piece p, Square sq);
         constexpr void removePiece(Piece p, Square sq);
+
+        U64 hash() const {
+            return m_hash;
+        }
+
+        U64 zobrist() const {
+            U64 hashKey = 0;
+
+            Bitboard whitePieces = us(Color::WHITE);
+            Bitboard blackPieces = us(Color::BLACK);
+
+            while (whitePieces) {
+                Square sq = poplsb(whitePieces);
+                hashKey ^= zobrist::pieceKey(at(sq), sq);
+            }
+
+            while (blackPieces) {
+                Square sq = poplsb(blackPieces);
+                hashKey ^= zobrist::pieceKey(at(sq), sq);
+            }
+
+            U64 epHash = 0;
+
+            if (m_enPassant != Square(Square::NO_SQ)) {
+                epHash ^= zobrist::enpassantKey(m_enPassant.file());
+            }
+
+            U64 sideHash = 0;
+
+            if (m_turn == Color::WHITE) {
+                sideHash ^= zobrist::sideKey();
+            }
+
+            U64 castlingHash = 0;
+
+            castlingHash ^= zobrist::castlingKey(getCastlingHashIndex());
+
+            return hashKey ^ epHash ^ sideHash ^ castlingHash;
+        }
     };
 
     constexpr void Board::placePiece(Piece p, Square sq) {
@@ -286,7 +333,7 @@ namespace chess {
                 const Piece piece = charToPiece(c);
                 placePiece(piece, square);
 
-                // m_hash ^= zobrist::pieceKey(piece, square);
+                m_hash ^= zobrist::pieceKey(piece, square);
 
                 square = Square(square + 1);
             } else if (c == '/') {
@@ -316,6 +363,7 @@ namespace chess {
             }
         }
 
+        m_hash  = hash();
         occ_all = all();
 
         m_states.clear();
@@ -366,6 +414,7 @@ namespace chess {
 
         os << "Half Move Clock: " << int(b.halfMoveClock()) << '\n';
         os << "Plies: " << b.ply() << '\n';
+        os << "Hash: " << std::hex << b.hash() << std::dec << '\n';
 
         return os;
     }
@@ -380,7 +429,9 @@ namespace chess {
         m_halfMoveClock++;
         m_plies++;
 
-        makeMoveCalled++;
+        if (m_enPassant != Square(Square::NO_SQ)) {
+            m_hash ^= zobrist::enpassantKey(m_enPassant.file());
+        }
 
         m_enPassant = Square(Square::NO_SQ);
 
@@ -396,20 +447,32 @@ namespace chess {
                 const auto side    = move.to() > king_sq ? CastlingSide::KING_SIDE : CastlingSide::QUEEN_SIDE;
 
                 if (hasCastlingRights(~m_turn, side)) {
-                    m_castlingRights[static_cast<int>(~m_turn)][static_cast<int>(side)] = false;
+                    int t = static_cast<int>(~m_turn);
+                    int s = static_cast<int>(side);
+
+                    m_castlingRights[t][s] = false;
+
+                    m_hash ^= zobrist::castlingIndex(t + s);
                 }
             }
         }
 
         if (pt == PieceType::KING && hasCastlingRights(m_turn)) {
+            m_hash ^= zobrist::castlingKey(getCastlingHashIndex());
+
             m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(CastlingSide::KING_SIDE)]  = false;
             m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(CastlingSide::QUEEN_SIDE)] = false;
+
+            m_hash ^= zobrist::castlingKey(getCastlingHashIndex());
+
         } else if (pt == PieceType::ROOK && ourBackRank(move.from(), m_turn)) {
             const auto king_sq = kingSq(m_turn);
             const auto side    = move.from() > king_sq ? CastlingSide::KING_SIDE : CastlingSide::QUEEN_SIDE;
 
             if (hasCastlingRights(m_turn, side)) {
                 m_castlingRights[static_cast<int>(m_turn)][static_cast<int>(side)] = false;
+
+                m_hash ^= zobrist::castlingIndex(static_cast<int>(m_turn) + static_cast<int>(side));
             }
         } else if (pt == PieceType::PAWN) {
             m_halfMoveClock = 0;
@@ -421,6 +484,8 @@ namespace chess {
 
                 if (ep_mask & bitboard(~m_turn, PieceType::PAWN)) {
                     m_enPassant = possible_ep;
+
+                    m_hash ^= zobrist::enpassantKey(m_enPassant.file());
                 }
             }
         }
@@ -439,24 +504,40 @@ namespace chess {
 
             placePiece(king, kingTo);
             placePiece(rook, rookTo);
+
+            m_hash ^= zobrist::pieceKey(king, move.from());
+            m_hash ^= zobrist::pieceKey(king, kingTo);
+
+            m_hash ^= zobrist::pieceKey(rook, move.to());
+            m_hash ^= zobrist::pieceKey(rook, rookTo);
         } else if (move.type() == Move::PROMOTION) {
             const auto piece_pawn = colorPiece(m_turn, PieceType::PAWN);
             const auto piece      = colorPiece(m_turn, move.promoted());
 
             removePiece(piece_pawn, move.from());
             placePiece(piece, move.to());
+
+            m_hash ^= zobrist::pieceKey(piece_pawn, move.from());
+            m_hash ^= zobrist::pieceKey(piece, move.to());
         } else {
             const auto piece = at(move.from());
 
             removePiece(piece, move.from());
             placePiece(piece, move.to());
+
+            m_hash ^= zobrist::pieceKey(piece, move.from());
+            m_hash ^= zobrist::pieceKey(piece, move.to());
         }
 
         if (move.type() == Move::ENPASSANT) {
             const auto piece = colorPiece(~m_turn, PieceType::PAWN);
 
             removePiece(piece, Square(int(move.to()) ^ 8));
+
+            m_hash ^= zobrist::pieceKey(piece, Square(int(move.to()) ^ 8));
         }
+
+        m_hash ^= zobrist::sideKey();
 
         m_turn = ~m_turn;
     }
@@ -476,16 +557,13 @@ namespace chess {
         const auto prev = m_states.back();
         m_states.pop_back();
 
-        m_hash           = prev.hash;
         m_enPassant      = prev.enpassant;
-        m_halfMoveClock  = prev.half_moves;
+        m_halfMoveClock  = prev.halfMoves;
         m_castlingRights = prev.castling;
 
         m_plies--;
 
         m_turn = ~m_turn;
-
-        unmakeMoveCalled++;
 
         if (move.type() == Move::CASTLING) {
             const bool king_side = move.to() > move.from();
@@ -503,6 +581,7 @@ namespace chess {
             placePiece(rook, move.to());
             placePiece(king, move.from());
 
+            m_hash = prev.hash;
             return;
         } else if (move.type() == Move::PROMOTION) {
             const auto piece_pawn = colorPiece(m_turn, PieceType::PAWN);
@@ -515,6 +594,7 @@ namespace chess {
                 placePiece(prev.captured_piece, move.to());
             }
 
+            m_hash = prev.hash;
             return;
 
         } else {
@@ -533,5 +613,7 @@ namespace chess {
         } else if (prev.captured_piece != Piece::NONE) {
             placePiece(prev.captured_piece, move.to());
         }
+
+        m_hash = prev.hash;
     }
 } // namespace chess

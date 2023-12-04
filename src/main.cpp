@@ -13,9 +13,5 @@ int main(int argc, char** argv) {
 
     perft::bulkSpeedTest();
 
-    // perft::bulkSuite("./standard.epd", 10000);
-
-    // chess::Board board("rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 3");
-
     return 0;
 }
