@@ -412,36 +412,19 @@ namespace chess {
                 // Check if the castling path is not attacked
                 const bool pathNotAttacked = (NOT_ATTACKED_PATH & EMPTY_NOT_ATTACKED) == NOT_ATTACKED_PATH;
 
-                if (!pathNotAttacked) {
-                    continue;
-                }
-
                 // Check if the castling path is not occupied
                 const bool pathNotOccupied = (NOT_OCCUPIED_PATH & ~occAll) == NOT_OCCUPIED_PATH;
 
-                if (!pathNotOccupied) {
-                    continue;
-                }
-
-                const Bitboard kingToSqBB  = kingToSq.bb();
-                const Bitboard kingBB      = kingSq.bb();
-                const Bitboard withoutRook = occAll & ~rookFromSqBB;
-
                 // Check if the king's destination is not occupied or attacked.
-                const bool isKingToSafe = !(kingToSqBB & (seen | (withoutRook & ~kingBB)));
-
-                if (!isKingToSafe) {
-                    continue;
-                }
+                const Bitboard kingToSqBB   = kingToSq.bb();
+                const Bitboard kingBB       = kingSq.bb();
+                const Bitboard withoutRook  = occAll & ~rookFromSqBB;
+                const bool     isKingToSafe = !(kingToSqBB & (seen | (withoutRook & ~kingBB)));
 
                 // Check if the rook's destination is not occupied by the king
                 const Bitboard rookToSqBB         = rookToSq.bb();
                 const Bitboard withoutKing        = occAll & ~kingBB;
                 const bool     isRookToUnoccupied = !(rookToSqBB & (withoutRook & withoutKing));
-
-                if (!isRookToUnoccupied) {
-                    continue;
-                }
 
                 if constexpr (Legal) {
                     // Check if the rook is not pinned
