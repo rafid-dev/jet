@@ -1,17 +1,13 @@
-#include "../headers/argparse.hpp"
-#include "../headers/attacks.hpp"
-#include "../headers/board.hpp"
-#include "../headers/movegen.hpp"
-#include "../headers/perfsuite.hpp"
+#include "../headers/bitboard.hpp"
 
 #include <iostream>
 
 using chess::Square;
 
 int main(int argc, char** argv) {
-    chess::attacks::init();
+    chess::Bitboard bb{Square(Square::SQ_E4)};
 
-    perft::bulkSpeedTest();
+    
 
     return 0;
 }

@@ -5,10 +5,9 @@
 
 namespace chess {
 
-    using U64      = uint64_t;
-    using Bitboard = uint64_t;
+    using U64 = uint64_t;
 
-    inline Square lsb(Bitboard bb);
+    inline Square lsb(U64 bb);
 
 #if defined(__GNUC__) || defined(__clang__)
     inline Square lsb(U64 b) {
@@ -47,7 +46,7 @@ namespace chess {
 
 #endif
 
-    inline int popcount(Bitboard b) {
+    inline int popcount(U64 b) {
 #if defined(_MSC_VER) || defined(__INTEL_COMPILER)
         return (uint8_t) _mm_popcnt_u64(b);
 
@@ -57,14 +56,14 @@ namespace chess {
 #endif
     }
 
-    inline Square poplsb(Bitboard& b) {
+    inline Square poplsb(U64& b) {
         Square sq = lsb(b);
         b &= b - 1;
         return sq;
     }
 
-    inline Bitboard makeBitboard(Square sq) {
-        return Bitboard(1ULL) << sq;
+    inline U64 makeBitboard(Square sq) {
+        return U64(1ULL) << sq;
     }
 
 } // namespace chess

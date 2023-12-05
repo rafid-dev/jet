@@ -10,7 +10,7 @@
 namespace chess {
     class attacks {
         struct Magic {
-            Bitboard mask;
+            U64 mask;
             U64      magic;
             U64*     attacks;
             U64      shift;
@@ -20,10 +20,10 @@ namespace chess {
             }
         };
 
-        static void initSliders(Square sq, Magic table[], U64 magic, const std::function<Bitboard(Square, Bitboard)>& attacks);
+        static void initSliders(Square sq, Magic table[], U64 magic, const std::function<U64(Square, U64)>& attacks);
 
         // clang-format off
-        static constexpr Bitboard PAWN_ATTACKS[NUM_COLORS][NUM_SQUARES] = {
+        static constexpr U64 PAWN_ATTACKS[NUM_COLORS][NUM_SQUARES] = {
             {0x200, 0x500, 0xa00, 0x1400, 0x2800, 0x5000, 0xa000, 0x4000,
             0x20000, 0x50000, 0xa0000, 0x140000, 0x280000, 0x500000, 0xa00000, 0x400000,
             0x2000000, 0x5000000, 0xa000000, 0x14000000, 0x28000000, 0x50000000, 0xa0000000, 0x40000000,
@@ -44,7 +44,7 @@ namespace chess {
             0x2000000000000, 0x5000000000000, 0xa000000000000, 0x14000000000000, 0x28000000000000, 0x50000000000000, 0xa0000000000000, 0x40000000000000
         }};
 
-        static constexpr Bitboard KNIGHT_ATTACKS[NUM_SQUARES] = {
+        static constexpr U64 KNIGHT_ATTACKS[NUM_SQUARES] = {
             0x20400, 0x50800, 0xa1100, 0x142200, 0x284400, 0x508800, 0xa01000, 0x402000,
             0x2040004, 0x5080008, 0xa110011, 0x14220022, 0x28440044, 0x50880088, 0xa0100010, 0x40200020,
             0x204000402, 0x508000805, 0xa1100110a, 0x1422002214, 0x2844004428, 0x5088008850, 0xa0100010a0, 0x4020002040,
@@ -55,7 +55,7 @@ namespace chess {
             0x4020000000000, 0x8050000000000, 0x110a0000000000, 0x22140000000000, 0x44280000000000, 0x88500000000000, 0x10a00000000000, 0x20400000000000
         };
 
-        static constexpr Bitboard KING_ATTACKS[NUM_SQUARES] = {
+        static constexpr U64 KING_ATTACKS[NUM_SQUARES] = {
             0x302, 0x705, 0xe0a, 0x1c14, 0x3828, 0x7050, 0xe0a0, 0xc040,
             0x30203, 0x70507, 0xe0a0e, 0x1c141c, 0x382838, 0x705070, 0xe0a0e0, 0xc040c0,
             0x3020300, 0x7050700, 0xe0a0e00, 0x1c141c00, 0x38283800, 0x70507000, 0xe0a0e000, 0xc040c000,
@@ -68,14 +68,14 @@ namespace chess {
 
         // clang-format on
 
-        static inline Bitboard RookAttacks[0x19000]  = {};
-        static inline Bitboard BishopAttacks[0x1480] = {};
+        static inline U64 RookAttacks[0x19000]  = {};
+        static inline U64 BishopAttacks[0x1480] = {};
 
         static inline Magic RookTable[NUM_SQUARES]   = {};
         static inline Magic BishopTable[NUM_SQUARES] = {};
 
         // Magic numbers taken from Disservin/chess-library
-        static constexpr Bitboard RookMagics[NUM_SQUARES] = {
+        static constexpr U64 RookMagics[NUM_SQUARES] = {
             0x8a80104000800020ULL, 0x140002000100040ULL,  0x2801880a0017001ULL,  0x100081001000420ULL,  0x200020010080420ULL,  0x3001c0002010008ULL,  0x8480008002000100ULL, 0x2080088004402900ULL,
             0x800098204000ULL,     0x2024401000200040ULL, 0x100802000801000ULL,  0x120800800801000ULL,  0x208808088000400ULL,  0x2802200800400ULL,    0x2200800100020080ULL, 0x801000060821100ULL,
             0x80044006422000ULL,   0x100808020004000ULL,  0x12108a0010204200ULL, 0x140848010000802ULL,  0x481828014002800ULL,  0x8094004002004100ULL, 0x4010040010010802ULL, 0x20008806104ULL,
@@ -85,7 +85,7 @@ namespace chess {
             0x101002200408200ULL,  0x40802000401080ULL,   0x4008142004410100ULL, 0x2060820c0120200ULL,  0x1001004080100ULL,    0x20c020080040080ULL,  0x2935610830022400ULL, 0x44440041009200ULL,
             0x280001040802101ULL,  0x2100190040002085ULL, 0x80c0084100102001ULL, 0x4024081001000421ULL, 0x20030a0244872ULL,    0x12001008414402ULL,   0x2006104900a0804ULL,  0x1004081002402ULL};
 
-        static constexpr Bitboard BishopMagics[NUM_SQUARES] = {
+        static constexpr U64 BishopMagics[NUM_SQUARES] = {
             0x40040844404084ULL,   0x2004208a004208ULL,   0x10190041080202ULL,   0x108060845042010ULL,  0x581104180800210ULL,  0x2112080446200010ULL, 0x1080820820060210ULL, 0x3c0808410220200ULL,
             0x4050404440404ULL,    0x21001420088ULL,      0x24d0080801082102ULL, 0x1020a0a020400ULL,    0x40308200402ULL,      0x4011002100800ULL,    0x401484104104005ULL,  0x801010402020200ULL,
             0x400210c3880100ULL,   0x404022024108200ULL,  0x810018200204102ULL,  0x4002801a02003ULL,    0x85040820080400ULL,   0x810102c808880400ULL, 0xe900410884800ULL,    0x8002020480840102ULL,
@@ -96,51 +96,51 @@ namespace chess {
             0xa010109502200ULL,    0x4a02012000ULL,       0x500201010098b028ULL, 0x8040002811040900ULL, 0x28000010020204ULL,   0x6000020202d0240ULL,  0x8918844842082200ULL, 0x4010011029020020ULL};
 
     public:
-        static inline std::array<std::array<Bitboard, 64>, 64> SQUARES_BETWEEN_BB{};
+        static inline std::array<std::array<U64, 64>, 64> SQUARES_BETWEEN_BB{};
 
         template <Direction dir>
-        static constexpr Bitboard shift(const Bitboard& b);
+        static constexpr U64 shift(const U64& b);
 
         template <Color c>
-        static Bitboard pawnLeftAttacks(const Bitboard b);
+        static U64 pawnLeftAttacks(const U64 b);
 
         template <Color c>
-        static Bitboard pawnRightAttacks(const Bitboard b);
+        static U64 pawnRightAttacks(const U64 b);
 
-        static Bitboard pawnAttacks(Square sq, const Color c);
-        static Bitboard knightAttacks(Square sq);
-        static Bitboard kingAttacks(Square sq);
-        static Bitboard queenAttacks(Square sq, Bitboard occupied);
+        static U64 pawnAttacks(Square sq, const Color c);
+        static U64 knightAttacks(Square sq);
+        static U64 kingAttacks(Square sq);
+        static U64 queenAttacks(Square sq, U64 occupied);
 
-        static Bitboard bishopAttacks(Square sq, Bitboard occupied);
-        static Bitboard rookAttacks(Square sq, Bitboard occupied);
+        static U64 bishopAttacks(Square sq, U64 occupied);
+        static U64 rookAttacks(Square sq, U64 occupied);
 
-        static Bitboard bishop(Square sq, Bitboard occupied) {
+        static U64 bishop(Square sq, U64 occupied) {
             return BishopTable[sq].attacks[BishopTable[sq].index(occupied)];
         }
 
-        static Bitboard rook(Square sq, Bitboard occupied) {
+        static U64 rook(Square sq, U64 occupied) {
             return RookTable[sq].attacks[RookTable[sq].index(occupied)];
         }
 
-        static Bitboard queen(Square sq, Bitboard occupied) {
+        static U64 queen(Square sq, U64 occupied) {
             return bishop(sq, occupied) | rook(sq, occupied);
         }
 
-        static constexpr Bitboard pawn(Square sq, const Color c) {
+        static constexpr U64 pawn(Square sq, const Color c) {
             return PAWN_ATTACKS[static_cast<int>(c)][sq];
         }
 
-        static constexpr Bitboard knight(Square sq) {
+        static constexpr U64 knight(Square sq) {
             return KNIGHT_ATTACKS[sq];
         }
 
-        static constexpr Bitboard king(Square sq) {
+        static constexpr U64 king(Square sq) {
             return KING_ATTACKS[sq];
         }
 
         template <PieceType pt>
-        static constexpr Bitboard getAttacks(Square sq, Bitboard occupied = 0) {
+        static constexpr U64 getAttacks(Square sq, U64 occupied = 0) {
             if constexpr (pt == PieceType::PAWN) {
                 return pawn(sq, Color::WHITE) | pawn(sq, Color::BLACK);
             } else if constexpr (pt == PieceType::KNIGHT) {
@@ -184,7 +184,7 @@ namespace chess {
     };
 
     template <Direction dir>
-    inline constexpr Bitboard attacks::shift(const Bitboard& b) {
+    inline constexpr U64 attacks::shift(const U64& b) {
         if constexpr (dir == Direction::NORTH) {
             return b << 8;
         } else if constexpr (dir == Direction::SOUTH) {
@@ -207,7 +207,7 @@ namespace chess {
     }
 
     template <Color c>
-    inline Bitboard attacks::pawnLeftAttacks(const Bitboard b) {
+    inline U64 attacks::pawnLeftAttacks(const U64 b) {
         if constexpr (c == Color::WHITE) {
             return (b << 7) & ~MASK_FILE[7];
         } else {
@@ -216,7 +216,7 @@ namespace chess {
     }
 
     template <Color c>
-    inline Bitboard attacks::pawnRightAttacks(const Bitboard b) {
+    inline U64 attacks::pawnRightAttacks(const U64 b) {
         if constexpr (c == Color::WHITE) {
             return (b << 9) & ~MASK_FILE[0];
         } else {
@@ -224,8 +224,8 @@ namespace chess {
         }
     }
 
-    inline Bitboard attacks::pawnAttacks(Square sq, const Color c) {
-        Bitboard b = 1ULL << sq;
+    inline U64 attacks::pawnAttacks(Square sq, const Color c) {
+        U64 b = 1ULL << sq;
 
         if (c == Color::WHITE) {
             return pawnLeftAttacks<Color::WHITE>(b) | pawnRightAttacks<Color::WHITE>(b);
@@ -234,16 +234,16 @@ namespace chess {
         }
     }
 
-    inline Bitboard attacks::knightAttacks(Square sq) {
-        Bitboard b = 1ULL << sq;
+    inline U64 attacks::knightAttacks(Square sq) {
+        U64 b = 1ULL << sq;
 
-        constexpr Bitboard A_FILE             = MASK_FILE[0];
-        const Bitboard     KNIGHT_NOT_A_FILE  = b & ~A_FILE;
-        const Bitboard     KNIGHT_NOT_H_FILE  = b & ~MASK_FILE[7];
-        const Bitboard     KNIGHT_NOT_AB_FILE = KNIGHT_NOT_A_FILE & ~MASK_FILE[1];
-        const Bitboard     KNIGHT_NOT_GH_FILE = KNIGHT_NOT_H_FILE & ~MASK_FILE[6];
+        constexpr U64 A_FILE             = MASK_FILE[0];
+        const U64     KNIGHT_NOT_A_FILE  = b & ~A_FILE;
+        const U64     KNIGHT_NOT_H_FILE  = b & ~MASK_FILE[7];
+        const U64     KNIGHT_NOT_AB_FILE = KNIGHT_NOT_A_FILE & ~MASK_FILE[1];
+        const U64     KNIGHT_NOT_GH_FILE = KNIGHT_NOT_H_FILE & ~MASK_FILE[6];
 
-        Bitboard attacks = (KNIGHT_NOT_A_FILE << 15) | (KNIGHT_NOT_A_FILE >> 17);
+        U64 attacks = (KNIGHT_NOT_A_FILE << 15) | (KNIGHT_NOT_A_FILE >> 17);
 
         attacks |= (KNIGHT_NOT_H_FILE << 17) | (KNIGHT_NOT_H_FILE >> 15);
         attacks |= (KNIGHT_NOT_AB_FILE << 6) | (KNIGHT_NOT_AB_FILE >> 10);
@@ -252,15 +252,15 @@ namespace chess {
         return attacks;
     }
 
-    inline Bitboard attacks::kingAttacks(Square sq) {
-        Bitboard b = 1ULL << sq;
+    inline U64 attacks::kingAttacks(Square sq) {
+        U64 b = 1ULL << sq;
 
         return shift<Direction::NORTH_EAST>(b) | shift<Direction::NORTH_WEST>(b) | shift<Direction::SOUTH_EAST>(b) | shift<Direction::SOUTH_WEST>(b) | shift<Direction::EAST>(b) | shift<Direction::WEST>(b) |
                shift<Direction::NORTH>(b) | shift<Direction::SOUTH>(b);
     }
 
-    inline Bitboard attacks::bishopAttacks(Square sq, Bitboard occupied) {
-        Bitboard attacks = 0ULL;
+    inline U64 attacks::bishopAttacks(Square sq, U64 occupied) {
+        U64 attacks = 0ULL;
 
         int r, f;
 
@@ -310,8 +310,8 @@ namespace chess {
         return attacks;
     }
 
-    inline Bitboard attacks::rookAttacks(Square sq, Bitboard occupied) {
-        Bitboard attacks = 0ULL;
+    inline U64 attacks::rookAttacks(Square sq, U64 occupied) {
+        U64 attacks = 0ULL;
 
         int r, f;
 
@@ -361,12 +361,12 @@ namespace chess {
         return attacks;
     }
 
-    inline Bitboard attacks::queenAttacks(Square sq, Bitboard occupied) {
+    inline U64 attacks::queenAttacks(Square sq, U64 occupied) {
         return bishopAttacks(sq, occupied) | rookAttacks(sq, occupied);
     }
 
     inline void attacks::generatePawnAttacks() {
-        std::cout << "static constexpr Bitboard PAWN_ATTACKS[NUM_COLORS][NUM_SQUARES] = {\n";
+        std::cout << "static constexpr U64 PAWN_ATTACKS[NUM_COLORS][NUM_SQUARES] = {\n";
 
         for (const auto c : {Color::WHITE, Color::BLACK}) {
             std::cout << "    {";
@@ -394,7 +394,7 @@ namespace chess {
     }
 
     inline void attacks::generateKnightAttacks() {
-        std::cout << "static constexpr Bitboard KNIGHT_ATTACKS[NUM_SQUARES] = {\n";
+        std::cout << "static constexpr U64 KNIGHT_ATTACKS[NUM_SQUARES] = {\n";
 
         for (int sq = 0; sq < NUM_SQUARES; sq++) {
             std::cout << std::hex << "0x" << knightAttacks(Square(sq)) << std::dec;
@@ -412,7 +412,7 @@ namespace chess {
     }
 
     inline void attacks::generateKingAttacks() {
-        std::cout << "static constexpr Bitboard KING_ATTACKS[NUM_SQUARES] = {\n";
+        std::cout << "static constexpr U64 KING_ATTACKS[NUM_SQUARES] = {\n";
 
         for (int sq = 0; sq < NUM_SQUARES; sq++) {
             std::cout << std::hex << "0x" << kingAttacks(Square(sq)) << std::dec;
@@ -429,14 +429,14 @@ namespace chess {
         std::cout << "};\n";
     }
 
-    inline void attacks::initSliders(Square sq, Magic table[], U64 magic, const std::function<Bitboard(Square, Bitboard)>& attacks) {
-        Bitboard rank_mask = ((MASK_RANK[0] | MASK_RANK[7]) & ~MASK_RANK[static_cast<int>(sq.rank())]);
+    inline void attacks::initSliders(Square sq, Magic table[], U64 magic, const std::function<U64(Square, U64)>& attacks) {
+        U64 rank_mask = ((MASK_RANK[0] | MASK_RANK[7]) & ~MASK_RANK[static_cast<int>(sq.rank())]);
 
-        Bitboard file_mask = ((MASK_FILE[0] | MASK_FILE[7]) & ~MASK_FILE[static_cast<int>(sq.file())]);
+        U64 file_mask = ((MASK_FILE[0] | MASK_FILE[7]) & ~MASK_FILE[static_cast<int>(sq.file())]);
 
-        Bitboard edges = rank_mask | file_mask;
+        U64 edges = rank_mask | file_mask;
 
-        Bitboard occupancy = 0ULL;
+        U64 occupancy = 0ULL;
 
         table[int(sq)].magic = magic;
         table[int(sq)].mask  = attacks(sq, occupancy) & ~edges;
@@ -465,7 +465,7 @@ namespace chess {
         initSquaresBetween();
     }
 
-    constexpr inline Bitboard squaresBetween(Square a, Square b) {
+    constexpr inline U64 squaresBetween(Square a, Square b) {
         return attacks::SQUARES_BETWEEN_BB[a][b];
     }
 } // namespace chess

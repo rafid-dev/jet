@@ -5,8 +5,7 @@
 
 namespace chess {
 
-    using U64      = uint64_t;
-    using Bitboard = uint64_t;
+    using U64 = uint64_t;
 
     // clang-format off
 
@@ -64,12 +63,12 @@ namespace chess {
     }
 
     // clang-format on
-    constexpr uint8_t  NUM_SQUARES       = 64;
-    constexpr uint8_t  NUM_COLORS        = 2;
-    constexpr uint8_t  NUM_PIECES        = 12;
-    constexpr uint8_t  NUM_PIECE_TYPES   = 6;
-    constexpr int      MAX_MOVES         = 256;
-    constexpr Bitboard DEFAULT_CHECKMASK = 0xFFFFFFFFFFFFFFFF;
+    constexpr uint8_t NUM_SQUARES       = 64;
+    constexpr uint8_t NUM_COLORS        = 2;
+    constexpr uint8_t NUM_PIECES        = 12;
+    constexpr uint8_t NUM_PIECE_TYPES   = 6;
+    constexpr int     MAX_MOVES         = 256;
+    constexpr U64     DEFAULT_CHECKMASK = 0xFFFFFFFFFFFFFFFF;
 
     // clang-format off
     constexpr std::string_view squareToString[64] = {

@@ -16,7 +16,7 @@ namespace chess {
     class Board {
     private:
         std::array<Piece, NUM_SQUARES> m_pieces{};
-        Bitboard                       m_bitboards[2][NUM_PIECE_TYPES]{};
+        U64                       m_bitboards[2][NUM_PIECE_TYPES]{};
 
         Color  m_turn      = Color::WHITE;
         Square m_enPassant = Square(Square::NO_SQ);
@@ -56,25 +56,25 @@ namespace chess {
     public:
         Board(std::string_view fen = START_FEN);
 
-        constexpr Bitboard bitboard(Color c, PieceType pt) const {
+        constexpr U64 bitboard(Color c, PieceType pt) const {
             return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
         }
 
-        constexpr Bitboard bitboard(PieceType pt) const {
+        constexpr U64 bitboard(PieceType pt) const {
             return bitboard(Color::WHITE, pt) | bitboard(Color::BLACK, pt);
         }
 
-        constexpr Bitboard bitboard(Piece p) const {
+        constexpr U64 bitboard(Piece p) const {
             return bitboard(pieceToColor(p), pieceToPieceType(p));
         }
 
         template <Color c>
-        constexpr Bitboard bitboard(PieceType pt) const {
+        constexpr U64 bitboard(PieceType pt) const {
             return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
         }
 
         template <Color c, PieceType pt>
-        constexpr inline Bitboard bitboard() const {
+        constexpr inline U64 bitboard() const {
             return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
         }
 
@@ -102,20 +102,20 @@ namespace chess {
             return false;
         }
 
-        constexpr Bitboard us(Color color) const {
+        constexpr U64 us(Color color) const {
             return bitboard(color, PieceType::PAWN) | bitboard(color, PieceType::KNIGHT) | bitboard(color, PieceType::BISHOP) | bitboard(color, PieceType::ROOK) | bitboard(color, PieceType::QUEEN) |
                    bitboard(color, PieceType::KING);
         }
 
-        constexpr Bitboard them(Color color) const {
+        constexpr U64 them(Color color) const {
             return us(~color);
         }
 
-        constexpr Bitboard all() const {
+        constexpr U64 all() const {
             return us(Color::WHITE) | us(Color::BLACK);
         }
 
-        constexpr Bitboard occupied() const {
+        constexpr U64 occupied() const {
             return occ_all;
         }
 
@@ -165,7 +165,7 @@ namespace chess {
         constexpr void placePiece(Piece p, Square sq);
         constexpr void removePiece(Piece p, Square sq);
 
-        constexpr inline Bitboard checkers() const {
+        constexpr inline U64 checkers() const {
             const auto occ     = occupied();
             const auto king_sq = kingSq(m_turn);
 
@@ -189,8 +189,8 @@ namespace chess {
         U64 zobrist() const {
             U64 hashKey = 0;
 
-            Bitboard whitePieces = us(Color::WHITE);
-            Bitboard blackPieces = us(Color::BLACK);
+            U64 whitePieces = us(Color::WHITE);
+            U64 blackPieces = us(Color::BLACK);
 
             while (whitePieces) {
                 Square sq = poplsb(whitePieces);
@@ -446,7 +446,7 @@ namespace chess {
             const auto possible_ep = static_cast<Square>(int(move.to()) ^ 8);
 
             if (std::abs(int(move.to()) - int(move.from())) == 16) {
-                Bitboard ep_mask = attacks::pawn(possible_ep, m_turn);
+                U64 ep_mask = attacks::pawn(possible_ep, m_turn);
 
                 if (ep_mask & bitboard(~m_turn, PieceType::PAWN)) {
                     m_enPassant = possible_ep;

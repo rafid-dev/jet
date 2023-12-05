@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace misc {
-    inline void printBitboard(chess::Bitboard bb) {
+    inline void printBitboard(chess::U64 bb) {
         std::bitset<chess::NUM_SQUARES> b(bb);
         std::string                     str_bitset = b.to_string();
 

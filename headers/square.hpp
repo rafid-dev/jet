@@ -89,31 +89,31 @@ namespace chess {
     }
 
     // clang-format off
-    static constexpr Bitboard MASK_RANK[8] = {
+    static constexpr U64 MASK_RANK[8] = {
         0xff, 0xff00, 0xff0000, 0xff000000, 0xff00000000, 0xff0000000000, 0xff000000000000, 0xff00000000000000
     };
 
-    static constexpr Bitboard MASK_FILE[8] = {
+    static constexpr U64 MASK_FILE[8] = {
         0x101010101010101, 0x202020202020202, 0x404040404040404, 0x808080808080808, 0x1010101010101010, 0x2020202020202020, 0x4040404040404040, 0x8080808080808080,
     };
 
     // clang-format on
 
-    static inline constexpr Bitboard toBitboard(Rank r) {
+    static inline constexpr U64 toBitboard(Rank r) {
         return MASK_RANK[static_cast<int>(r)];
     }
 
-    static inline constexpr Bitboard toBitboard(File f) {
+    static inline constexpr U64 toBitboard(File f) {
         return MASK_FILE[static_cast<int>(f)];
     }
 
     template <Rank r>
-    static inline constexpr Bitboard toBitboard() {
+    static inline constexpr U64 toBitboard() {
         return MASK_RANK[static_cast<int>(r)];
     }
 
     template <File f>
-    static inline constexpr Bitboard toBitboard() {
+    static inline constexpr U64 toBitboard() {
         return MASK_FILE[static_cast<int>(f)];
     }
 
@@ -155,7 +155,7 @@ namespace chess {
         }
 
     public:
-        constexpr inline Bitboard bb() const {
+        constexpr inline U64 bb() const {
             return 1ULL << m_sq;
         }
 
