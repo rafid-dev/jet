@@ -1,13 +1,13 @@
-#include "../headers/bitboard.hpp"
+#include "../headers/board.hpp"
 
 #include <iostream>
 
-using chess::Square;
+using namespace chess;
 
-int main(int argc, char** argv) {
-    chess::Bitboard bb{Square(Square::SQ_E4)};
+int main() {
+    Board board{};
 
-    
+    std::cout << board << '\n';
 
     return 0;
 }

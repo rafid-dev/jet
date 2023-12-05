@@ -53,52 +53,52 @@ namespace chess {
 
         static constexpr inline Square kingTo(Color c, CastlingSide side) {
             if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare(Square::SQ_G1, c);
+                return relativeSquare(Square::G1, c);
             } else {
-                return relativeSquare(Square::SQ_C1, c);
+                return relativeSquare(Square::C1, c);
             }
         }
 
         static constexpr inline Square rookTo(Color c, CastlingSide side) {
             if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare(Square::SQ_F1, c);
+                return relativeSquare(Square::F1, c);
             } else {
-                return relativeSquare(Square::SQ_D1, c);
+                return relativeSquare(Square::D1, c);
             }
         }
 
         static constexpr inline Square rookFrom(Color c, CastlingSide side) {
             if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare(Square::SQ_H1, c);
+                return relativeSquare(Square::H1, c);
             } else {
-                return relativeSquare(Square::SQ_A1, c);
+                return relativeSquare(Square::A1, c);
             }
         }
 
         template <Color c>
         static constexpr inline Square kingTo(CastlingSide side) {
             if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare<c>(Square::SQ_G1);
+                return relativeSquare<c>(Square::G1);
             } else {
-                return relativeSquare<c>(Square::SQ_C1);
+                return relativeSquare<c>(Square::C1);
             }
         }
 
         template <Color c>
         static constexpr inline Square rookTo(CastlingSide side) {
             if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare<c>(Square::SQ_F1);
+                return relativeSquare<c>(Square::F1);
             } else {
-                return relativeSquare<c>(Square::SQ_D1);
+                return relativeSquare<c>(Square::D1);
             }
         }
 
         template <Color c>
         static constexpr inline Square rookFrom(CastlingSide side) {
             if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare<c>(Square::SQ_H1);
+                return relativeSquare<c>(Square::H1);
             } else {
-                return relativeSquare<c>(Square::SQ_A1);
+                return relativeSquare<c>(Square::A1);
             }
         }
 
