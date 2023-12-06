@@ -68,6 +68,7 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "xlocbuf": "cpp",
-        "xlocmes": "cpp"
+        "xlocmes": "cpp",
+        "cassert": "cpp"
     }
 }

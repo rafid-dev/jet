@@ -1,9 +1,11 @@
 #pragma once
 
+#include "attacks.hpp"
 #include "bitboards.hpp"
 #include "castling.hpp"
 #include "mailbox.hpp"
 #include "misc.hpp"
+#include "moves.hpp"
 #include "square.hpp"
 #include "types.hpp"
 
@@ -78,7 +80,7 @@ namespace chess {
 
         // Returns all pieces occupied by both colors
         constexpr Bitboard all() const {
-            return us(Color::WHITE) | us(Color::BLACK);
+            return us<Color::WHITE>() | us<Color::BLACK>();
         }
 
         // Returns the piece on a square
@@ -124,17 +126,47 @@ namespace chess {
             return m_pieces;
         }
 
-        constexpr void clearAllPieces() {
-            m_pieces.clear();
-            m_occupancy.zero();
-            for (int i = 0; i < NUM_COLORS; ++i) {
-                for (int j = 0; j < NUM_PIECE_TYPES; ++j) {
-                    m_bitboards[i][j].zero();
-                }
+        // set the board to a given fen
+        void setFen(std::string_view fen);
+
+        constexpr bool isAttacked(Square s, Color c) const {
+            if (Attacks::pawnAttacks(s, c) & bitboard(c, PieceType::PAWN)) {
+                return true;
             }
+
+            if (Attacks::knightAttacks(s) & bitboard(c, PieceType::KNIGHT)) {
+                return true;
+            }
+
+            if (Attacks::bishopAttacks(s, occupied()) & (bitboard(c, PieceType::BISHOP) | bitboard(c, PieceType::QUEEN))) {
+                return true;
+            }
+
+            if (Attacks::rookAttacks(s, occupied()) & (bitboard(c, PieceType::ROOK) | bitboard(c, PieceType::QUEEN))) {
+                return true;
+            }
+
+            if (Attacks::kingAttacks(s) & bitboard(c, PieceType::KING)) {
+                return true;
+            }
+
+            return false;
         }
 
-        void setFen(std::string_view fen);
+        constexpr Square kingSq(Color c) const {
+            return m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KING)].lsb();
+        }
+
+        constexpr bool isCheck() const {
+            return isAttacked(kingSq(sideToMove()), ~sideToMove());
+        }
+
+        constexpr bool isCheck(Color c) const {
+            return isAttacked(kingSq(c), ~c);
+        }
+
+        constexpr void makeMove(Move move);
+        constexpr void unmakeMove(Move move);
 
     private:
         // Bitboards for each color , corressponding to each piece type
@@ -160,6 +192,16 @@ namespace chess {
 
         // Ply count
         int m_ply{0};
+
+        constexpr void _clearAllPieces() {
+            m_pieces.clear();
+            m_occupancy.zero();
+            for (int i = 0; i < NUM_COLORS; ++i) {
+                for (int j = 0; j < NUM_PIECE_TYPES; ++j) {
+                    m_bitboards[i][j].zero();
+                }
+            }
+        }
     };
 
     constexpr inline Board::Board(std::string_view fen) {
@@ -172,7 +214,7 @@ namespace chess {
         } // remove leading spaces
 
         m_ply = 0;
-        clearAllPieces();
+        _clearAllPieces();
 
         std::vector<std::string_view> params = misc::splitString(fen, ' ');
 

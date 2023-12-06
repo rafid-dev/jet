@@ -354,13 +354,13 @@ namespace chess {
         static constexpr std::size_t ROOK_ATTACKS_SIZE   = 102400;
         static constexpr std::size_t BISHOP_ATTACKS_SIZE = 5248;
 
-        static std::array<U64, ROOK_ATTACKS_SIZE>   ROOK_ATTACKS;
-        static std::array<U64, BISHOP_ATTACKS_SIZE> BISHOP_ATTACKS;
+        static inline std::array<U64, ROOK_ATTACKS_SIZE>   ROOK_ATTACKS;
+        static inline std::array<U64, BISHOP_ATTACKS_SIZE> BISHOP_ATTACKS;
 
-        static std::array<MagicEntry, NUM_SQUARES> ROOK_MAGICS_ENTRIES;
-        static std::array<MagicEntry, NUM_SQUARES> BISHOP_MAGICS_ENTRIES;
+        static inline std::array<MagicEntry, NUM_SQUARES> ROOK_MAGICS_ENTRIES;
+        static inline std::array<MagicEntry, NUM_SQUARES> BISHOP_MAGICS_ENTRIES;
 
-        static std::array<std::array<Bitboard, 64>, 64> SQUARES_BETWEEN;
+        static inline std::array<std::array<Bitboard, 64>, 64> SQUARES_BETWEEN;
 
         template <typename F>
         static inline void generateSlidersAttacks(Square sq, std::array<MagicEntry, NUM_SQUARES>& magicTable, U64 magic, F attacks) {
@@ -384,7 +384,7 @@ namespace chess {
             } while (occupancy);
         }
 
-        static void generateSquaresBetween() {
+        static inline void generateSquaresBetween() {
             Bitboard b;
 
             for (const auto sq : SquareIterator()) {
