@@ -145,7 +145,10 @@ namespace chess {
         constexpr Square(File file, Rank rank) : m_sq(static_cast<int>(rank) * 8 + static_cast<int>(file)) {
         }
 
-    public:
+        constexpr Square(std::string_view str) {
+            m_sq = (str[0] - 'a') + (str[1] - '1') * 8;
+        }
+
         constexpr inline int sq() const {
             return m_sq;
         }

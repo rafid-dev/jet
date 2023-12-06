@@ -14,27 +14,43 @@ namespace chess {
         Mailbox64() = default;
 
         constexpr Piece get(Square sq) const {
-            return m_squares[sq.sq()];
+            return m_squares[sq];
         }
 
         constexpr void set(Piece piece, Square sq) {
-            m_squares[sq.sq()] = piece;
+            m_squares[sq] = piece;
         }
 
         constexpr void move(Piece piece, Square from, Square to) {
-            m_squares[to.sq()]   = piece;
-            m_squares[from.sq()] = Piece::NONE;
+            m_squares[to]   = piece;
+            m_squares[from] = Piece::NONE;
         }
 
         constexpr void clear(Square sq) {
-            m_squares[sq.sq()] = Piece::NONE;
+            m_squares[sq] = Piece::NONE;
         }
 
         constexpr void clear() {
             m_squares.fill(Piece::NONE);
         }
 
+        inline std::string toString() const {
+            std::string str;
+            for (Rank r = Rank::RANK_8; r >= Rank::RANK_1; r--) {
+                for (File f = File::FILE_A; f <= File::FILE_H; f++) {
+                    Square sq    = Square(f, r);
+                    Piece  piece = get(sq);
+                    str += ' ';
+                    str += pieceToChar(piece);
+                }
+                str += '\n';
+            }
+
+            return str;
+        }
+
     private:
         std::array<Piece, 64> m_squares;
     };
+
 }; // namespace chess

@@ -112,6 +112,16 @@ namespace chess {
             m_occupancy.clear(sq);
         }
 
+        // Move a piece from one square to another
+        constexpr void movePiece(Piece piece, Square from, Square to) {
+            m_pieces.move(piece, from, to);
+        }
+
+        // Returns the mailbox of 64 squares containing a piece
+        constexpr const Mailbox64& pieces() const {
+            return m_pieces;
+        }
+
         constexpr void clearAllPieces() {
             m_pieces.clear();
             m_occupancy.zero();
@@ -120,11 +130,6 @@ namespace chess {
                     m_bitboards[i][j].zero();
                 }
             }
-        }
-
-        // Move a piece from one square to another
-        constexpr void movePiece(Piece piece, Square from, Square to) {
-            m_pieces.move(piece, from, to);
         }
 
         void setFen(std::string_view fen);
@@ -169,7 +174,7 @@ namespace chess {
 
         std::vector<std::string_view> params = misc::splitString(fen, ' ');
 
-        std::string_view position  = params[0];
+        std::string_view pssition  = params[0];
         std::string_view side      = params[1];
         std::string_view castling  = params[2];
         std::string_view enPassant = params[3];
@@ -194,89 +199,47 @@ namespace chess {
 
         Square square = Square(56);
 
-        for (char c : position) {
+        for (char c : pssition) {
             if (charToPiece(c) != Piece::NONE) {
                 const Piece piece = charToPiece(c);
                 placePiece(piece, square);
 
-                square = Square(square.sq() + 1);
+                square = Square(square + 1);
+
             } else if (c == '/') {
-                square = Square(square.sq() - 16);
-            } else if (std::isdigit(c)) {
-                square = Square(square.sq() + (c - '0'));
+                square = Square(square - 16);
+            } else if (c >= '1' && c <= '8') {
+                square = Square(square + (c - '0'));
             }
         }
 
         if (enPassant != "-") {
-            m_enPassantSq = (enPassant[0] - 'a') + ((enPassant[1] - '1') * 8);
+            m_enPassantSq = Square(enPassant);
         } else {
-            m_enPassantSq = Square::NO_SQ;
+            m_enPassantSq = Square();
         }
 
-        m_castlingRights.clear();
-
-        for (char c : castling) {
-            if (c == '-') {
-                break;
-            }
-
-            if (c == 'K' || c == 'k') {
-                m_castlingRights.setCastlingRights(static_cast<Color>(c == 'K'), CastlingSide::KING_SIDE);
-            } else if (c == 'Q' || c == 'q') {
-                m_castlingRights.setCastlingRights(static_cast<Color>(c == 'Q'), CastlingSide::QUEEN_SIDE);
-            }
-        }
+        m_castlingRights.loadFromString(castling);
 
         m_occupancy = all();
     }
 
     inline std::ostream& operator<<(std::ostream& os, const Board& board) {
-        for (Rank r = Rank::RANK_8; r >= Rank::RANK_1; r--) {
-            for (File f = File::FILE_A; f <= File::FILE_H; f++) {
-                os << pieceToChar(board.at(Square(f, r))) << ' ';
-            }
-
-            os << '\n';
-        }
-
+        os << board.pieces().toString() << '\n';
         os << "\nSide to move: " << (board.sideToMove() == Color::WHITE ? "White" : "Black") << '\n';
 
-        os << "\nTurn: " << (board.sideToMove() == Color::WHITE ? "White" : "Black") << '\n';
-
-        if (board.enPassant().sq() != Square::NO_SQ) {
+        if (board.enPassant().isValid()) {
             os << "En Passant: " << board.enPassant() << '\n';
         } else {
             os << "En Passant: None\n";
         }
 
-        auto castlingRights = board.castlingRights();
-
         os << "Castling Rights: ";
-        if (castlingRights.hasCastlingRights(Color::WHITE, CastlingSide::KING_SIDE)) {
-            // White can castle kingside
-            os << 'K';
-        }
-        if (castlingRights.hasCastlingRights(Color::WHITE, CastlingSide::QUEEN_SIDE)) {
-            // White can castle queenside
-            os << 'Q';
-        }
-
-        if (castlingRights.hasCastlingRights(Color::BLACK, CastlingSide::KING_SIDE)) {
-            // Black can castle kingside
-            os << 'k';
-        }
-
-        if (castlingRights.hasCastlingRights(Color::BLACK, CastlingSide::QUEEN_SIDE)) {
-            // Black can castle queenside
-            os << 'q';
-        }
-
+        os << board.castlingRights().toString();
         os << '\n';
 
-        os << "Half Move Clock: " << int(board.halfMoveClock()) << '\n';
+        os << "Half Move Clock: " << board.halfMoveClock() << '\n';
         os << "Plies: " << board.ply() << '\n';
-        // os << "Hash: " << std::hex << b.hash() << std::dec << '\n';
-
         return os;
     }
 

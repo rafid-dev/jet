@@ -26,6 +26,29 @@ namespace chess {
             std::memset(&m_rights, 0, sizeof(m_rights));
         }
 
+        constexpr void loadFromString(std::string_view str) {
+            clear();
+
+            for (auto c : str) {
+                switch (c) {
+                    case 'K':
+                        setRights(Color::WHITE, CastlingSide::KING_SIDE, 1);
+                        break;
+                    case 'Q':
+                        setRights(Color::WHITE, CastlingSide::QUEEN_SIDE, 1);
+                        break;
+                    case 'k':
+                        setRights(Color::BLACK, CastlingSide::KING_SIDE, 1);
+                        break;
+                    case 'q':
+                        setRights(Color::BLACK, CastlingSide::QUEEN_SIDE, 1);
+                        break;
+                    case '-':
+                        return;
+                }
+            }
+        }
+
         bool hasCastlingRights(Color c, CastlingSide side) const {
             return getRights(c, side);
         }
@@ -103,6 +126,28 @@ namespace chess {
             }
         }
 
+        inline std::string toString() const {
+            std::string str;
+
+            if (getRights(Color::WHITE, CastlingSide::KING_SIDE)) {
+                str += 'K';
+            }
+
+            if (getRights(Color::WHITE, CastlingSide::QUEEN_SIDE)) {
+                str += 'Q';
+            }
+
+            if (getRights(Color::BLACK, CastlingSide::KING_SIDE)) {
+                str += 'k';
+            }
+
+            if (getRights(Color::BLACK, CastlingSide::QUEEN_SIDE)) {
+                str += 'q';
+            }
+
+            return str;
+        }
+
     private:
         using RightsType = CastlingRightsBase<bool>;
 
@@ -140,4 +185,5 @@ namespace chess {
             }
         }
     };
+
 } // namespace chess
