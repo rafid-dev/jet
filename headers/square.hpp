@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.hpp"
+#include <array>
 #include <iostream>
 
 namespace chess {
@@ -81,6 +82,24 @@ namespace chess {
         Rank old = r;
         --r;
         return old;
+    }
+
+    // Addition overloads
+    constexpr File operator+(File f, int i) {
+        return static_cast<File>(static_cast<int>(f) + i);
+    }
+
+    constexpr Rank operator+(Rank r, int i) {
+        return static_cast<Rank>(static_cast<int>(r) + i);
+    }
+
+    // Substraction overloads
+    constexpr File operator-(File f, int i) {
+        return static_cast<File>(static_cast<int>(f) - i);
+    }
+
+    constexpr Rank operator-(Rank r, int i) {
+        return static_cast<Rank>(static_cast<int>(r) - i);
     }
 
     template <Color c>
@@ -239,6 +258,31 @@ namespace chess {
 
         constexpr inline operator int() const {
             return sq();
+        }
+    };
+
+    // Used to iterate through all squares
+    class SquareIterator {
+    public:
+        static constexpr std::array<Square, NUM_SQUARES> SQUARES = {
+            Square::A1, Square::B1, Square::C1, Square::D1, Square::E1, Square::F1, Square::G1, Square::H1, Square::A2, Square::B2, Square::C2, Square::D2, Square::E2, Square::F2, Square::G2, Square::H2,
+            Square::A3, Square::B3, Square::C3, Square::D3, Square::E3, Square::F3, Square::G3, Square::H3, Square::A4, Square::B4, Square::C4, Square::D4, Square::E4, Square::F4, Square::G4, Square::H4,
+            Square::A5, Square::B5, Square::C5, Square::D5, Square::E5, Square::F5, Square::G5, Square::H5, Square::A6, Square::B6, Square::C6, Square::D6, Square::E6, Square::F6, Square::G6, Square::H6,
+            Square::A7, Square::B7, Square::C7, Square::D7, Square::E7, Square::F7, Square::G7, Square::H7, Square::A8, Square::B8, Square::C8, Square::D8, Square::E8, Square::F8, Square::G8, Square::H8,
+        };
+
+        SquareIterator() = default;
+
+        static constexpr auto begin() {
+            return std::begin(SQUARES);
+        }
+
+        static constexpr auto end() {
+            return std::end(SQUARES);
+        }
+
+        static constexpr auto size() {
+            return std::size(SQUARES);
         }
     };
 

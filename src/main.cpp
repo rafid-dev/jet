@@ -1,13 +1,11 @@
-#include "../headers/board.hpp"
+#include "../headers/attacks.hpp"
 
 #include <iostream>
 
 using namespace chess;
 
 int main() {
-    chess::Board board;
-
-    
+    Attacks::init();
 
     return 0;
 }

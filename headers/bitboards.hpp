@@ -8,6 +8,34 @@
 #include <iostream>
 
 namespace chess {
+
+    // Bit manipulation functions
+    namespace bitops {
+        constexpr inline int popcount(U64 b) {
+#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
+            return (uint8_t) _mm_popcnt_u64(b);
+#else
+            return __builtin_popcountll(b);
+#endif
+        }
+
+        static constexpr inline Square lsb(U64 b) {
+#if defined(__GNUC__) || defined(__clang__)
+            return Square(__builtin_ctzll(b));
+#elif defined(_MSC_VER)
+            unsigned long idx;
+            _BitScanForward64(&idx, b);
+            return static_cast<Square>(int(idx));
+#endif
+        }
+
+        static constexpr inline Square poplsb(U64& b) {
+            Square sq = lsb(b);
+            b &= b - 1;
+            return sq;
+        }
+    } // namespace bitops
+
     class Bitboard {
     public:
         constexpr Bitboard() : m_squares(0){};
@@ -58,14 +86,14 @@ namespace chess {
         }
 
         constexpr inline Square lsb() const {
-            return _lsb_internal(m_squares);
+            return bitops::lsb(m_squares);
         }
         constexpr inline int popcount() const {
-            return _popcount_internal(m_squares);
+            return bitops::popcount(m_squares);
         }
 
         constexpr inline Square poplsb() {
-            return _poplsb_internal(m_squares);
+            return bitops::poplsb(m_squares);
         }
 
         template <Direction d>
@@ -183,30 +211,6 @@ namespace chess {
                 return 0;
             }
         }
-
-        static constexpr inline Square _lsb_internal(U64 b) {
-#if defined(__GNUC__) || defined(__clang__)
-            return Square(__builtin_ctzll(b));
-#elif defined(_MSC_VER)
-            unsigned long idx;
-            _BitScanForward64(&idx, b);
-            return static_cast<Square>(int(idx));
-#endif
-        }
-
-        static constexpr inline Square _poplsb_internal(U64& b) {
-            Square sq = _lsb_internal(b);
-            b &= b - 1;
-            return sq;
-        }
-
-        static constexpr inline int _popcount_internal(U64 b) {
-#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
-            return (uint8_t) _mm_popcnt_u64(b);
-#else
-            return __builtin_popcountll(b);
-#endif
-        }
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Bitboard& bb) {
@@ -224,8 +228,13 @@ namespace chess {
             // Reverse the row for correct bit order
             std::reverse(row.begin(), row.end());
 
-            // Output the reversed row
-            os << row << '\n';
+            // Output the reversed row with spaces between each number
+            for (char bit : row) {
+                os << bit << ' ';
+            }
+
+            // Add a newline after each row
+            os << '\n';
         }
 
         // Add a newline for better separation
@@ -233,4 +242,5 @@ namespace chess {
 
         return os;
     }
+
 } // namespace chess
