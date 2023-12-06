@@ -1,6 +1,7 @@
 #pragma once
 
 #include "square.hpp"
+
 #include <algorithm>
 #include <array>
 #include <bitset>

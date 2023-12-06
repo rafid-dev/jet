@@ -5,6 +5,36 @@
 
 namespace chess {
 
+    // clang-format off
+    enum class Direction : int8_t { 
+        NORTH = 8, 
+        WEST = -1, 
+        SOUTH = -8, 
+        EAST = 1,
+        NORTH_EAST = 9, 
+        NORTH_WEST = 7, 
+        SOUTH_WEST = -9, 
+        SOUTH_EAST = -7 
+    };
+
+    constexpr Direction relativeDirection(Color c, Direction d) {
+        if (c == Color::WHITE) {
+            return d;
+        } else {
+            return static_cast<Direction>(-static_cast<int8_t>(d));
+        }
+    }
+
+    template <Color c, Direction d>
+    constexpr Direction relativeDirection() {
+        if constexpr (c == Color::WHITE) {
+            return d;
+        } else {
+            return static_cast<Direction>(-static_cast<int8_t>(d));
+        }
+    }
+    // clang-format on
+
     enum class File { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H, NO_FILE };
 
     enum class Rank { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, NO_RANK };
@@ -145,8 +175,7 @@ namespace chess {
         constexpr Square(File file, Rank rank) : m_sq(static_cast<int>(rank) * 8 + static_cast<int>(file)) {
         }
 
-        constexpr Square(std::string_view str) {
-            m_sq = (str[0] - 'a') + (str[1] - '1') * 8;
+        constexpr Square(std::string_view str) : m_sq((str[0] - 'a') + (str[1] - '1') * 8) {
         }
 
         constexpr inline int sq() const {
