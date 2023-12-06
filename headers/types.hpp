@@ -5,8 +5,6 @@
 
 namespace chess {
 
-    static constexpr std::string_view START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
     using U64 = uint64_t;
 
     // clang-format off

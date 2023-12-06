@@ -6,12 +6,14 @@
 #include "misc.hpp"
 #include "square.hpp"
 #include "types.hpp"
+
+#include "fens.hpp"
 #include <charconv>
 
 namespace chess {
     class Board {
     public:
-        constexpr Board(std::string_view fen = START_FEN);
+        constexpr Board(std::string_view fen = FENS::STARTPOS);
 
         constexpr inline auto ply() const {
             return m_ply;
