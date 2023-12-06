@@ -5,9 +5,9 @@
 using namespace chess;
 
 int main() {
-    Board board{};
+    chess::Board board;
 
-    std::cout << board << '\n';
+    std::cout << board << std::endl;
 
     return 0;
 }

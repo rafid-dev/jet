@@ -127,7 +127,7 @@ namespace chess {
             m_pieces.move(piece, from, to);
         }
 
-        constexpr void setFen(std::string_view fen);
+        void setFen(std::string_view fen);
 
     private:
         // Bitboards for each color , corressponding to each piece type
@@ -159,7 +159,7 @@ namespace chess {
         setFen(fen);
     }
 
-    constexpr inline void Board::setFen(std::string_view fen) {
+    inline void Board::setFen(std::string_view fen) {
         while (fen[0] == ' ') {
             fen.remove_prefix(1);
         } // remove leading spaces
@@ -208,9 +208,9 @@ namespace chess {
         }
 
         if (enPassant != "-") {
-            m_enPassantSq = Square((enPassant[0] - 'a') + ((enPassant[1] - '1') * 8));
+            m_enPassantSq = (enPassant[0] - 'a') + ((enPassant[1] - '1') * 8);
         } else {
-            m_enPassantSq = Square(Square::NO_SQ);
+            m_enPassantSq = Square::NO_SQ;
         }
 
         m_castlingRights.clear();
@@ -243,7 +243,7 @@ namespace chess {
 
         os << "\nTurn: " << (board.sideToMove() == Color::WHITE ? "White" : "Black") << '\n';
 
-        if (board.enPassant().isValid()) {
+        if (board.enPassant().sq() != Square::NO_SQ) {
             os << "En Passant: " << board.enPassant() << '\n';
         } else {
             os << "En Passant: None\n";

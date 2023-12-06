@@ -13,7 +13,7 @@ namespace chess {
         constexpr Bitboard(U64 squares) : m_squares(squares) {
         }
 
-        constexpr Bitboard(Square square) : m_squares(1ULL << square) {
+        constexpr Bitboard(Square square) : m_squares(1ULL << square.sq()) {
         }
 
         constexpr Bitboard(File f) : m_squares(MASK_FILE[static_cast<int>(f)]) {

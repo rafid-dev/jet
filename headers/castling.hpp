@@ -4,6 +4,7 @@
 #include "types.hpp"
 
 #include <array>
+#include <cstring>
 
 namespace chess {
     enum class CastlingSide : uint8_t { KING_SIDE, QUEEN_SIDE };
@@ -107,12 +108,36 @@ namespace chess {
 
         RightsType m_rights;
 
-        bool getRights(Color c, CastlingSide side) const {
-            return *(reinterpret_cast<const bool*>(&m_rights) + static_cast<uint8_t>(c) * 2 + static_cast<uint8_t>(side));
+        constexpr bool getRights(Color c, CastlingSide side) const {
+            if (c == Color::WHITE) {
+                if (side == CastlingSide::KING_SIDE) {
+                    return m_rights.whiteKingSide;
+                } else {
+                    return m_rights.whiteQueenSide;
+                }
+            } else {
+                if (side == CastlingSide::KING_SIDE) {
+                    return m_rights.blackKingSide;
+                } else {
+                    return m_rights.blackQueenSide;
+                }
+            }
         }
 
-        void setRights(Color c, CastlingSide side, bool value) {
-            *(reinterpret_cast<bool*>(&m_rights) + static_cast<uint8_t>(c) * 2 + static_cast<uint8_t>(side)) = value;
+        constexpr void setRights(Color c, CastlingSide side, bool value) {
+            if (c == Color::WHITE) {
+                if (side == CastlingSide::KING_SIDE) {
+                    m_rights.whiteKingSide = value;
+                } else {
+                    m_rights.whiteQueenSide = value;
+                }
+            } else {
+                if (side == CastlingSide::KING_SIDE) {
+                    m_rights.blackKingSide = value;
+                } else {
+                    m_rights.blackQueenSide = value;
+                }
+            }
         }
     };
 } // namespace chess

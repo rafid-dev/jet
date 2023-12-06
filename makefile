@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := clang++
-CXXFLAGS := -std=c++20 -O3 -flto -fuse-ld=lld -march=native -fexceptions -fopenmp -mavx2 -Wall -Wextra -DNDEBUG
+CXXFLAGS := -std=c++20 -O3 -flto -fuse-ld=lld -march=native -fexceptions -fopenmp -mavx2 -Wall -Wextra -DNDEBUG -fsanitize=address -fsanitize=undefined
 LDFLAGS :=
 
 # Debug compiler flags

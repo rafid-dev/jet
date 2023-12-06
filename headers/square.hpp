@@ -5,7 +5,7 @@
 
 namespace chess {
 
-    enum class File { NO_FILE = -1, FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H };
+    enum class File { FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H, NO_FILE };
 
     enum class Rank { RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, NO_RANK };
 
@@ -104,6 +104,20 @@ namespace chess {
     private:
         uint8_t m_sq;
 
+        // clang-format off
+        static constexpr inline std::string_view squareToString[65] = {
+            "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+            "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+            "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+            "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+            "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+            "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+            "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+            "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+            "no_sq", 
+        };
+        // clang-format on 
+
     public:
         // clang-format off
         enum : uint8_t {
@@ -126,12 +140,6 @@ namespace chess {
         }
 
         constexpr Square(int file, int rank) : m_sq(rank * 8 + file) {
-        }
-
-        constexpr Square(int sq) : m_sq(sq) {
-        }
-
-        constexpr Square(uint64_t sq) : m_sq(static_cast<uint8_t>(sq)) {
         }
 
         constexpr Square(File file, Rank rank) : m_sq(static_cast<int>(rank) * 8 + static_cast<int>(file)) {
@@ -185,143 +193,25 @@ namespace chess {
             return !isLight();
         }
 
-        constexpr int operator<<(int i) const {
-            return m_sq << i;
+        constexpr inline std::string_view toString() const {
+            return squareToString[m_sq];
         }
 
-        constexpr int operator>>(int i) const {
-            return m_sq >> i;
+        constexpr inline bool operator==(const Square& rhs) const {
+            return m_sq == rhs.m_sq;
         }
 
-        // overloads
-        constexpr operator int() const {
-            return m_sq;
+        constexpr inline bool operator!=(const Square& rhs) const {
+            return m_sq != rhs.m_sq;
         }
 
-        constexpr Square operator+(int i) const {
-            return Square(m_sq + i);
-        }
-
-        constexpr Square operator-(int i) const {
-            return Square(m_sq - i);
-        }
-
-        constexpr Square& operator+=(int i) {
-            m_sq += i;
-            return *this;
-        }
-
-        constexpr Square& operator-=(int i) {
-            m_sq -= i;
-            return *this;
-        }
-
-        constexpr Square& operator++() {
-            ++m_sq;
-            return *this;
-        }
-
-        constexpr Square& operator--() {
-            --m_sq;
-            return *this;
-        }
-
-        constexpr Square operator++(int) {
-            Square old = *this;
-            ++m_sq;
-            return old;
-        }
-
-        constexpr Square operator--(int) {
-            Square old = *this;
-            --m_sq;
-            return old;
-        }
-
-        constexpr bool operator==(const Square& other) const {
-            return m_sq == other.m_sq;
-        }
-
-        constexpr bool operator!=(const Square& other) const {
-            return m_sq != other.m_sq;
-        }
-
-        constexpr bool operator<(const Square& other) const {
-            return m_sq < other.m_sq;
-        }
-
-        constexpr bool operator>(const Square& other) const {
-            return m_sq > other.m_sq;
-        }
-
-        constexpr bool operator<=(const Square& other) const {
-            return m_sq <= other.m_sq;
-        }
-
-        constexpr bool operator>=(const Square& other) const {
-            return m_sq >= other.m_sq;
-        }
-
-        constexpr bool operator<(const int& other) const {
-            return m_sq < other;
-        }
-
-        constexpr bool operator>(const int& other) const {
-            return m_sq > other;
-        }
-
-        constexpr bool operator<=(const int& other) const {
-            return m_sq <= other;
-        }
-
-        constexpr bool operator>=(const int& other) const {
-            return m_sq >= other;
-        }
-
-        constexpr bool operator==(const int& other) const {
-            return m_sq == other;
-        }
-
-        constexpr bool operator!=(const int& other) const {
-            return m_sq != other;
-        }
-
-        // operator overloads for use with Direction
-        constexpr Square operator+(Direction dir) const {
-            return Square(m_sq + static_cast<int>(dir));
-        }
-
-        constexpr Square operator-(Direction dir) const {
-            return Square(m_sq - static_cast<int>(dir));
-        }
-
-        constexpr Square& operator+=(Direction dir) {
-            m_sq += static_cast<int>(dir);
-            return *this;
-        }
-
-        constexpr Square& operator-=(Direction dir) {
-            m_sq -= static_cast<int>(dir);
-            return *this;
+        constexpr inline operator int() const {
+            return sq();
         }
     };
-
-    // clang-format off
-    constexpr std::string_view squareToString[65] = {
-        "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-        "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-        "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-        "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-        "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-        "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-        "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-        "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-        "no_sq", 
-    };
-    // clang-format on 
 
     inline std::ostream& operator<<(std::ostream& os, const Square& sq) {
-        os << squareToString[sq];
+        os << sq.toString();
         return os;
     }
 
@@ -332,12 +222,12 @@ namespace chess {
     }
 
     constexpr Square relativeSquare(Square sq, Color c) {
-        return static_cast<Square>(static_cast<int>(sq) ^ (static_cast<int>(c) * 56));
+        return static_cast<Square>(static_cast<int>(sq.sq()) ^ (static_cast<int>(c) * 56));
     }
 
     template <Color c>
     constexpr Square relativeSquare(Square sq) {
-        return static_cast<Square>(static_cast<int>(sq) ^ (static_cast<int>(c) * 56));
+        return static_cast<Square>(static_cast<int>(sq.sq()) ^ (static_cast<int>(c) * 56));
     }
 
     constexpr bool ourBackRank(Square sq, Color c) {
