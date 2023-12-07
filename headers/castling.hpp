@@ -32,16 +32,16 @@ namespace chess {
             for (auto c : str) {
                 switch (c) {
                     case 'K':
-                        setRights(Color::WHITE, CastlingSide::KING_SIDE, 1);
+                        _setRights(Color::WHITE, CastlingSide::KING_SIDE, 1);
                         break;
                     case 'Q':
-                        setRights(Color::WHITE, CastlingSide::QUEEN_SIDE, 1);
+                        _setRights(Color::WHITE, CastlingSide::QUEEN_SIDE, 1);
                         break;
                     case 'k':
-                        setRights(Color::BLACK, CastlingSide::KING_SIDE, 1);
+                        _setRights(Color::BLACK, CastlingSide::KING_SIDE, 1);
                         break;
                     case 'q':
-                        setRights(Color::BLACK, CastlingSide::QUEEN_SIDE, 1);
+                        _setRights(Color::BLACK, CastlingSide::QUEEN_SIDE, 1);
                         break;
                     case '-':
                         return;
@@ -50,102 +50,61 @@ namespace chess {
         }
 
         bool hasCastlingRights(Color c, CastlingSide side) const {
-            return getRights(c, side);
+            return _getRights(c, side);
         }
 
         bool hasCastlingRights(Color c) const {
-            return getRights(c, CastlingSide::KING_SIDE) || getRights(c, CastlingSide::QUEEN_SIDE);
+            return _getRights(c, CastlingSide::KING_SIDE) || _getRights(c, CastlingSide::QUEEN_SIDE);
         }
 
-        int removeCastlingRights(Color c, CastlingSide side) {
-            setRights(c, side, 0);
-            return static_cast<uint8_t>(c) * 2 + static_cast<uint8_t>(side);
-        }
-
-        void removeCastlingRights(Color c) {
-            setRights(c, CastlingSide::KING_SIDE, 0);
-            setRights(c, CastlingSide::QUEEN_SIDE, 0);
-        }
-
-        void setCastlingRights(Color c, CastlingSide side) {
-            setRights(c, side, 1);
+        constexpr void setCastlingRights(Color c, CastlingSide side, bool value) {
+            _setRights(c, side, value);
         }
 
         int index() const {
-            return m_rights.whiteKingSide | (m_rights.whiteQueenSide << 1) | (m_rights.blackKingSide << 2) | (m_rights.blackQueenSide << 3);
+            return m_rights.whiteKingSide | (m_rights.whiteQueenSide << 1) | (m_rights.blackKingSide << 2) |
+                   (m_rights.blackQueenSide << 3);
         }
 
         static constexpr inline Square kingTo(Color c, CastlingSide side) {
-            if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare(Square::G1, c);
-            } else {
-                return relativeSquare(Square::C1, c);
-            }
+            const bool kingSide = side == CastlingSide::KING_SIDE;
+            return Square::relativeSquare(Square::C1 + 4 * kingSide, c);
         }
 
         static constexpr inline Square rookTo(Color c, CastlingSide side) {
-            if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare(Square::F1, c);
-            } else {
-                return relativeSquare(Square::D1, c);
-            }
+            const bool kingSide = side == CastlingSide::KING_SIDE;
+            return Square::relativeSquare(Square::D1 + 2 * kingSide, c);
         }
 
         static constexpr inline Square rookFrom(Color c, CastlingSide side) {
-            if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare(Square::H1, c);
-            } else {
-                return relativeSquare(Square::A1, c);
-            }
-        }
-
-        template <Color c>
-        static constexpr inline Square kingTo(CastlingSide side) {
-            if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare<c>(Square::G1);
-            } else {
-                return relativeSquare<c>(Square::C1);
-            }
-        }
-
-        template <Color c>
-        static constexpr inline Square rookTo(CastlingSide side) {
-            if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare<c>(Square::F1);
-            } else {
-                return relativeSquare<c>(Square::D1);
-            }
-        }
-
-        template <Color c>
-        static constexpr inline Square rookFrom(CastlingSide side) {
-            if (side == CastlingSide::KING_SIDE) {
-                return relativeSquare<c>(Square::H1);
-            } else {
-                return relativeSquare<c>(Square::A1);
-            }
+            const bool kingSide = side == CastlingSide::KING_SIDE;
+            return Square::relativeSquare(Square::H1 * kingSide, c);
         }
 
         inline std::string toString() const {
             std::string str;
 
-            if (getRights(Color::WHITE, CastlingSide::KING_SIDE)) {
+            if (_getRights(Color::WHITE, CastlingSide::KING_SIDE)) {
                 str += 'K';
             }
 
-            if (getRights(Color::WHITE, CastlingSide::QUEEN_SIDE)) {
+            if (_getRights(Color::WHITE, CastlingSide::QUEEN_SIDE)) {
                 str += 'Q';
             }
 
-            if (getRights(Color::BLACK, CastlingSide::KING_SIDE)) {
+            if (_getRights(Color::BLACK, CastlingSide::KING_SIDE)) {
                 str += 'k';
             }
 
-            if (getRights(Color::BLACK, CastlingSide::QUEEN_SIDE)) {
+            if (_getRights(Color::BLACK, CastlingSide::QUEEN_SIDE)) {
                 str += 'q';
             }
 
             return str;
+        }
+
+        static constexpr inline CastlingSide getCastlingSide(Square sq, Square kingSq) {
+            return static_cast<CastlingSide>((sq > kingSq) ^ 1);
         }
 
     private:
@@ -153,7 +112,7 @@ namespace chess {
 
         RightsType m_rights;
 
-        constexpr bool getRights(Color c, CastlingSide side) const {
+        constexpr bool _getRights(Color c, CastlingSide side) const {
             if (c == Color::WHITE) {
                 if (side == CastlingSide::KING_SIDE) {
                     return m_rights.whiteKingSide;
@@ -169,7 +128,7 @@ namespace chess {
             }
         }
 
-        constexpr void setRights(Color c, CastlingSide side, bool value) {
+        constexpr void _setRights(Color c, CastlingSide side, bool value) {
             if (c == Color::WHITE) {
                 if (side == CastlingSide::KING_SIDE) {
                     m_rights.whiteKingSide = value;

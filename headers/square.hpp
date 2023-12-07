@@ -102,42 +102,6 @@ namespace chess {
         return static_cast<Rank>(static_cast<int>(r) - i);
     }
 
-    template <Color c>
-    constexpr Rank relativeRank(Rank r) {
-        if constexpr (c == Color::WHITE) {
-            return r;
-        } else {
-            return static_cast<Rank>(static_cast<int>(r) ^ 7);
-        }
-    }
-
-    template <Color c>
-    constexpr File relativeFile(File f) {
-        if constexpr (c == Color::WHITE) {
-            return f;
-        } else {
-            return static_cast<File>(static_cast<int>(f) ^ 7);
-        }
-    }
-
-    template <Color c, Rank r>
-    constexpr Rank relativeRank() {
-        if constexpr (c == Color::WHITE) {
-            return r;
-        } else {
-            return static_cast<Rank>(static_cast<int>(r) ^ 7);
-        }
-    }
-
-    template <Color c, File f>
-    constexpr File relativeFile() {
-        if constexpr (c == Color::WHITE) {
-            return f;
-        } else {
-            return static_cast<File>(static_cast<int>(f) ^ 7);
-        }
-    }
-
     // clang-format off
     static constexpr U64 MASK_RANK[8] = {
         0xff, 0xff00, 0xff0000, 0xff000000, 0xff00000000, 0xff0000000000, 0xff000000000000, 0xff00000000000000
@@ -259,16 +223,83 @@ namespace chess {
         constexpr inline operator int() const {
             return sq();
         }
+
+        template <Color c>
+        static constexpr inline Rank relativeRank(Rank r) {
+            if constexpr (c == Color::WHITE) {
+                return r;
+            } else {
+                return static_cast<Rank>(static_cast<int>(r) ^ 7);
+            }
+        }
+
+        template <Color c>
+        static constexpr inline File relativeFile(File f) {
+            if constexpr (c == Color::WHITE) {
+                return f;
+            } else {
+                return static_cast<File>(static_cast<int>(f) ^ 7);
+            }
+        }
+
+        template <Color c, Rank r>
+        static constexpr inline Rank relativeRank() {
+            if constexpr (c == Color::WHITE) {
+                return r;
+            } else {
+                return static_cast<Rank>(static_cast<int>(r) ^ 7);
+            }
+        }
+
+        static constexpr inline Rank relativeRank(Color c, Rank r) {
+            return static_cast<Rank>(static_cast<int>(r) ^ (static_cast<int>(c) * 7));
+        }
+
+        template <Color c, File f>
+        static constexpr inline File relativeFile() {
+            if constexpr (c == Color::WHITE) {
+                return f;
+            } else {
+                return static_cast<File>(static_cast<int>(f) ^ 7);
+            }
+        }
+
+        static constexpr inline int squareDistance(Square x, Square y) {
+            int dx = std::abs(static_cast<int>(x.file()) - static_cast<int>(y.file()));
+            int dy = std::abs(static_cast<int>(x.rank()) - static_cast<int>(y.rank()));
+            return std::max(dx, dy);
+        }
+
+        static constexpr inline Square relativeSquare(Square sq, Color c) {
+            return static_cast<Square>(int(sq) ^ (static_cast<int>(c) * 56));
+        }
+
+        template <Color c>
+        static constexpr inline Square relativeSquare(Square sq) {
+            return static_cast<Square>(int(sq) ^ (static_cast<int>(c) * 56));
+        }
+
+        static constexpr inline bool isOurBackRank(Square sq, Color c) {
+            return sq.rank() == static_cast<Rank>(static_cast<int>(c) * 7);
+        }
+
+        static constexpr inline bool isTheirBackRank(Square sq, Color c) {
+            return sq.rank() == relativeRank(~c, Rank::RANK_1);
+        }
     };
 
     // Used to iterate through all squares
     class SquareIterator {
     public:
         static constexpr std::array<Square, NUM_SQUARES> SQUARES = {
-            Square::A1, Square::B1, Square::C1, Square::D1, Square::E1, Square::F1, Square::G1, Square::H1, Square::A2, Square::B2, Square::C2, Square::D2, Square::E2, Square::F2, Square::G2, Square::H2,
-            Square::A3, Square::B3, Square::C3, Square::D3, Square::E3, Square::F3, Square::G3, Square::H3, Square::A4, Square::B4, Square::C4, Square::D4, Square::E4, Square::F4, Square::G4, Square::H4,
-            Square::A5, Square::B5, Square::C5, Square::D5, Square::E5, Square::F5, Square::G5, Square::H5, Square::A6, Square::B6, Square::C6, Square::D6, Square::E6, Square::F6, Square::G6, Square::H6,
-            Square::A7, Square::B7, Square::C7, Square::D7, Square::E7, Square::F7, Square::G7, Square::H7, Square::A8, Square::B8, Square::C8, Square::D8, Square::E8, Square::F8, Square::G8, Square::H8,
+            Square::A1, Square::B1, Square::C1, Square::D1, Square::E1, Square::F1, Square::G1, Square::H1,
+            Square::A2, Square::B2, Square::C2, Square::D2, Square::E2, Square::F2, Square::G2, Square::H2,
+            Square::A3, Square::B3, Square::C3, Square::D3, Square::E3, Square::F3, Square::G3, Square::H3,
+            Square::A4, Square::B4, Square::C4, Square::D4, Square::E4, Square::F4, Square::G4, Square::H4,
+            Square::A5, Square::B5, Square::C5, Square::D5, Square::E5, Square::F5, Square::G5, Square::H5,
+            Square::A6, Square::B6, Square::C6, Square::D6, Square::E6, Square::F6, Square::G6, Square::H6,
+            Square::A7, Square::B7, Square::C7, Square::D7, Square::E7, Square::F7, Square::G7, Square::H7,
+            Square::A8, Square::B8, Square::C8, Square::D8, Square::E8, Square::F8, Square::G8, Square::H8,
         };
 
         SquareIterator() = default;
@@ -291,22 +322,4 @@ namespace chess {
         return os;
     }
 
-    inline int squareDistance(Square x, Square y) {
-        int dx = std::abs(static_cast<int>(x.file()) - static_cast<int>(y.file()));
-        int dy = std::abs(static_cast<int>(x.rank()) - static_cast<int>(y.rank()));
-        return std::max(dx, dy);
-    }
-
-    constexpr Square relativeSquare(Square sq, Color c) {
-        return static_cast<Square>(static_cast<int>(sq.sq()) ^ (static_cast<int>(c) * 56));
-    }
-
-    template <Color c>
-    constexpr Square relativeSquare(Square sq) {
-        return static_cast<Square>(static_cast<int>(sq.sq()) ^ (static_cast<int>(c) * 56));
-    }
-
-    constexpr bool ourBackRank(Square sq, Color c) {
-        return sq.rank() == static_cast<Rank>(static_cast<int>(c) * 7);
-    }
 } // namespace chess

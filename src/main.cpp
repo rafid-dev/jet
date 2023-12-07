@@ -19,7 +19,11 @@ int main() {
     std::string line;
     std::string token;
 
+    std::vector<Move> moves;
+
     while (std::getline(std::cin, line)) {
+        token.clear();
+
         std::istringstream iss(line);
 
         iss >> token;
@@ -48,9 +52,24 @@ int main() {
             }
 
             while (iss >> token) {
-                Move move = Move::fromUCI(token);
+                Move move = board.uciToMove(token);
                 board.makeMove(move);
             }
+            continue;
+        } else if (token == "makemove" || token == "make") {
+            while (iss >> token) {
+                Move move = board.uciToMove(token);
+                board.makeMove(move);
+                moves.push_back(move);
+            }
+
+            std::cout << board << std::endl;
+        } else if (token == "unmakemove" || token == "unmake") {
+            board.unmakeMove(moves.back());
+            moves.pop_back();
+
+            std::cout << board << std::endl;
+
         } else if (token == "quit" || token == "exit") {
             break;
         } else if (token == "print") {

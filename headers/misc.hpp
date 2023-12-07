@@ -6,7 +6,7 @@
 
 namespace misc {
 
-    std::vector<std::string_view> splitString(std::string_view str, char delimiter) {
+    static inline std::vector<std::string_view> splitString(std::string_view str, char delimiter) {
         std::vector<std::string_view> result;
         size_t                        start = 0;
         size_t                        end   = str.find(delimiter);
@@ -25,7 +25,9 @@ namespace misc {
     // Returns the current time in Duration
     template <typename Duration = std::chrono::milliseconds>
     inline double tick() {
-        return (double) std::chrono::duration_cast<Duration>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        return (double) std::chrono::duration_cast<Duration>(
+                   std::chrono::steady_clock::now().time_since_epoch())
+            .count();
     }
 
 } // namespace misc

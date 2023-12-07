@@ -34,7 +34,8 @@ namespace chess {
         }
 
         static constexpr uint8_t _encodePieceType(PieceType pt) {
-            assert(static_cast<uint8_t>(pt) >= static_cast<uint8_t>(PieceType::KNIGHT) && static_cast<uint8_t>(pt) <= static_cast<uint8_t>(PieceType::QUEEN));
+            assert(static_cast<uint8_t>(pt) >= static_cast<uint8_t>(PieceType::KNIGHT) &&
+                   static_cast<uint8_t>(pt) <= static_cast<uint8_t>(PieceType::QUEEN));
             return static_cast<uint8_t>(pt) - 1;
         }
 
@@ -60,21 +61,6 @@ namespace chess {
 
         static inline constexpr Move makePromotion(Square from, Square to, PieceType promoted) {
             return _make<MoveType::PROMOTION>(from, to, promoted);
-        }
-
-        static inline constexpr Move fromUCI(std::string_view uci) {
-            assert(uci.size() == 4 || uci.size() == 5);
-
-            Square from = Square(uci.substr(0, 2));
-            Square to   = Square(uci.substr(2, 2));
-
-            if (uci.size() == 4) {
-                return makeNormal(from, to);
-            }
-
-            PieceType promoted = charToPieceType(uci[4]);
-
-            return makePromotion(from, to, promoted);
         }
 
         constexpr Square from() const {
@@ -194,7 +180,8 @@ namespace chess {
         }
 
         constexpr void sort() {
-            std::sort(m_moves.begin(), m_moves.begin() + m_size, [](const Move& a, const Move& b) { return a.score() > b.score(); });
+            std::sort(m_moves.begin(), m_moves.begin() + m_size,
+                      [](const Move& a, const Move& b) { return a.score() > b.score(); });
         }
 
         using iterator       = Move*;
