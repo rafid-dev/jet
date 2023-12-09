@@ -98,11 +98,19 @@ namespace chess {
         constexpr auto score() const {
             return m_score;
         }
+
+        constexpr auto move() const {
+            return m_data;
+        }
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Move& m) {
         os << m.from();
-        os << m.to();
+        if (m.type() == MoveType::CASTLING) {
+            os << (Square(m.to() > m.from() ? File::FILE_G : File::FILE_C, m.from().rank()));
+        } else {
+            os << m.to();
+        }
 
         if (m.isPromotion()) {
             os << pieceTypeToChar(m.promoted());
@@ -122,6 +130,14 @@ namespace chess {
 
         constexpr void add(Move m) {
             assert(m_size < MAX_SIZE);
+            m_moves[m_size++] = m;
+        }
+
+        constexpr void addIf(Move m, bool condition) {
+            assert(m_size < MAX_SIZE);
+            if (!condition) {
+                return;
+            }
             m_moves[m_size++] = m;
         }
 

@@ -113,6 +113,53 @@ namespace chess {
 
     // clang-format on
 
+    // clang-format off
+        static constexpr inline Rank squareToRank[65] = {
+            Rank::RANK_1, Rank::RANK_1, Rank::RANK_1, Rank::RANK_1, Rank::RANK_1, Rank::RANK_1, Rank::RANK_1, Rank::RANK_1,
+            Rank::RANK_2, Rank::RANK_2, Rank::RANK_2, Rank::RANK_2, Rank::RANK_2, Rank::RANK_2, Rank::RANK_2, Rank::RANK_2,
+            Rank::RANK_3, Rank::RANK_3, Rank::RANK_3, Rank::RANK_3, Rank::RANK_3, Rank::RANK_3, Rank::RANK_3, Rank::RANK_3,
+            Rank::RANK_4, Rank::RANK_4, Rank::RANK_4, Rank::RANK_4, Rank::RANK_4, Rank::RANK_4, Rank::RANK_4, Rank::RANK_4,
+            Rank::RANK_5, Rank::RANK_5, Rank::RANK_5, Rank::RANK_5, Rank::RANK_5, Rank::RANK_5, Rank::RANK_5, Rank::RANK_5,
+            Rank::RANK_6, Rank::RANK_6, Rank::RANK_6, Rank::RANK_6, Rank::RANK_6, Rank::RANK_6, Rank::RANK_6, Rank::RANK_6,
+            Rank::RANK_7, Rank::RANK_7, Rank::RANK_7, Rank::RANK_7, Rank::RANK_7, Rank::RANK_7, Rank::RANK_7, Rank::RANK_7,
+            Rank::RANK_8, Rank::RANK_8, Rank::RANK_8, Rank::RANK_8, Rank::RANK_8, Rank::RANK_8, Rank::RANK_8, Rank::RANK_8, Rank::NO_RANK
+        };
+
+        static constexpr inline File squareToFile[65] = {
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H,
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H,
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H,
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H,
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H,
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H,
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H,
+            File::FILE_A, File::FILE_B, File::FILE_C, File::FILE_D, File::FILE_E, File::FILE_F, File::FILE_G, File::FILE_H, File::NO_FILE
+        };
+
+    // clang-format on
+
+    static constexpr auto generateSquareDistanceMap() {
+        std::array<std::array<int, 64>, 64> arr;
+
+        for (int x = 0; x < 64; x++) {
+            for (int y = 0; y < 64; y++) {
+                int xr = static_cast<int>(squareToRank[x]);
+                int yr = static_cast<int>(squareToRank[y]);
+                int xf = static_cast<int>(squareToFile[x]);
+                int yf = static_cast<int>(squareToFile[y]);
+
+                int dx = (xf > yf) ? (xf - yf) : (yf - xf);
+                int dy = (xr > yr) ? (xr - yr) : (yr - xr);
+
+                arr[x][y] = std::max(dx, dy);
+            }
+        }
+
+        return arr;
+    }
+
+    static constexpr auto squareDistanceMap = generateSquareDistanceMap();
+
     class Square {
     private:
         uint8_t m_sq;
@@ -169,11 +216,11 @@ namespace chess {
         }
 
         constexpr inline File file() const {
-            return static_cast<File>(m_sq & 7);
+            return squareToFile[m_sq];
         }
 
         constexpr inline Rank rank() const {
-            return static_cast<Rank>(m_sq >> 3);
+            return squareToRank[m_sq];
         }
 
         constexpr uint8_t index() const {
@@ -186,14 +233,6 @@ namespace chess {
 
         constexpr int antiDiagonal() const {
             return int(file()) + int(rank());
-        }
-
-        constexpr bool backRank(Color c) const {
-            if (c == Color::WHITE) {
-                return rank() == Rank::RANK_1;
-            } else {
-                return rank() == Rank::RANK_8;
-            }
         }
 
         constexpr bool isValid() const {
@@ -222,6 +261,14 @@ namespace chess {
 
         constexpr inline operator int() const {
             return sq();
+        }
+
+        constexpr Square operator+(Direction d) const {
+            return m_sq + static_cast<int>(d);
+        }
+
+        constexpr Square operator-(Direction d) const {
+            return m_sq - static_cast<int>(d);
         }
 
         template <Color c>
@@ -265,9 +312,7 @@ namespace chess {
         }
 
         static constexpr inline int squareDistance(Square x, Square y) {
-            int dx = std::abs(static_cast<int>(x.file()) - static_cast<int>(y.file()));
-            int dy = std::abs(static_cast<int>(x.rank()) - static_cast<int>(y.rank()));
-            return std::max(dx, dy);
+            return squareDistanceMap[x][y];
         }
 
         static constexpr inline Square relativeSquare(Square sq, Color c) {
@@ -277,6 +322,15 @@ namespace chess {
         template <Color c>
         static constexpr inline Square relativeSquare(Square sq) {
             return static_cast<Square>(int(sq) ^ (static_cast<int>(c) * 56));
+        }
+
+        template <Color c, uint8_t sq>
+        static constexpr inline Square relativeSquare() {
+            if constexpr (c == Color::WHITE) {
+                return static_cast<Square>(sq);
+            } else {
+                return static_cast<Square>(sq ^ 56);
+            }
         }
 
         static constexpr inline bool isOurBackRank(Square sq, Color c) {

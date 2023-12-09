@@ -1,5 +1,5 @@
 # Compiler and flags
-CXX := clang++
+CXX := clang++-17
 CXXFLAGS := -std=c++20 -O3 -flto -march=native -fexceptions  -Wall -Wextra 
 LDFLAGS :=
 

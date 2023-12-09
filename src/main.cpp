@@ -1,6 +1,8 @@
 #include "../headers/attacks.hpp"
 #include "../headers/board.hpp"
 #include "../headers/misc.hpp"
+#include "../headers/movegen.hpp"
+#include "../headers/perfsuite.hpp"
 
 #include <iostream>
 #include <istream>
@@ -13,6 +15,8 @@ static constexpr std::string_view AUTHOR = "Rafid Ahsan";
 
 int main() {
     Attacks::init();
+
+    std::cout << "Jet" << std::endl;
 
     Board board;
 
@@ -36,11 +40,18 @@ int main() {
             std::cout << "readyok\n";
         } else if (token == "ucinewgame") {
             board.setFen(FENS::STARTPOS);
+        } else if (token == "movegen") {
+            Movelist list;
+            MoveGen::legalmoves<MoveGenType::ALL>(board, list);
+
+            std::cout << list << std::endl;
         } else if (token == "position") {
             iss >> token;
 
             if (token == "startpos") {
                 board.setFen(FENS::STARTPOS);
+            } else if (token == "kiwipete") {
+                board.setFen(FENS::KIWIPETE);
             } else if (token == "fen") {
                 std::string fen;
 
@@ -70,6 +81,29 @@ int main() {
 
             std::cout << board << std::endl;
 
+        } else if (token == "go") {
+            iss >> token;
+
+            if (token == "perftsuite") {
+                iss >> token;
+
+                perft::bulkSuite(token, 1000);
+            } else if (token == "perft") {
+                iss >> token;
+
+                int depth = 6;
+                if (token == "depth") {
+                    iss >> token;
+                    depth = std::stoi(token);
+                }
+
+                iss >> token;
+                if (token == "speed") {
+                    perft::bulkSpeedTest(board, depth);
+                } else {
+                    perft::startBulk(board, depth);
+                }
+            }
         } else if (token == "quit" || token == "exit") {
             break;
         } else if (token == "print") {

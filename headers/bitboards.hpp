@@ -6,32 +6,40 @@
 #include <array>
 #include <bitset>
 #include <iostream>
+#include <x86intrin.h>
 
 namespace chess {
 
+#define BitboardIterator(X) for (; X;)
+
     // Bit manipulation functions
     namespace bitops {
+        static constexpr inline void resetLowestBit(U64& b) {
+            b = _blsr_u64(b);
+        }
         constexpr inline int popcount(U64 b) {
-#if defined(_MSC_VER) || defined(__INTEL_COMPILER)
-            return (uint8_t) _mm_popcnt_u64(b);
-#else
-            return __builtin_popcountll(b);
-#endif
+            // #if defined(_MSC_VER) || defined(__INTEL_COMPILER)
+            //             return (uint8_t) _mm_popcnt_u64(b);
+            // #else
+            //             return __builtin_popcountll(b);
+            // #endif
+            return static_cast<int>(_mm_popcnt_u64(b));
         }
 
         static constexpr inline Square lsb(U64 b) {
-#if defined(__GNUC__) || defined(__clang__)
-            return Square(__builtin_ctzll(b));
-#elif defined(_MSC_VER)
-            unsigned long idx;
-            _BitScanForward64(&idx, b);
-            return static_cast<Square>(int(idx));
-#endif
+            // #if defined(__GNUC__) || defined(__clang__)
+            //             return Square(__builtin_ctzll(b));
+            // #elif defined(_MSC_VER)
+            //             unsigned long idx;
+            //             _BitScanForward64(&idx, b);
+            //             return static_cast<Square>(int(idx));
+            // #endif
+            return static_cast<Square>(_tzcnt_u64(b));
         }
 
         static constexpr inline Square poplsb(U64& b) {
             Square sq = lsb(b);
-            b &= b - 1;
+            resetLowestBit(b);
             return sq;
         }
     } // namespace bitops
@@ -42,7 +50,7 @@ namespace chess {
         constexpr Bitboard(U64 squares) : m_squares(squares) {
         }
 
-        constexpr Bitboard(Square square) : m_squares(1ULL << square.sq()) {
+        constexpr Bitboard(Square square) : m_squares(1ULL << static_cast<uint8_t>(square)) {
         }
 
         constexpr Bitboard(File f) : m_squares(MASK_FILE[static_cast<int>(f)]) {
@@ -103,6 +111,34 @@ namespace chess {
 
         constexpr inline bool empty() const {
             return m_squares == 0;
+        }
+
+        constexpr inline bool single() const {
+            return popcount() == 1;
+        }
+
+        constexpr inline bool multiple() const {
+            return popcount() > 1;
+        }
+
+        constexpr Bitboard operator+(const Bitboard& rhs) const {
+            return Bitboard(m_squares + rhs.m_squares);
+        }
+
+        constexpr Bitboard operator-(const Bitboard& rhs) const {
+            return Bitboard(m_squares - rhs.m_squares);
+        }
+
+        constexpr Bitboard operator*(const Bitboard& rhs) const {
+            return Bitboard(m_squares * rhs.m_squares);
+        }
+
+        constexpr Bitboard operator*(const bool& rhs) const {
+            return Bitboard(m_squares * rhs);
+        }
+
+        constexpr Bitboard operator*(const U64& rhs) const {
+            return Bitboard(m_squares * rhs);
         }
 
         constexpr Bitboard operator&(const Bitboard& rhs) const {

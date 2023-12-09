@@ -99,8 +99,8 @@ namespace chess {
             m_pieces.set(piece, sq);
 
             // Update bitboards
-            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))]
-                .set(sq);
+            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))].set(
+                sq);
 
             // Update occupancy bitboard
             m_occupancy.set(sq);
@@ -108,11 +108,12 @@ namespace chess {
 
         // Remove a piece from a square
         constexpr void removePiece(Piece piece, Square sq) {
+            assert(m_pieces.get(sq) == piece && piece != Piece::NONE);
             m_pieces.clear(sq);
 
             // Update bitboards
-            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))]
-                .clear(sq);
+            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))].clear(
+                sq);
 
             // Update occupancy bitboard
             m_occupancy.clear(sq);
@@ -158,7 +159,14 @@ namespace chess {
         }
 
         constexpr Square kingSq(Color c) const {
-            return m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KING)].lsb();
+            return m_bitboards[static_cast<bool>(c)][static_cast<int>(PieceType::KING)].lsb();
+            // return Square::A1;
+        }
+
+        template <Color c>
+        constexpr Square kingSq() const {
+            return m_bitboards[static_cast<bool>(c)][static_cast<int>(PieceType::KING)].lsb();
+            // return Square::A1;
         }
 
         constexpr bool isCheck() const {
@@ -199,8 +207,7 @@ namespace chess {
             }
 
             if (pt == PieceType::KING && Square::squareDistance(from, to) == 2) {
-                return Move::makeCastling(from,
-                                          Square(to > from ? File::FILE_H : File::FILE_A, from.rank()));
+                return Move::makeCastling(from, Square(to > from ? File::FILE_H : File::FILE_A, from.rank()));
             }
 
             if (pt == PieceType::PAWN && to == m_enPassantSq) {
