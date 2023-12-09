@@ -152,6 +152,10 @@ namespace chess {
             m_size = 0;
         }
 
+        constexpr void setSize(int size) {
+            m_size = size;
+        }
+
         constexpr int size() const {
             return m_size;
         }
@@ -220,7 +224,7 @@ namespace chess {
         }
 
     private:
-        static constexpr std::size_t MAX_SIZE = 256;
+        static constexpr std::size_t MAX_SIZE = 128;
         int                          m_size   = 0;
         std::array<Move, MAX_SIZE>   m_moves{};
     };

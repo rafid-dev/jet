@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX := clang++-17
-CXXFLAGS := -std=c++20 -O3 -flto -march=native -fexceptions  -Wall -Wextra 
+CXXFLAGS := -std=c++20 -O3 -flto -march=native -fexceptions  -Wall -Wextra
 LDFLAGS :=
 
 # Debug compiler flags
