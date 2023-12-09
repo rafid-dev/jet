@@ -1,4 +1,5 @@
 Jet/
+.vscode/
 
 # Compiled object files
 *.o
@@ -10,6 +11,7 @@ bin/
 
 # Build directory
 build/
+testing/
 
 # Dependency and package management directories
 vendor/
@@ -26,6 +28,7 @@ libs/
 
 # Windows-specific
 Thumbs.db
+
 
 # NN specific
 *.binpack

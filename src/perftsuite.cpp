@@ -1,7 +1,6 @@
-#include "../headers/board.hpp"
-#include "../headers/misc.hpp"
-#include "../headers/movegen.hpp"
-#include "../headers/perfsuite.hpp"
+#include "chess/movegen.hpp"
+#include "chess/movegencountonly.hpp"
+#include "perfsuite.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -11,12 +10,12 @@ namespace perft {
 
     template <bool print = false>
     uint64_t bulkPerft(chess::Board& board, int depth) {
+        if (depth == 1) {
+            return chess::MoveGenCountOnly::legalmoves<chess::MoveGenType::ALL>(board);
+        }
+
         chess::Movelist moves;
         chess::MoveGen::legalmoves<chess::MoveGenType::ALL>(board, moves);
-
-        if (depth == 1) {
-            return moves.size();
-        }
 
         uint64_t nodes = 0;
 

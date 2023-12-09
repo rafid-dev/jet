@@ -4,10 +4,14 @@
 #include "moves.hpp"
 
 namespace chess {
+    // All bits set to 1
 
     enum class MoveGenType : uint8_t { ALL, QUIET, CAPTURE };
 
     class MoveGen {
+    public:
+        static constexpr inline Bitboard default_checkmask = 0xffffffffffffffffull;
+
     private:
         template <Color c>
         static inline Bitboard getLeaperAttacks(const Board& board) {
@@ -113,7 +117,7 @@ namespace chess {
             BitboardIterator(rook_attacks) {
                 const Square sq = rook_attacks.poplsb();
 
-                const Bitboard possible_pin = Attacks::squaresBetween(kingSq, sq) | Bitboard(sq);
+                const Bitboard possible_pin = Attacks::squaresBetween(kingSq, sq);
                 pinHV |= possible_pin * (possible_pin & us).single();
             }
 
@@ -131,7 +135,7 @@ namespace chess {
             BitboardIterator(bishop_attacks) {
                 const Square sq = bishop_attacks.poplsb();
 
-                const Bitboard possible_pin = Attacks::squaresBetween(kingSq, sq) | Bitboard(sq);
+                const Bitboard possible_pin = Attacks::squaresBetween(kingSq, sq);
                 pinD |= possible_pin * (possible_pin & us).single();
             }
 
@@ -297,12 +301,12 @@ namespace chess {
         }
 
         template <Color c, CastlingSide castleSide>
-        static inline void generateCastlingMove(const Board& board, Movelist& movelist, Square kingSq,
-                                                Bitboard seen, Bitboard all, Bitboard pinHV) {
+        static inline Bitboard generateCastlingMove(const Board& board, Square kingSq, Bitboard seen,
+                                                    Bitboard all, Bitboard pinHV) {
             const CastlingRights castlingRights = board.castlingRights();
 
             if (!castlingRights.hasCastlingRights<c, castleSide>()) {
-                return;
+                return Bitboard(0);
             }
 
             constexpr Square   king_to   = CastlingRights::kingTo<c, castleSide>();
@@ -331,6 +335,14 @@ namespace chess {
             Bitboard moves = rook_from_bb * (path_not_attacked && path_not_occupied && king_to_safe &&
                                              rook_to_clear && rook_unpinned);
 
+            return moves;
+        }
+
+        template <Color c, CastlingSide castleSide>
+        static inline void generateCastlingMove(const Board& board, Movelist& movelist, Square kingSq,
+                                                Bitboard seen, Bitboard all, Bitboard pinHV) {
+            Bitboard moves = generateCastlingMove<c, castleSide>(board, kingSq, seen, all, pinHV);
+
             BitboardIterator(moves) {
                 Square to = moves.poplsb();
                 movelist.add(Move::makeCastling(kingSq, to));
@@ -354,9 +366,6 @@ namespace chess {
                 generateCastlingMove<c, CastlingSide::QUEEN_SIDE>(board, movelist, kingSq, seen, all, pinHV);
             }
         }
-
-        // All bits set to 1
-        static constexpr inline Bitboard default_checkmask = 0xffffffffffffffffull;
 
         template <Color c, MoveGenType mt>
         static inline void generateLegalMoves(const Board& board, Movelist& movelist) {

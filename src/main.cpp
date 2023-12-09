@@ -1,8 +1,5 @@
-#include "../headers/attacks.hpp"
-#include "../headers/board.hpp"
-#include "../headers/misc.hpp"
-#include "../headers/movegen.hpp"
-#include "../headers/perfsuite.hpp"
+#include "chess/movegen.hpp"
+#include "perfsuite.hpp"
 
 #include <iostream>
 #include <istream>
@@ -16,7 +13,8 @@ static constexpr std::string_view AUTHOR = "Rafid Ahsan";
 int main() {
     Attacks::init();
 
-    std::cout << "Jet" << std::endl;
+    std::cout << NAME << std::endl;
+    std::cout << AUTHOR << std::endl;
 
     Board board;
 
