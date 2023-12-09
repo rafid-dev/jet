@@ -5,8 +5,7 @@
 
 namespace chess {
 
-    using U64      = uint64_t;
-    using Bitboard = uint64_t;
+    using U64 = uint64_t;
 
     // clang-format off
 
@@ -25,7 +24,7 @@ namespace chess {
         BLACKROOK,
         BLACKQUEEN,
         BLACKKING,
-        NONE
+        NONE,
     };
 
     enum class Color : uint8_t { WHITE, BLACK, NO_COLOR };
@@ -34,55 +33,11 @@ namespace chess {
         return Color(static_cast<uint8_t>(c) ^ 1);
     }
 
-    enum class Direction : int8_t { 
-        NORTH = 8, 
-        WEST = -1, 
-        SOUTH = -8, 
-        EAST = 1,
-        NORTH_EAST = 9, 
-        NORTH_WEST = 7, 
-        SOUTH_WEST = -9, 
-        SOUTH_EAST = -7 
-    };
-
-    template <Color c>
-    constexpr Direction relativeDirection(Direction d) {
-        if constexpr (c == Color::WHITE) {
-            return d;
-        } else {
-            return static_cast<Direction>(-static_cast<int8_t>(d));
-        }
-    }
-
-    template <Color c, Direction d>
-    constexpr Direction relativeDirection() {
-        if constexpr (c == Color::WHITE) {
-            return d;
-        } else {
-            return static_cast<Direction>(-static_cast<int8_t>(d));
-        }
-    }
-
-    // clang-format on
-    constexpr uint8_t  NUM_SQUARES       = 64;
-    constexpr uint8_t  NUM_COLORS        = 2;
-    constexpr uint8_t  NUM_PIECES        = 12;
-    constexpr uint8_t  NUM_PIECE_TYPES   = 6;
-    constexpr int      MAX_MOVES         = 256;
-    constexpr Bitboard DEFAULT_CHECKMASK = 0xFFFFFFFFFFFFFFFF;
-
-    // clang-format off
-    constexpr std::string_view squareToString[64] = {
-        "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-        "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-        "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
-        "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
-        "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
-        "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
-        "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-        "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-    };
-    // clang-format on 
+    constexpr uint8_t NUM_SQUARES       = 64;
+    constexpr uint8_t NUM_COLORS        = 2;
+    constexpr uint8_t NUM_PIECES        = 12;
+    constexpr uint8_t NUM_PIECE_TYPES   = 6;
+    constexpr int     MAX_MOVES         = 256;
 
     constexpr Piece charToPiece(char c){
 
@@ -151,15 +106,15 @@ namespace chess {
         return static_cast<Color>(static_cast<uint8_t>(p) / 6);
     }
 
-    constexpr Piece colorPiece(Color c, PieceType pt) {
+    constexpr Piece makePiece(Color c, PieceType pt) {
         return static_cast<Piece>(static_cast<uint8_t>(c) * 6 + static_cast<uint8_t>(pt));
     }
 
     template<Color c, PieceType pt>
-    constexpr Piece colorPiece() {
+    constexpr Piece makePiece() {
         return static_cast<Piece>(static_cast<uint8_t>(c) * 6 + static_cast<uint8_t>(pt));
     }
 
-    static constexpr std::string_view START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    // clang-format on
 
 } // namespace chess

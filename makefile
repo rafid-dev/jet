@@ -1,16 +1,17 @@
 # Compiler and flags
-CXX := clang++
-CXXFLAGS := -std=c++20 -O3 -flto -fuse-ld=lld -march=native -fexceptions -fopenmp -mavx2 -Wall -Wextra -DNDEBUG
+CXX := clang++-17
+CXXFLAGS := -std=c++20 -O3 -flto -march=native -fexceptions  -Wall -Wextra 
 LDFLAGS :=
 
 # Debug compiler flags
-DEBUG_CXXFLAGS := -g -O0 -DDEBUG
+DEBUG_CXXFLAGS := -g -O0 -DDEBUG -fsanitize=address -fsanitize=undefined
+
+BUILD_CXXFLAGS := -DNDEBUG
 
 # Directories
 SRC_DIR := src
 BUILD_DIR := build
 BIN_DIR := bin
-PGO_DIR := pgo_data
 
 # Source files
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
@@ -21,11 +22,13 @@ TARGET := $(BIN_DIR)/Jet
 
 # Append .exe to the binary name on Windows
 ifeq ($(OS),Windows_NT)
+	CXXFLAGS += -fuse-ld=lld
     TARGET := $(TARGET).exe
 endif
 
 # Default target
-all: $(TARGET)
+all: CXXFLAGS += $(BUILD_CXXFLAGS)
+all: $(TARGET) 
 
 # Rule to build the target binary
 $(TARGET): $(OBJS) | $(BIN_DIR)
@@ -46,13 +49,6 @@ debug: $(TARGET)
 # Clean the build
 clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR) $(PGO_DIR)
-
-# PGO-generate target
-pgo-generate: CXXFLAGS += -fprofile-generate
-pgo-generate: clean $(TARGET)
-
-pgo-pg: CXXFLAGS += -pg
-pgo-pg: clean $(TARGET)
 
 # Phony targets
 .PHONY: all debug clean pgo-generate

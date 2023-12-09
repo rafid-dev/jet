@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../headers/misc.hpp"
+#include "fens.hpp"
+#include "misc.hpp"
 #include <string>
 #include <vector>
 
@@ -29,12 +30,12 @@ namespace perft {
 
     public:
         EpdInfo(const std::string_view& epd) {
-            auto split = misc::split(epd, ';');
+            auto split = misc::splitString(epd, ';');
 
             m_fen = split[0];
 
             for (size_t i = 1; i < split.size(); i++) {
-                auto info_split = misc::split(split[i], ' ');
+                auto info_split = misc::splitString(split[i], ' ');
 
                 auto depth = std::stoi(std::string{info_split[0][1]});
                 auto nodes = std::stoull(std::string{info_split[1]});
@@ -52,8 +53,10 @@ namespace perft {
         }
     };
 
-
     void bulkSuite(const std::string& name, const uint64_t max);
     void startBulk(const std::string& fen, const int depth = 1);
-    void bulkSpeedTest(const std::string_view& fen = chess::START_FEN, const int depth = 7);
+    void startBulk(const chess::Board& board, const int depth = 1);
+    void bulkSpeedTest(const std::string_view& fen = chess::FENS::STARTPOS, const int depth = 7);
+    void bulkSpeedTest(const chess::Board& board, const int depth = 7);
+
 } // namespace perft

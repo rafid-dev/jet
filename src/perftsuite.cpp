@@ -12,7 +12,7 @@ namespace perft {
     template <bool print = false>
     uint64_t bulkPerft(chess::Board& board, int depth) {
         chess::Movelist moves;
-        chess::movegen::legalMoves<chess::movegen::MoveGenType::ALL>(board, moves);
+        chess::MoveGen::legalmoves<chess::MoveGenType::ALL>(board, moves);
 
         if (depth == 1) {
             return moves.size();
@@ -42,7 +42,7 @@ namespace perft {
         if constexpr (print) {
             if (depth == 1) {
                 chess::Movelist moves;
-                chess::movegen::legalMoves<chess::movegen::MoveGenType::ALL>(board, moves);
+                chess::MoveGen::legalmoves<chess::MoveGenType::ALL>(board, moves);
 
                 for (const auto& move : moves) {
                     std::cout << move << ": 1" << std::endl;
@@ -77,8 +77,6 @@ namespace perft {
 
         uint64_t totalNodes = 0;
 
-        auto start_time = misc::tick();
-
         while (std::getline(file, line)) {
             if (count > max) {
                 break;
@@ -106,14 +104,18 @@ namespace perft {
 
                 std::string color = (nodes == required) ? "\033[32m" : "\033[31m";
                 if (nodes != required) {
-                    std::cout << "\r" << color << "#" << count << " D" << depth << " Failed: [" << info.fen() << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed << " NPS" << std::endl;
+                    std::cout << "\r" << color << "#" << count << " D" << depth << " Failed: [" << info.fen()
+                              << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed
+                              << " NPS" << std::endl;
 
                     testPositionBulk<true>(board, depth, nodes);
                     std::cout << board << std::endl;
 
                     fails++;
                 } else {
-                    std::cout << "\r" << color << "#" << count << " D" << depth << " Passed: [" << info.fen() << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed << " NPS" << std::endl;
+                    std::cout << "\r" << color << "#" << count << " D" << depth << " Passed: [" << info.fen()
+                              << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed
+                              << " NPS" << std::endl;
                     passes++;
                 }
 
@@ -129,11 +131,22 @@ namespace perft {
         std::cout << "Total passes: " << passes << std::endl;
         std::cout << "Total fails: " << fails << std::endl;
         std::cout << "Total time: " << totalTime << "ms" << std::endl;
-        std::cout << "Average speed: " << static_cast<uint64_t>(1000.0f * totalNodes / (totalTime + 1)) << " NPS" << std::endl;
+        std::cout << "Average speed: " << static_cast<uint64_t>(1000.0f * totalNodes / (totalTime + 1))
+                  << " NPS" << std::endl;
     }
 
     void startBulk(const std::string& fen, const int depth) {
         chess::Board board(fen);
+
+        uint64_t nodes = 0;
+
+        testPositionBulk<true>(board, depth, nodes);
+
+        std::cout << "Nodes: " << nodes << std::endl;
+    }
+
+    void startBulk(const chess::Board& brd, const int depth) {
+        chess::Board board = brd;
 
         uint64_t nodes = 0;
 
@@ -156,7 +169,27 @@ namespace perft {
 
         std::cout << "Nodes: " << nodes << std::endl;
         std::cout << "Time: " << time_elapsed << "ms" << std::endl;
-        std::cout << "Speed: " << static_cast<uint64_t>(1000.0f * nodes / (time_elapsed + 1)) << " NPS" << std::endl;
+        std::cout << "Speed: " << static_cast<uint64_t>(1000.0f * nodes / (time_elapsed + 1)) << " NPS"
+                  << std::endl;
+    }
+
+    void bulkSpeedTest(const chess::Board& brd, const int depth) {
+        std::cout << "(BULK) Starting speed test: "
+                  << " D" << depth << std::endl;
+        chess::Board board = brd;
+
+        uint64_t nodes = 0;
+
+        auto start_time = misc::tick();
+
+        testPositionBulk<false>(board, depth, nodes);
+
+        auto time_elapsed = misc::tick() - start_time;
+
+        std::cout << "Nodes: " << nodes << std::endl;
+        std::cout << "Time: " << time_elapsed << "ms" << std::endl;
+        std::cout << "Speed: " << static_cast<uint64_t>(1000.0f * nodes / (time_elapsed + 1)) << " NPS"
+                  << std::endl;
     }
 
 } // namespace perft
