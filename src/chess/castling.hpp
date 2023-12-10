@@ -66,11 +66,6 @@ namespace chess {
             _setRights(c, side, value);
         }
 
-        int index() const {
-            return m_rights.whiteKingSide | (m_rights.whiteQueenSide << 1) | (m_rights.blackKingSide << 2) |
-                   (m_rights.blackQueenSide << 3);
-        }
-
         static constexpr inline Square kingTo(Color c, CastlingSide side) {
             const bool kingSide = side == CastlingSide::KING_SIDE;
             return Square::relativeSquare(Square::C1 + 4 * kingSide, c);
@@ -137,6 +132,13 @@ namespace chess {
 
         static constexpr inline CastlingSide getCastlingSide(Square sq, Square kingSq) {
             return static_cast<CastlingSide>((sq > kingSq) ^ 1);
+        }
+
+        constexpr inline int index() const {
+            return hasCastlingRights<Color::WHITE, CastlingSide::KING_SIDE>() +
+                   2 * hasCastlingRights<Color::WHITE, CastlingSide::QUEEN_SIDE>() +
+                   4 * hasCastlingRights<Color::BLACK, CastlingSide::KING_SIDE>() +
+                   8 * hasCastlingRights<Color::WHITE, CastlingSide::KING_SIDE>();
         }
 
     private:

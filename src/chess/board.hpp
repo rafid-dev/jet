@@ -8,6 +8,7 @@
 #include "moves.hpp"
 #include "square.hpp"
 #include "types.hpp"
+#include "zobrist.hpp"
 
 #include "fens.hpp"
 #include <charconv>
@@ -99,8 +100,7 @@ namespace chess {
             m_pieces.set(piece, sq);
 
             // Update bitboards
-            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))].set(
-                sq);
+            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))].set(sq);
 
             // Update occupancy bitboard
             m_occupancy.set(sq);
@@ -112,8 +112,7 @@ namespace chess {
             m_pieces.clear(sq);
 
             // Update bitboards
-            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))].clear(
-                sq);
+            m_bitboards[static_cast<int>(pieceToColor(piece))][static_cast<int>(pieceToPieceType(piece))].clear(sq);
 
             // Update occupancy bitboard
             m_occupancy.clear(sq);
@@ -141,13 +140,11 @@ namespace chess {
                 return true;
             }
 
-            if (Attacks::bishopAttacks(s, occupied()) &
-                (bitboard(c, PieceType::BISHOP) | bitboard(c, PieceType::QUEEN))) {
+            if (Attacks::bishopAttacks(s, occupied()) & (bitboard(c, PieceType::BISHOP) | bitboard(c, PieceType::QUEEN))) {
                 return true;
             }
 
-            if (Attacks::rookAttacks(s, occupied()) &
-                (bitboard(c, PieceType::ROOK) | bitboard(c, PieceType::QUEEN))) {
+            if (Attacks::rookAttacks(s, occupied()) & (bitboard(c, PieceType::ROOK) | bitboard(c, PieceType::QUEEN))) {
                 return true;
             }
 
@@ -193,7 +190,39 @@ namespace chess {
         void unmakeMove(const Move& move);
 
         constexpr U64 hash() const {
-            return 0;
+            return m_hash;
+        }
+
+        constexpr U64 genHash() const {
+            U64 hash_key = 0;
+
+            Bitboard white = us<Color::WHITE>();
+            Bitboard black = us<Color::BLACK>();
+
+            BitboardIterator(white) {
+                Square sq = white.poplsb();
+                hash_key ^= Zobrist::pieceKey(at(sq), sq);
+            }
+
+            BitboardIterator(black) {
+                Square sq = black.poplsb();
+                hash_key ^= Zobrist::pieceKey(at(sq), sq);
+            }
+
+            U64 enpassanthash = 0;
+            U64 sidehash      = 0;
+            U64 castlehash    = 0;
+
+            if (m_enPassantSq.isValid()) {
+                enpassanthash ^= Zobrist::enpassantKey(m_enPassantSq.file());
+            }
+            if (m_sideToMove == Color::WHITE) {
+                sidehash ^= Zobrist::sideKey();
+            }
+
+            castlehash ^= Zobrist::castlingKey(m_castlingRights.index());
+
+            return hash_key ^ enpassanthash ^ sidehash ^ castlehash;
         }
 
         constexpr inline Move uciToMove(std::string_view uci) const {
@@ -225,8 +254,7 @@ namespace chess {
             int            m_halfmoveClock;
             U64            hash;
 
-            constexpr State(CastlingRights castle, Square enPassant, Piece capturedPiece, int halfmoveClock,
-                            U64 hash)
+            constexpr State(CastlingRights castle, Square enPassant, Piece capturedPiece, int halfmoveClock, U64 hash)
                 : m_castlingRights(castle)
                 , m_capturedPiece(capturedPiece)
                 , m_enPassantSq(enPassant)
@@ -313,6 +341,8 @@ namespace chess {
 
         os << "Half Move Clock: " << board.halfMoveClock() << '\n';
         os << "Plies: " << board.ply() << '\n';
+        os << "Hash: " << std::hex << board.hash() << std::dec << std::endl;
+
         return os;
     }
 
@@ -328,8 +358,8 @@ namespace chess {
         m_halfmoveClock++;
         m_ply++;
 
-        if (m_enPassantSq != Square()) {
-            // update hash
+        if (m_enPassantSq.isValid()) {
+            m_hash ^= Zobrist::enpassantKey(m_enPassantSq.file());
         }
 
         m_enPassantSq = Square();
@@ -342,20 +372,26 @@ namespace chess {
             removePiece(captured_piece, move.to());
         }
 
-        if (is_capture && pieceToPieceType(captured_piece) == PieceType::ROOK &&
-            Square::isTheirBackRank(move.to(), side)) {
+        if (is_capture && pieceToPieceType(captured_piece) == PieceType::ROOK && Square::isTheirBackRank(move.to(), side)) {
             const CastlingSide castleSide = CastlingRights::getCastlingSide(move.to(), kingSq(~side));
             m_castlingRights.setCastlingRights(~side, castleSide, 0);
+
+            m_hash ^= Zobrist::castlingIndex(2 * static_cast<int>(~side) + static_cast<int>(castleSide));
         }
 
         if (pt == PieceType::KING && m_castlingRights.hasCastlingRights(side)) {
+            m_hash ^= Zobrist::castlingKey(m_castlingRights.index());
+
             m_castlingRights.setCastlingRights(side, CastlingSide::KING_SIDE, 0);
             m_castlingRights.setCastlingRights(side, CastlingSide::QUEEN_SIDE, 0);
+
+            m_hash ^= Zobrist::castlingKey(m_castlingRights.index());
 
         } else if (pt == PieceType::ROOK && Square::isOurBackRank(move.from(), side)) {
             const CastlingSide castleSide = CastlingRights::getCastlingSide(move.from(), kingSq(side));
 
             m_castlingRights.setCastlingRights(side, castleSide, 0);
+            m_hash ^= Zobrist::castlingIndex(2 * static_cast<int>(side) + static_cast<int>(castleSide));
         }
 
         if (pt == PieceType::PAWN && Square::squareDistance(move.from(), move.to()) == 2) {
@@ -364,6 +400,8 @@ namespace chess {
 
             if (ep_mask & bitboard(~side, PieceType::PAWN)) {
                 m_enPassantSq = possible_ep;
+
+                m_hash ^= Zobrist::enpassantKey(m_enPassantSq.file());
             }
         }
 
@@ -381,18 +419,31 @@ namespace chess {
 
             placePiece(piece, kingTo);
             placePiece(captured_piece, rookTo);
+
+            m_hash ^= Zobrist::pieceKey(piece, move.from()) ^ Zobrist::pieceKey(piece, kingTo);
+            m_hash ^= Zobrist::pieceKey(captured_piece, move.to()) ^ Zobrist::pieceKey(piece, rookTo);
         } else if (move.type() == MoveType::PROMOTION) {
+            const Piece promoted = makePiece(side, move.promoted());
             removePiece(piece, move.from());
-            placePiece(makePiece(side, move.promoted()), move.to());
+            placePiece(promoted, move.to());
+
+            m_hash ^= Zobrist::pieceKey(piece, move.from()) ^ Zobrist::pieceKey(promoted, move.to());
         } else {
             removePiece(piece, move.from());
             placePiece(piece, move.to());
+
+            m_hash ^= Zobrist::pieceKey(piece, move.from()) ^ Zobrist::pieceKey(piece, move.to());
         }
 
         if (move.type() == MoveType::ENPASSANT) {
-            removePiece(makePiece(~side, PieceType::PAWN), Square(int(move.to()) ^ 8));
+            const Piece  piece = makePiece(~side, PieceType::PAWN);
+            const Square sq    = Square(int(move.to()) ^ 8);
+            removePiece(piece, sq);
+
+            m_hash ^= Zobrist::pieceKey(piece, sq);
         }
 
+        m_hash ^= Zobrist::sideKey();
         m_sideToMove = ~m_sideToMove;
     }
 
@@ -496,8 +547,8 @@ namespace chess {
         }
 
         m_castlingRights.loadFromString(castling);
-
         m_occupancy = all();
+        m_hash      = genHash();
     }
 
 } // namespace chess

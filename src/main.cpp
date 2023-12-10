@@ -1,4 +1,5 @@
 #include "chess/movegen.hpp"
+#include "chess/zobrist.hpp"
 #include "perfsuite.hpp"
 
 #include <iostream>
