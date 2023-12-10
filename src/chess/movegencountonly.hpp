@@ -16,8 +16,8 @@ namespace chess {
         }
 
         template <Color c, bool double_ep_possible>
-        static inline void generateEnpassantMoves(const Board& board, Square ep, Bitboard ep_bb, Bitboard all,
-                                                  Bitboard pinD, int& count) {
+        static inline void generateEnpassantMoves(const Board& board, Square ep, Bitboard ep_bb, Bitboard all, Bitboard pinD,
+                                                  int& count) {
             if constexpr (double_ep_possible) {
                 BitboardIterator(ep_bb) {
                     Square from = ep_bb.poplsb();
@@ -26,20 +26,18 @@ namespace chess {
                     }
                 }
             } else {
-                const Square ep_pawn = ep + relativeDirection<c, Direction::SOUTH>();
-                const Square from    = ep_bb.lsb();
+                constexpr Direction down    = relativeDirection<c, Direction::SOUTH>();
+                const Square        ep_pawn = ep + down;
+                const Square        from    = ep_bb.lsb();
 
-                const Square   kingSq = board.kingSq<c>();
-                const Bitboard rook_queen =
-                    board.bitboard<~c, PieceType::ROOK>() | board.bitboard<~c, PieceType::QUEEN>();
+                const Square   kingSq     = board.kingSq<c>();
+                const Bitboard rook_queen = board.bitboard<~c, PieceType::ROOK>() | board.bitboard<~c, PieceType::QUEEN>();
 
-                const bool possible_pin =
-                    (board.bitboard<c, PieceType::KING>() & Bitboard(ep_pawn.rank())) && rook_queen;
+                const bool possible_pin = (board.bitboard<c, PieceType::KING>() & Bitboard(ep_pawn.rank())) && rook_queen;
 
                 const Bitboard connectingPawns = Bitboard(ep_pawn) | Bitboard(from);
 
-                if (possible_pin &&
-                    !(Attacks::rookAttacks(kingSq, all & ~connectingPawns) & rook_queen).empty()) {
+                if (possible_pin && !(Attacks::rookAttacks(kingSq, all & ~connectingPawns) & rook_queen).empty()) {
                     return;
                 }
 
@@ -47,71 +45,62 @@ namespace chess {
             }
         }
 
+        template <PawnMoveType pmt>
+        static constexpr inline void enumerateMoves(Bitboard moves, int& count) {
+            if constexpr (pmt == PawnMoveType::Promotion || pmt == PawnMoveType::LeftPromotion ||
+                          pmt == PawnMoveType::RightPromotion) {
+                count += moves.popcount() * 4;
+            } else {
+                count += moves.popcount();
+            }
+        }
+
         template <Color c, MoveGenType mt>
-        static inline void generatePawnMoves(const Board& board, Bitboard them, Bitboard all, Bitboard pinD,
-                                             Bitboard pinHV, Bitboard checkmask, int& count) {
-            constexpr Bitboard rank_before_promo  = Bitboard(Square::relativeRank<c, Rank::RANK_7>());
-            constexpr Bitboard rank_promo         = Bitboard(Square::relativeRank<c, Rank::RANK_8>());
-            constexpr Bitboard single_pushed_rank = Bitboard(Square::relativeRank<c, Rank::RANK_3>());
-
-            constexpr Direction DOWN = relativeDirection<c, Direction::SOUTH>();
-            constexpr Direction UP   = relativeDirection<c, Direction::NORTH>();
-
-            const Bitboard pawns = board.bitboard<c, PieceType::PAWN>();
-
-            const bool promo_possible = !(pawns & rank_before_promo).empty();
+        static inline void generatePawnMoves(const Board& board, Bitboard them, Bitboard all, Bitboard pinD, Bitboard pinHV,
+                                             Bitboard checkmask, int& count) {
+            constexpr Bitboard  rank_before_promo = Bitboard(Square::relativeRank<c, Rank::RANK_7>());
+            constexpr Direction down              = relativeDirection<c, Direction::SOUTH>();
+            const Bitboard      pawns             = board.bitboard<c, PieceType::PAWN>();
+            const bool          promo_possible    = !(pawns & rank_before_promo).empty();
 
             if constexpr (mt != MoveGenType::CAPTURE) {
                 const Bitboard moveable_square = ~all & checkmask;
 
-                const Bitboard pawns_hv             = pawns & ~pinD;
-                const Bitboard unpinned_single_push = (pawns_hv & ~pinHV).shift<UP>() & ~all;
-                const Bitboard pinned_single_push   = (pawns_hv & pinHV).shift<UP>() & pinHV & ~all;
-
-                Bitboard single_push = (unpinned_single_push | pinned_single_push) & moveable_square;
+                Bitboard pinned_pushes   = PawnMovesHandler<c, mt>::template pawnPinMaskHV<true>(pawns, all, pinD, pinHV);
+                Bitboard unpinned_pushes = PawnMovesHandler<c, mt>::template pawnPinMaskHV<false>(pawns, all, pinD, pinHV);
+                Bitboard legal_push  = PawnMovesHandler<c, mt>::legalPawnPush(pinned_pushes, unpinned_pushes, moveable_square);
+                Bitboard double_push = PawnMovesHandler<c, mt>::doublePushes(pinned_pushes, unpinned_pushes, moveable_square);
+                Bitboard single_push = PawnMovesHandler<c, mt>::singlePushes(legal_push);
 
                 if constexpr (mt != MoveGenType::QUIET) {
-                    Bitboard promotions = (single_push & rank_promo) * promo_possible;
-
-                    count += promotions.popcount() * 4;
+                    Bitboard promotions = PawnMovesHandler<c, mt>::promotionPushes(legal_push, promo_possible);
+                    enumerateMoves<PawnMoveType::Promotion>(promotions, count);
                 }
 
-                Bitboard double_push = (unpinned_single_push & single_pushed_rank).shift<UP>() |
-                                       (pinned_single_push & single_pushed_rank).shift<UP>();
-
-                single_push &= ~rank_promo;
-                double_push &= moveable_square;
-
-                count += single_push.popcount();
-                count += double_push.popcount();
+                enumerateMoves<PawnMoveType::SinglePush>(single_push, count);
+                enumerateMoves<PawnMoveType::DoublePush>(double_push, count);
             }
 
             if constexpr (mt != MoveGenType::QUIET) {
-                const Bitboard moveable_square = them & checkmask;
-
+                const Bitboard moveable_square  = them & checkmask;
                 const Bitboard pawns_d          = pawns & ~pinHV;
-                const Bitboard unpinned_pawns_d = pawns_d & ~pinD;
-                const Bitboard pinned_pawns_d   = pawns_d & pinD;
+                const Bitboard pinned_pawns_d   = PawnMovesHandler<c, mt>::template pawnPinMaskD<true>(pawns_d, pinD);
+                const Bitboard unpinned_pawns_d = PawnMovesHandler<c, mt>::template pawnPinMaskD<false>(pawns_d, pinD);
 
-                Bitboard left_attacks = (Attacks::pawnLeftAttacks<c>(unpinned_pawns_d)) |
-                                        (Attacks::pawnLeftAttacks<c>(pinned_pawns_d) & pinD);
-                Bitboard right_attacks = (Attacks::pawnRightAttacks<c>(unpinned_pawns_d)) |
-                                         (Attacks::pawnRightAttacks<c>(pinned_pawns_d) & pinD);
+                Bitboard legal_left = PawnMovesHandler<c, mt>::template legalCaptures<Direction::WEST>(
+                    pinned_pawns_d, unpinned_pawns_d, pinD, moveable_square);
+                Bitboard legal_right = PawnMovesHandler<c, mt>::template legalCaptures<Direction::EAST>(
+                    pinned_pawns_d, unpinned_pawns_d, pinD, moveable_square);
 
-                left_attacks &= moveable_square;
-                right_attacks &= moveable_square;
+                Bitboard promotions_left  = PawnMovesHandler<c, mt>::promotionCaptures(legal_left, promo_possible);
+                Bitboard promotions_right = PawnMovesHandler<c, mt>::promotionCaptures(legal_right, promo_possible);
+                Bitboard left_attacks     = PawnMovesHandler<c, mt>::captures(legal_left);
+                Bitboard right_attacks    = PawnMovesHandler<c, mt>::captures(legal_right);
 
-                Bitboard promotions_left  = (left_attacks & rank_promo) * promo_possible;
-                Bitboard promotions_right = (right_attacks & rank_promo) * promo_possible;
-
-                count += promotions_left.popcount() * 4;
-                count += promotions_right.popcount() * 4;
-
-                left_attacks &= ~rank_promo;
-                right_attacks &= ~rank_promo;
-
-                count += left_attacks.popcount();
-                count += right_attacks.popcount();
+                enumerateMoves<PawnMoveType::LeftPromotion>(promotions_left, count);
+                enumerateMoves<PawnMoveType::RightPromotion>(promotions_right, count);
+                enumerateMoves<PawnMoveType::LeftCapture>(left_attacks, count);
+                enumerateMoves<PawnMoveType::RightCapture>(right_attacks, count);
 
                 Square ep = board.enPassant();
 
@@ -119,7 +108,7 @@ namespace chess {
                     return;
                 }
 
-                if (((Bitboard(ep) | Bitboard(Square(ep + DOWN))) & checkmask).empty()) {
+                if (((Bitboard(ep) | Bitboard(Square(ep + down))) & checkmask).empty()) {
                     return;
                 }
 
@@ -134,22 +123,19 @@ namespace chess {
         }
 
         template <Color c, MoveGenType mt>
-        static inline void generateKingMoves(const Board& board, Bitboard moveable_squares, Bitboard seen,
-                                             Bitboard all, Bitboard pinHV, int& count) {
+        static inline void generateKingMoves(const Board& board, Bitboard moveable_squares, Bitboard seen, Bitboard all,
+                                             Bitboard pinHV, int& count) {
             Square   kingSq = board.kingSq<c>();
             Bitboard king   = Bitboard(kingSq);
 
-            enumerateMoves(king, count,
-                           [&](Square sq) { return Attacks::kingAttacks(sq) & moveable_squares & ~seen; });
+            enumerateMoves(king, count, [&](Square sq) { return Attacks::kingAttacks(sq) & moveable_squares & ~seen; });
 
             if constexpr (mt != MoveGenType::CAPTURE) {
                 if (seen & king) {
                     return;
                 }
-                count +=
-                    !generateCastlingMove<c, CastlingSide::KING_SIDE>(board, kingSq, seen, all, pinHV).empty();
-                count +=
-                    !generateCastlingMove<c, CastlingSide::QUEEN_SIDE>(board, kingSq, seen, all, pinHV).empty();
+                count += !generateCastlingMove<c, CastlingSide::KING_SIDE>(board, kingSq, seen, all, pinHV).empty();
+                count += !generateCastlingMove<c, CastlingSide::QUEEN_SIDE>(board, kingSq, seen, all, pinHV).empty();
             }
         }
 
@@ -198,8 +184,7 @@ namespace chess {
 
             Bitboard knights = board.bitboard<c, PieceType::KNIGHT>() & ~(pinD | pinHV);
 
-            enumerateMoves(knights, count,
-                           [&](Square sq) { return Attacks::knightAttacks(sq) & moveable_squares; });
+            enumerateMoves(knights, count, [&](Square sq) { return Attacks::knightAttacks(sq) & moveable_squares; });
 
             Bitboard bishops = board.bitboard<c, PieceType::BISHOP>() & ~pinHV;
 
