@@ -17,6 +17,10 @@ namespace perft {
         chess::Movelist moves;
         chess::MoveGen::legalmoves<chess::MoveGenType::ALL>(board, moves);
 
+        // if (depth == 1) {
+        //     return moves.size();
+        // }
+
         uint64_t nodes = 0;
 
         for (const auto& move : moves) {
@@ -39,18 +43,18 @@ namespace perft {
     template <bool print = false>
     void testPositionBulk(chess::Board& board, int depth, uint64_t& nodes) {
         if constexpr (print) {
-            if (depth == 1) {
-                chess::Movelist moves;
-                chess::MoveGen::legalmoves<chess::MoveGenType::ALL>(board, moves);
+            // if (depth == 1) {
+            //     chess::Movelist moves;
+            //     chess::MoveGen::legalmoves<chess::MoveGenType::ALL>(board, moves);
 
-                for (const auto& move : moves) {
-                    std::cout << move << ": 1" << std::endl;
-                }
+            //     for (const auto& move : moves) {
+            //         std::cout << move << ": 1" << std::endl;
+            //     }
 
-                nodes = moves.size();
-            } else {
-                nodes = bulkPerft<true>(board, depth);
-            }
+            //     nodes = moves.size();
+            // } else {
+            nodes = bulkPerft<true>(board, depth);
+            // }
         } else {
             nodes = bulkPerft<false>(board, depth);
         }

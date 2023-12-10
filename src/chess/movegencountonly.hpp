@@ -21,7 +21,7 @@ namespace chess {
             if constexpr (double_ep_possible) {
                 BitboardIterator(ep_bb) {
                     Square from = ep_bb.poplsb();
-                    if (!(pinD & Bitboard(from)) || !(pinD & Bitboard(ep))) {
+                    if (!(pinD & Bitboard(from)) && !(pinD & Bitboard(ep))) {
                         count++;
                     }
                 }
@@ -73,7 +73,7 @@ namespace chess {
                 if constexpr (mt != MoveGenType::QUIET) {
                     Bitboard promotions = (single_push & rank_promo) * promo_possible;
 
-                    count += promotions.popcount();
+                    count += promotions.popcount() * 4;
                 }
 
                 Bitboard double_push = (unpinned_single_push & single_pushed_rank).shift<UP>() |
@@ -104,8 +104,8 @@ namespace chess {
                 Bitboard promotions_left  = (left_attacks & rank_promo) * promo_possible;
                 Bitboard promotions_right = (right_attacks & rank_promo) * promo_possible;
 
-                count += promotions_left.popcount();
-                count += promotions_right.popcount();
+                count += promotions_left.popcount() * 4;
+                count += promotions_right.popcount() * 4;
 
                 left_attacks &= ~rank_promo;
                 right_attacks &= ~rank_promo;
@@ -146,10 +146,10 @@ namespace chess {
                 if (seen & king) {
                     return;
                 }
-                count += generateCastlingMove<c, CastlingSide::KING_SIDE>(board, kingSq, seen, all, pinHV)
-                             .popcount();
-                count += generateCastlingMove<c, CastlingSide::QUEEN_SIDE>(board, kingSq, seen, all, pinHV)
-                             .popcount();
+                count +=
+                    !generateCastlingMove<c, CastlingSide::KING_SIDE>(board, kingSq, seen, all, pinHV).empty();
+                count +=
+                    !generateCastlingMove<c, CastlingSide::QUEEN_SIDE>(board, kingSq, seen, all, pinHV).empty();
             }
         }
 
@@ -182,8 +182,7 @@ namespace chess {
 
             Bitboard pinD  = pinMaskDiagonal<c>(board, kingSq, them, us);
             Bitboard pinHV = pinMaskHorizontalVertical<c>(board, kingSq, them, us);
-
-            Bitboard seen = generateSeenSquares<~c>(board, all, enemy_or_empty);
+            Bitboard seen  = generateSeenSquares<~c>(board, all, enemy_or_empty);
 
             generateKingMoves<c, mt>(board, moveable_squares, seen, all, pinHV, count);
 
