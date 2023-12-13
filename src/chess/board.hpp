@@ -14,6 +14,7 @@
 #include <charconv>
 
 namespace chess {
+
     class Board {
     public:
         Board(std::string_view fen = FENS::STARTPOS);

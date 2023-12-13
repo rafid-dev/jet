@@ -25,9 +25,7 @@ namespace misc {
     // Returns the current time in Duration
     template <typename Duration = std::chrono::milliseconds>
     inline double tick() {
-        return (double) std::chrono::duration_cast<Duration>(
-                   std::chrono::steady_clock::now().time_since_epoch())
-            .count();
+        return (double) std::chrono::duration_cast<Duration>(std::chrono::steady_clock::now().time_since_epoch()).count();
     }
 
 } // namespace misc

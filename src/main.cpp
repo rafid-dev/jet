@@ -1,6 +1,10 @@
 #include "chess/movegen.hpp"
 #include "chess/zobrist.hpp"
+#include "evaluation/evaluate.hpp"
 #include "perfsuite.hpp"
+#include "search/search.hpp"
+#include "search/searchinfo.hpp"
+#include "search/searchthread.hpp"
 
 #include <iostream>
 #include <istream>
@@ -17,12 +21,15 @@ int main() {
     std::cout << NAME << std::endl;
     std::cout << AUTHOR << std::endl;
 
-    Board board;
+    jet::search::SearchThread st;
+    Board&                    board = st.board();
 
     std::string line;
     std::string token;
 
     std::vector<Move> moves;
+
+    jet::search::SearchInfo info;
 
     while (std::getline(std::cin, line)) {
         token.clear();
@@ -80,33 +87,43 @@ int main() {
 
             std::cout << board << std::endl;
 
-        } else if (token == "go") {
+        } else if (token == "perftsuite") {
             iss >> token;
 
-            if (token == "perftsuite") {
-                iss >> token;
+            perft::bulkSuite(token, 1000);
+        } else if (token == "perft") {
+            iss >> token;
 
-                perft::bulkSuite(token, 1000);
-            } else if (token == "perft") {
+            int depth = 6;
+            if (token == "depth") {
                 iss >> token;
+                depth = std::stoi(token);
+            }
 
-                int depth = 6;
+            iss >> token;
+            if (token == "speed") {
+                perft::bulkSpeedTest(board, depth);
+            } else {
+                perft::startBulk(board, depth);
+            }
+
+            // Search things
+        } else if (token == "go") {
+            while (iss >> token) {
                 if (token == "depth") {
                     iss >> token;
-                    depth = std::stoi(token);
-                }
-
-                iss >> token;
-                if (token == "speed") {
-                    perft::bulkSpeedTest(board, depth);
-                } else {
-                    perft::startBulk(board, depth);
+                    info.setDepth(std::stoi(token));
                 }
             }
-        } else if (token == "quit" || token == "exit") {
-            break;
+
+            jet::search::search(st, info);
         } else if (token == "print") {
             std::cout << board << std::endl;
+            std::cout << "Eval: " << jet::evaluation::evaluate(board) << std::endl;
+        } else if (token == "quit" || token == "exit") {
+            break;
+        } else if (token == "\n") {
+            continue;
         } else {
             std::cout << "Unknown command: " << token << '\n';
         }

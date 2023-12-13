@@ -9,7 +9,7 @@
 
 namespace chess {
 
-    enum class MoveType : uint16_t { NORMAL, ENPASSANT, CASTLING, PROMOTION };
+    enum class MoveType : uint16_t { NORMAL = 0, ENPASSANT, CASTLING, PROMOTION };
 
     struct Move {
     private:
@@ -46,6 +46,10 @@ namespace chess {
 
     public:
         Move() = default;
+
+        static inline constexpr Move none() {
+            return _make<MoveType::NORMAL>(0, 0);
+        }
 
         static inline constexpr Move makeNormal(Square from, Square to) {
             return _make<MoveType::NORMAL>(from, to);
@@ -101,6 +105,10 @@ namespace chess {
 
         constexpr auto move() const {
             return m_data;
+        }
+
+        constexpr bool isValid() const {
+            return !(from() == to());
         }
     };
 
