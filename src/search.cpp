@@ -27,6 +27,8 @@ namespace jet {
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::ALL>(board, movelist);
 
+            Move bestmove = Move::none();
+
             for (const auto& move : movelist) {
                 board.makeMove(move);
 
@@ -40,7 +42,9 @@ namespace jet {
                     bestscore = score;
 
                     if (score > alpha) {
-                        alpha = score;
+                        bestmove = move;
+
+                        ss->updatePV(bestmove, ss + 1);
 
                         if (score >= beta) {
                             break;
@@ -50,14 +54,18 @@ namespace jet {
             }
 
             if (movelist.empty()) {
-                bestscore = board.isCheck() ? -constants::IS_MATE + ss->ply : 0;
+                bestscore = board.isCheck() * (-constants::IS_MATE + ss->ply);
             }
 
             return bestscore;
         }
 
         void search(SearchThread& st, SearchInfo& info) {
-            SearchStack stack[constants::MAX_PLY + 10], *ss = stack + 7;
+            st.reset();
+
+            std::array<SearchStack, constants::SEARCH_STACK_SIZE> stack;
+
+            SearchStack* ss = stack.data() + 7;
 
             auto start = misc::tick();
 
@@ -70,6 +78,11 @@ namespace jet {
                 std::cout << " time " << time_elapsed;
                 std::cout << " nodes " << st.nodes;
                 std::cout << " nps " << static_cast<int>(1000.0f * st.nodes / (time_elapsed + 1));
+                std::cout << " pv";
+                for (int i = 0; ss->pv[i].isValid(); i++) {
+                    std::cout << " " << ss->pv[i];
+                }
+
                 std::cout << std::endl;
             }
         }

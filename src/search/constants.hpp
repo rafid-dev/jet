@@ -17,6 +17,8 @@ namespace jet {
         static inline constexpr types::Value IS_MATE_IN_MAX_PLY  = (IS_MATE - MAX_PLY);
         static inline constexpr types::Value IS_MATED_IN_MAX_PLY = -IS_MATE_IN_MAX_PLY;
 
+        static inline constexpr types::Depth SEARCH_STACK_SIZE = MAX_PLY + 10;
+
     } // namespace constants
 
 } // namespace jet
