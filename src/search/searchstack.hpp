@@ -1,22 +1,20 @@
 #pragma once
 
 #include "../chess/moves.hpp"
-#include "types.hpp"
+#include "constants.hpp"
 #include <cstdint>
 
 namespace jet {
 
     namespace search {
         struct SearchStack {
-            int ply = 0;
+            using List    = std::array<SearchStack, constants::SEARCH_STACK_SIZE>;
+            using pointer = SearchStack*;
 
+            types::Depth   ply = 0;
             types::PvTable pv;
 
-            SearchStack() {
-                std::fill(pv.begin(), pv.end(), chess::Move::none());
-            }
-
-            void updatePV(chess::Move bestmove, SearchStack* next) {
+            void updatePV(chess::Move bestmove, pointer next) {
                 int i;
 
                 pv[0] = bestmove;
@@ -27,6 +25,20 @@ namespace jet {
 
                 pv[i + 1] = chess::Move::none();
             };
+
+            static pointer init(List& list) {
+                for (auto& ss : list) {
+                    std::fill(ss.pv.begin(), ss.pv.end(), chess::Move::none());
+                }
+
+                return list.data() + 7;
+            }
+
+            static void printPVs(pointer ss) {
+                for (int i = 0; ss->pv[i].isValid(); i++) {
+                    std::cout << " " << ss->pv[i];
+                }
+            }
         };
 
     } // namespace search

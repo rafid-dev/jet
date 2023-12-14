@@ -11,6 +11,8 @@
 #include <sstream>
 
 using namespace chess;
+using namespace jet;
+using namespace jet::search;
 
 static constexpr std::string_view NAME   = "Jet";
 static constexpr std::string_view AUTHOR = "Rafid Ahsan";
@@ -21,8 +23,8 @@ int main() {
     std::cout << NAME << std::endl;
     std::cout << AUTHOR << std::endl;
 
-    jet::search::SearchThread st;
-    Board&                    board = st.board();
+    SearchThread st;
+    Board&       board = st.board();
 
     std::string line;
     std::string token;
@@ -68,10 +70,14 @@ int main() {
                 board.setFen(fen);
             }
 
-            while (iss >> token) {
-                Move move = board.uciToMove(token);
-                board.makeMove(move);
+            if (token == "moves") {
+                while (iss >> token) {
+                    Move move = board.uciToMove(token);
+                    board.makeMove(move);
+                    moves.push_back(move);
+                }
             }
+
             continue;
         } else if (token == "makemove" || token == "make") {
             while (iss >> token) {
@@ -109,10 +115,30 @@ int main() {
 
             // Search things
         } else if (token == "go") {
+            jet::search::TimeManager& tm = st.timeManager();
+
             while (iss >> token) {
                 if (token == "depth") {
                     iss >> token;
                     info.setDepth(std::stoi(token));
+                } else if (token == "wtime") {
+                    iss >> token;
+                    tm.setTime<TimeType::WTIME>(std::stoi(token));
+                } else if (token == "btime") {
+                    iss >> token;
+                    tm.setTime<TimeType::BTIME>(std::stoi(token));
+                } else if (token == "winc") {
+                    iss >> token;
+                    tm.setTime<TimeType::WINC>(std::stoi(token));
+                } else if (token == "binc") {
+                    iss >> token;
+                    tm.setTime<TimeType::BINC>(std::stoi(token));
+                } else if (token == "movetime") {
+                    iss >> token;
+                    tm.setTime<TimeType::MOVETIME>(std::stoi(token));
+                } else if (token == "movestogo") {
+                    iss >> token;
+                    tm.setMTG(std::stoi(token));
                 }
             }
 

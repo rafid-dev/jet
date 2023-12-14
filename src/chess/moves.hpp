@@ -22,6 +22,7 @@ namespace chess {
             T promoted : 2;
         };
         MoveBase<uint16_t> m_data;
+        int16_t            m_score;
 
         template <MoveType mt = MoveType::NORMAL>
         static inline constexpr Move _make(Square from, Square to, PieceType promoted = PieceType::KNIGHT) {
@@ -30,6 +31,8 @@ namespace chess {
             m.m_data.to       = static_cast<uint16_t>(to);
             m.m_data.type     = static_cast<uint16_t>(mt);
             m.m_data.promoted = _encodePieceType(promoted);
+            m.m_score         = 0;
+
             return m;
         }
 
@@ -102,26 +105,12 @@ namespace chess {
         constexpr bool isValid() const {
             return !(from() == to());
         }
-    };
 
-    struct ExtMove {
-    private:
-        Move    m_move;
-        int16_t m_score;
-
-    public:
-        ExtMove(Move move = Move::none(), int16_t s = 0) : m_move{move}, m_score{s} {
-        }
-
-        auto move() const {
-            return m_move;
-        }
-
-        void setScore(int16_t s) {
+        constexpr void setScore(int16_t s) {
             m_score = s;
         }
 
-        auto score() const {
+        constexpr auto score() const {
             return m_score;
         }
     };
@@ -141,12 +130,11 @@ namespace chess {
         return os;
     }
 
-    template <typename T = Move>
-    struct MovelistBase {
+    struct Movelist {
     public:
-        MovelistBase() = default;
+        Movelist() = default;
 
-        MovelistBase(std::initializer_list<Move> moves) : m_size(moves.size()) {
+        Movelist(std::initializer_list<Move> moves) : m_size(moves.size()) {
             assert(moves.size() <= MAX_SIZE);
             std::copy(moves.begin(), moves.end(), m_moves.begin());
         }
@@ -223,10 +211,8 @@ namespace chess {
         }
 
         constexpr void sort() {
-            if constexpr (std::is_same<T, ExtMove>::value) {
-                std::sort(m_moves.begin(), m_moves.begin() + m_size,
-                          [](const ExtMove& a, const ExtMove& b) { return a.score() > b.score(); });
-            }
+            std::sort(m_moves.begin(), m_moves.begin() + m_size,
+                      [](const Move& a, const Move& b) { return a.score() > b.score(); });
         }
 
         using iterator       = Move*;
@@ -248,14 +234,12 @@ namespace chess {
             return m_moves.data() + m_size;
         }
 
-    private:
         static constexpr std::size_t MAX_SIZE = 128;
-        int                          m_size   = 0;
-        std::array<Move, MAX_SIZE>   m_moves{};
-    };
 
-    using Movelist    = MovelistBase<Move>;
-    using ExtMovelist = MovelistBase<ExtMove>;
+    private:
+        int                        m_size = 0;
+        std::array<Move, MAX_SIZE> m_moves{};
+    };
 
     inline std::ostream& operator<<(std::ostream& os, const Movelist& ml) {
         for (int i = 0; i < ml.size(); ++i) {

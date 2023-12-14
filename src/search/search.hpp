@@ -8,7 +8,11 @@ namespace jet {
         class SearchInfo;
         struct SearchStack;
 
-        void         search(SearchThread&, SearchInfo&);
+        enum class NodeType : uint8_t { ROOT, PV, NONPV };
+
+        void search(SearchThread&, SearchInfo&);
+
+        template <NodeType nt>
         types::Value negamax(types::Value a, types::Value b, types::Depth, SearchThread&, SearchStack*);
     } // namespace search
 } // namespace jet

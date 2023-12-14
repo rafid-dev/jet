@@ -1,5 +1,6 @@
 #pragma once
 
+#include "constants.hpp"
 #include "types.hpp"
 
 namespace jet {
@@ -15,7 +16,7 @@ namespace jet {
             }
 
         private:
-            types::Depth m_depth;
+            types::Depth m_depth = constants::DEPTH_MAX;
         };
     } // namespace search
 } // namespace jet

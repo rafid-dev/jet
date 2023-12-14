@@ -226,7 +226,7 @@ namespace chess {
             return hash_key ^ enpassanthash ^ sidehash ^ castlehash;
         }
 
-        constexpr inline Move uciToMove(std::string_view uci) const {
+        inline Move uciToMove(std::string_view uci) const {
             Square from = Square(uci.substr(0, 2));
             Square to   = Square(uci.substr(2, 2));
 
