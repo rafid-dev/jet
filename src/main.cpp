@@ -70,11 +70,13 @@ int main() {
                 board.setFen(fen);
             }
 
+            iss >> token;
+
             if (token == "moves") {
                 while (iss >> token) {
                     Move move = board.uciToMove(token);
+                    // std::cout << "Parsed move: " << move << '\n';
                     board.makeMove(move);
-                    moves.push_back(move);
                 }
             }
 
@@ -117,28 +119,34 @@ int main() {
         } else if (token == "go") {
             jet::search::TimeManager& tm = st.timeManager();
 
+            tm.setNodes(0);
+            tm.setMTG(0);
+
             while (iss >> token) {
                 if (token == "depth") {
                     iss >> token;
                     info.setDepth(std::stoi(token));
                 } else if (token == "wtime") {
                     iss >> token;
-                    tm.setTime<TimeType::WTIME>(std::stoi(token));
+                    tm.setTime<TimeType::WTIME>(std::stod(token));
                 } else if (token == "btime") {
                     iss >> token;
-                    tm.setTime<TimeType::BTIME>(std::stoi(token));
+                    tm.setTime<TimeType::BTIME>(std::stod(token));
                 } else if (token == "winc") {
                     iss >> token;
-                    tm.setTime<TimeType::WINC>(std::stoi(token));
+                    tm.setTime<TimeType::WINC>(std::stod(token));
                 } else if (token == "binc") {
                     iss >> token;
-                    tm.setTime<TimeType::BINC>(std::stoi(token));
+                    tm.setTime<TimeType::BINC>(std::stod(token));
                 } else if (token == "movetime") {
                     iss >> token;
-                    tm.setTime<TimeType::MOVETIME>(std::stoi(token));
+                    tm.setTime<TimeType::MOVETIME>(std::stod(token));
                 } else if (token == "movestogo") {
                     iss >> token;
                     tm.setMTG(std::stoi(token));
+                } else if (token == "nodes") {
+                    iss >> token;
+                    tm.setNodes(std::stoull(token));
                 }
             }
 

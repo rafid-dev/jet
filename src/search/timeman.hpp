@@ -68,16 +68,29 @@ namespace jet {
                 movestogo = x;
             }
 
+            void setNodes(uint64_t n) {
+                nodes = n;
+            }
+
+            bool checkNodes(uint64_t n) const {
+                return nodes && n >= nodes;
+            }
+
+            bool nodeset() const {
+                return nodes;
+            }
+
             bool timeset = false;
 
         private:
-            Time m_start{};
-            Time wtime{};
-            Time btime{};
-            Time winc{};
-            Time binc{};
-            Time movetime{};
-            int  movestogo = 0;
+            Time     m_start{};
+            Time     wtime{};
+            Time     btime{};
+            Time     winc{};
+            Time     binc{};
+            Time     movetime{};
+            int      movestogo = 0;
+            uint64_t nodes     = 0;
 
             Time stoptime{};
         };

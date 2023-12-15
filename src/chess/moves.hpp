@@ -234,7 +234,7 @@ namespace chess {
             return m_moves.data() + m_size;
         }
 
-        static constexpr std::size_t MAX_SIZE = 128;
+        static constexpr int MAX_SIZE = 128;
 
     private:
         int                        m_size = 0;

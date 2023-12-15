@@ -35,10 +35,14 @@ namespace jet {
             }
 
             bool stop() const {
-                return stop_flag && timeman.timeset;
+                return stop_flag && (timeman.timeset || timeman.nodeset());
             }
 
             void checkup() {
+                if (timeman.nodeset()) {
+                    stop_flag = timeman.checkNodes(nodes);
+                    return;
+                }
                 if ((nodes & 2047) == 0) {
                     stop_flag = timeman.canStop();
                 }

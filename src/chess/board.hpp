@@ -247,6 +247,22 @@ namespace chess {
             return Move::makeNormal(from, to);
         }
 
+        bool isRepetition(int count = 2) const {
+            int n = 1;
+
+            for (int i = static_cast<int>(m_history.size()) - 2; i >= 0; i -= 2) {
+                if (m_history[i].hash == m_hash) {
+                    n++;
+                }
+
+                if (n >= count) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
     private:
         struct State {
             CastlingRights m_castlingRights;
@@ -550,6 +566,8 @@ namespace chess {
         m_castlingRights.loadFromString(castling);
         m_occupancy = all();
         m_hash      = genHash();
+        m_history.clear();
+        m_history.reserve(256);
     }
 
 } // namespace chess

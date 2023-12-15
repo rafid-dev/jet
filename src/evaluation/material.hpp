@@ -23,21 +23,15 @@ namespace jet {
         types::Value evaluateMaterial(Board& board) {
             types::Value sum = 0;
 
-            if constexpr (c == Color::WHITE) {
-                sum += evaluateMaterial<PieceType::PAWN, c>(board);
-                sum += evaluateMaterial<PieceType::KNIGHT, c>(board);
-                sum += evaluateMaterial<PieceType::BISHOP, c>(board);
-                sum += evaluateMaterial<PieceType::ROOK, c>(board);
-                sum += evaluateMaterial<PieceType::QUEEN, c>(board);
-            } else {
-                sum -= evaluateMaterial<PieceType::PAWN, c>(board);
-                sum -= evaluateMaterial<PieceType::KNIGHT, c>(board);
-                sum -= evaluateMaterial<PieceType::BISHOP, c>(board);
-                sum -= evaluateMaterial<PieceType::ROOK, c>(board);
-                sum -= evaluateMaterial<PieceType::QUEEN, c>(board);
-            }
+            constexpr int sign = (c == chess::Color::WHITE) ? 1 : -1;
 
-            return sum;
+            sum += evaluateMaterial<PieceType::PAWN, c>(board);
+            sum += evaluateMaterial<PieceType::KNIGHT, c>(board);
+            sum += evaluateMaterial<PieceType::BISHOP, c>(board);
+            sum += evaluateMaterial<PieceType::ROOK, c>(board);
+            sum += evaluateMaterial<PieceType::QUEEN, c>(board);
+
+            return sum * sign;
         }
     } // namespace evaluation
 } // namespace jet

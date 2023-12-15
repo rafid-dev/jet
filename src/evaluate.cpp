@@ -1,5 +1,6 @@
 #include "evaluation/evaluate.hpp"
 #include "evaluation/material.hpp"
+#include "evaluation/psqt.hpp"
 #include <array>
 
 using chess::Bitboard;
@@ -18,9 +19,15 @@ namespace jet {
             if (board.sideToMove() == Color::WHITE) {
                 sum += evaluateMaterial<Color::WHITE>(board);
                 sum += evaluateMaterial<Color::BLACK>(board);
+
+                // sum += evaluatePSQT<Color::WHITE>(board);
+                // sum += evaluatePSQT<Color::BLACK>(board);
             } else {
                 sum -= evaluateMaterial<Color::WHITE>(board);
                 sum -= evaluateMaterial<Color::BLACK>(board);
+
+                // sum -= evaluatePSQT<Color::WHITE>(board);
+                // sum -= evaluatePSQT<Color::BLACK>(board);
             }
 
             return sum;
