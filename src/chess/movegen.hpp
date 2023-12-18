@@ -47,6 +47,10 @@ namespace chess {
                 const Square ep_pawn = ep + down;
                 const Square from    = ep_bb.lsb();
 
+                if (pinD & Bitboard(from)) {
+                    return;
+                }
+
                 const Square   kingSq     = board.kingSq<c>();
                 const Bitboard rook_queen = board.bitboard<~c, PieceType::ROOK>() | board.bitboard<~c, PieceType::QUEEN>();
 
