@@ -134,6 +134,7 @@ namespace jet {
 
                     if (score > alpha) {
                         bestmove = move;
+                        alpha    = score;
 
                         ss->updatePV(bestmove, ss + 1);
 
