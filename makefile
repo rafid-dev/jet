@@ -4,7 +4,7 @@ CXXFLAGS := -std=c++20 -flto -march=native -fexceptions -Wall -Wextra
 LDFLAGS :=
 
 # Debug compiler flags
-DEBUG_CXXFLAGS := -g3 -O0 -DDEBUG -fsanitize=address -fsanitize=undefined
+DEBUG_CXXFLAGS := -g3 -O1 -DDEBUG -fsanitize=address -fsanitize=undefined
 
 BUILD_CXXFLAGS := -DNDEBUG -O3
 

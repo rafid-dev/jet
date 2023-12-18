@@ -30,23 +30,22 @@ namespace chess {
         static inline constexpr Direction down_right = relativeDirection<c, Direction::SOUTH_EAST>();
 
         template <bool double_ep_possible>
-        static inline void generateEnpassantMoves(const Board& board, Movelist& movelist, Square ep, Bitboard ep_bb,
-                                                  Bitboard all, Bitboard pinD) {
-            if constexpr (mt == MoveGenType::CAPTURE) {
+        static inline void generateEnpassantMoves(const Board& board, Movelist& movelist, Square ep, Bitboard ep_bb, Bitboard all, Bitboard pinD) {
+            if constexpr (mt == MoveGenType::QUIET) {
                 return;
             }
 
             if constexpr (double_ep_possible) {
                 BitboardIterator(ep_bb) {
                     Square from = ep_bb.poplsb();
-                    if (!(pinD & Bitboard(from)) || !(pinD & Bitboard(ep))) {
+                    if (!((Bitboard(from) & pinD) && !(pinD & Bitboard(ep)))) {
                         movelist.add(Move::makeEnpassant(from, ep));
                     }
                 }
             } else {
                 const Square from = ep_bb.lsb();
 
-                if ((pinD & Bitboard(from)) || (pinD & Bitboard(ep))) {
+                if ((Bitboard(from) & pinD) && !(pinD & Bitboard(ep))) {
                     return;
                 }
 
