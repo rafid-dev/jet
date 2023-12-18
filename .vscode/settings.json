@@ -69,6 +69,7 @@
         "thread": "cpp",
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "string_view": "cpp"
     }
 }

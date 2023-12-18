@@ -6,10 +6,11 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <type_traits>
 
 namespace chess {
 
-    enum class MoveType : uint16_t { NORMAL, ENPASSANT, CASTLING, PROMOTION };
+    enum class MoveType : uint16_t { NORMAL = 0, ENPASSANT, CASTLING, PROMOTION };
 
     struct Move {
     private:
@@ -21,7 +22,7 @@ namespace chess {
             T promoted : 2;
         };
         MoveBase<uint16_t> m_data;
-        int16_t            m_score = 0;
+        int16_t            m_score;
 
         template <MoveType mt = MoveType::NORMAL>
         static inline constexpr Move _make(Square from, Square to, PieceType promoted = PieceType::KNIGHT) {
@@ -30,6 +31,8 @@ namespace chess {
             m.m_data.to       = static_cast<uint16_t>(to);
             m.m_data.type     = static_cast<uint16_t>(mt);
             m.m_data.promoted = _encodePieceType(promoted);
+            m.m_score         = 0;
+
             return m;
         }
 
@@ -46,6 +49,10 @@ namespace chess {
 
     public:
         Move() = default;
+
+        static inline constexpr Move none() {
+            return _make<MoveType::NORMAL>(0, 0);
+        }
 
         static inline constexpr Move makeNormal(Square from, Square to) {
             return _make<MoveType::NORMAL>(from, to);
@@ -91,16 +98,20 @@ namespace chess {
             return type() == MoveType::CASTLING;
         }
 
-        constexpr void setScore(int16_t score) {
-            m_score = score;
+        constexpr auto move() const {
+            return m_data;
+        }
+
+        constexpr bool isValid() const {
+            return !(from() == to());
+        }
+
+        constexpr void setScore(int16_t s) {
+            m_score = s;
         }
 
         constexpr auto score() const {
             return m_score;
-        }
-
-        constexpr auto move() const {
-            return m_data;
         }
     };
 
@@ -223,10 +234,11 @@ namespace chess {
             return m_moves.data() + m_size;
         }
 
+        static constexpr int MAX_SIZE = 128;
+
     private:
-        static constexpr std::size_t MAX_SIZE = 128;
-        int                          m_size   = 0;
-        std::array<Move, MAX_SIZE>   m_moves{};
+        int                        m_size = 0;
+        std::array<Move, MAX_SIZE> m_moves{};
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Movelist& ml) {
