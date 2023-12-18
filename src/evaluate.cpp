@@ -20,14 +20,14 @@ namespace jet {
                 sum += evaluateMaterial<Color::WHITE>(board);
                 sum += evaluateMaterial<Color::BLACK>(board);
 
-                // sum += evaluatePSQT<Color::WHITE>(board);
-                // sum += evaluatePSQT<Color::BLACK>(board);
+                sum += evaluatePSQT<Color::WHITE>(board);
+                sum += evaluatePSQT<Color::BLACK>(board);
             } else {
                 sum -= evaluateMaterial<Color::WHITE>(board);
                 sum -= evaluateMaterial<Color::BLACK>(board);
 
-                // sum -= evaluatePSQT<Color::WHITE>(board);
-                // sum -= evaluatePSQT<Color::BLACK>(board);
+                sum -= evaluatePSQT<Color::WHITE>(board);
+                sum -= evaluatePSQT<Color::BLACK>(board);
             }
 
             return sum;
