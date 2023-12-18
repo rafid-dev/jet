@@ -95,6 +95,9 @@ namespace jet {
                 }
             }
 
+            const bool inCheck = board.isCheck();
+            depth += inCheck; // check extension
+
             Value score     = 0;
             Value bestscore = -constants::VALUE_INFINITY;
 
@@ -111,6 +114,12 @@ namespace jet {
                 st.nodes++;
                 movecount++;
 
+                if constexpr (nt == NodeType::ROOT) {
+                    if (movecount == 1 && depth == 1) {
+                        ss->pv[0] = move;
+                    }
+                }
+
                 score = -negamax<NodeType::PV>(-beta, -alpha, depth - 1, st, ss + 1);
 
                 board.unmakeMove(move);
@@ -119,12 +128,6 @@ namespace jet {
                 if (st.stop()) {
                     return 0;
                 }
-
-                // if constexpr (nt == NodeType::ROOT) {
-                //     if (movecount == 1) {
-                //         ss->pv[0] = move;
-                //     }
-                // }
 
                 if (score > bestscore) {
                     bestscore = score;
@@ -142,7 +145,7 @@ namespace jet {
             }
 
             if (!movecount) {
-                bestscore = board.isCheck() ? -constants::IS_MATE + ss->ply : 0;
+                bestscore = inCheck ? -constants::IS_MATE + ss->ply : 0;
             }
 
             return bestscore;

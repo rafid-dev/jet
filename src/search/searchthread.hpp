@@ -44,7 +44,7 @@ namespace jet {
                     return;
                 }
                 if ((nodes & 2047) == 0) {
-                    stop_flag = timeman.canStop();
+                    stop_flag = timeman.shouldStop();
                 }
             }
 

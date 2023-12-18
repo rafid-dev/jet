@@ -43,7 +43,7 @@ namespace jet {
                 stoptime = t + inc;
             }
 
-            bool canStop() const {
+            bool shouldStop() const {
                 return misc::tick() > (m_start + stoptime);
             }
 
