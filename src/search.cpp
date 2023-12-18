@@ -24,13 +24,15 @@ namespace jet {
         Value qsearch(Value alpha, Value beta, SearchThread& st) {
             st.checkup();
 
+            if (ss->ply >= constants::PLY_MAX) {
+                return evaluation::evaluate(st);
+            }
+
             if (st.board().isRepetition()) {
                 return 0;
             }
 
             Value standing_pat = evaluation::evaluate(st);
-            Value bestscore    = standing_pat;
-            Value score        = -constants::VALUE_INFINITY;
 
             if (standing_pat >= beta) {
                 return beta;
@@ -40,7 +42,9 @@ namespace jet {
                 alpha = standing_pat;
             }
 
-            Board&   board = st.board();
+            Value    bestscore = standing_pat;
+            Value    score     = -constants::VALUE_INFINITY;
+            Board&   board     = st.board();
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::CAPTURE>(board, movelist);
 
@@ -48,7 +52,7 @@ namespace jet {
                 board.makeMove(move);
                 st.nodes++;
 
-                score = -qsearch<NodeType::NONPV>(-beta, -alpha, st);
+                score = -qsearch<NodeType::PV>(-beta, -alpha, st);
 
                 board.unmakeMove(move);
 
@@ -81,7 +85,7 @@ namespace jet {
             st.checkup(); // check for time/nodes
 
             if (depth == 0) {
-                return evaluation::evaluate(st);
+                return qsearch<nt>(alpha, beta, st);
             }
 
             Board& board = st.board();
