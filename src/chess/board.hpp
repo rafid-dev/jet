@@ -158,13 +158,11 @@ namespace chess {
 
         constexpr Square kingSq(Color c) const {
             return m_bitboards[static_cast<bool>(c)][static_cast<int>(PieceType::KING)].lsb();
-            // return Square::A1;
         }
 
         template <Color c>
         constexpr Square kingSq() const {
             return m_bitboards[static_cast<bool>(c)][static_cast<int>(PieceType::KING)].lsb();
-            // return Square::A1;
         }
 
         constexpr bool isCheck() const {

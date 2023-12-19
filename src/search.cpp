@@ -116,12 +116,11 @@ namespace jet {
 
                 if constexpr (nt == NodeType::ROOT) {
                     if (movecount == 1 && depth == 1) {
-                        ss->pv[0] = move;
+                        ss->updatePV(move, ss + 1);
                     }
                 }
 
                 score = -negamax<NodeType::PV>(-beta, -alpha, depth - 1, st, ss + 1);
-
                 board.unmakeMove(move);
 
                 // if we stop, return 0
@@ -136,7 +135,7 @@ namespace jet {
                         bestmove = move;
                         alpha    = score;
 
-                        ss->updatePV(bestmove, ss + 1);
+                        ss->updatePV(move, ss + 1);
 
                         if (score >= beta) {
                             break;
