@@ -53,6 +53,17 @@ int main() {
             MoveGen::legalmoves<MoveGenType::ALL>(board, list);
 
             std::cout << list << std::endl;
+
+            list.clear();
+            MoveGen::legalmoves<MoveGenType::QUIET>(board, list);
+            std::cout << "Quiet moves: " << list.size() << '\n';
+            std::cout << list << std::endl;
+
+            list.clear();
+            MoveGen::legalmoves<MoveGenType::CAPTURE>(board, list);
+            std::cout << "Capture moves: " << list.size() << '\n';
+            std::cout << list << std::endl;
+
         } else if (token == "position") {
             iss >> token;
 

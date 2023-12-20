@@ -210,9 +210,22 @@ namespace chess {
             --m_size;
         }
 
-        constexpr void sort() {
-            std::sort(m_moves.begin(), m_moves.begin() + m_size,
-                      [](const Move& a, const Move& b) { return a.score() > b.score(); });
+        void nextmove(const int move_index) {
+            Move temp;
+
+            int     i         = 0;
+            int16_t bestscore = INT16_MIN;
+
+            for (int j = move_index; j < m_size; ++j) {
+                if (m_moves[j].score() > bestscore) {
+                    bestscore = m_moves[j].score();
+                    i         = j;
+                }
+            }
+
+            temp                = m_moves[move_index];
+            m_moves[move_index] = m_moves[i];
+            m_moves[i]          = temp;
         }
 
         using iterator       = Move*;

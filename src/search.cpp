@@ -1,5 +1,6 @@
 #include "search/constants.hpp"
 
+#include "search/moveorder.hpp"
 #include "search/search.hpp"
 #include "search/searchinfo.hpp"
 #include "search/searchstack.hpp"
@@ -21,11 +22,19 @@ namespace jet {
         template Value negamax<NodeType::NONPV>(Value, Value, Depth, SearchThread&, SearchStack*);
 
         template <NodeType nt>
-        Value qsearch(Value alpha, Value beta, SearchThread& st) {
+        Value qsearch(Value alpha, Value beta, int depth, SearchThread& st) {
             st.checkup();
 
             if (st.board().isRepetition()) {
                 return 0;
+            }
+
+            if (st.board().isCheck()) {
+                depth++;
+            }
+
+            if (depth == 0) {
+                return evaluation::evaluate(st);
             }
 
             Value standing_pat = evaluation::evaluate(st);
@@ -48,7 +57,7 @@ namespace jet {
                 board.makeMove(move);
                 st.nodes++;
 
-                score = -qsearch<NodeType::NONPV>(-beta, -alpha, st);
+                score = -qsearch<NodeType::NONPV>(-beta, -alpha, depth - 1, st);
 
                 board.unmakeMove(move);
 
@@ -82,6 +91,7 @@ namespace jet {
 
             if (depth == 0) {
                 return evaluation::evaluate(st);
+                // return qsearch<nt>(alpha, beta, 3, st);
             }
 
             Board& board = st.board();
@@ -103,12 +113,15 @@ namespace jet {
 
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::ALL>(board, movelist);
+            MoveOrdering::captures(board, movelist);
 
-            Move bestmove = Move::none();
+            Move bestmove  = Move::none();
+            int  movecount = 0;
 
-            int movecount = 0;
+            for (int i = 0; i < movelist.size(); i++) {
+                movelist.nextmove(i);
 
-            for (const auto& move : movelist) {
+                const auto& move = movelist[i];
                 board.makeMove(move);
                 (ss + 1)->ply = ss->ply + 1;
                 st.nodes++;

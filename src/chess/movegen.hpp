@@ -30,7 +30,8 @@ namespace chess {
         static inline constexpr Direction down_right = relativeDirection<c, Direction::SOUTH_EAST>();
 
         template <bool double_ep_possible>
-        static inline void generateEnpassantMoves(const Board& board, Movelist& movelist, Square ep, Bitboard ep_bb, Bitboard all, Bitboard pinD) {
+        static inline void generateEnpassantMoves(const Board& board, Movelist& movelist, Square ep, Bitboard ep_bb,
+                                                  Bitboard all, Bitboard pinD) {
             if constexpr (mt == MoveGenType::QUIET) {
                 return;
             }
