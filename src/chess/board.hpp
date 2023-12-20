@@ -85,15 +85,26 @@ namespace chess {
             return us<Color::WHITE>() | us<Color::BLACK>();
         }
 
-        // Returns the piece on a square
+        // Returns the bitboard of a given color and piece type
         template <Color c, PieceType pt>
         constexpr Bitboard bitboard() const {
             return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
         }
 
-        // Returns the piece on a square
+        // Returns the bitboard of a given color and piece type
         constexpr Bitboard bitboard(Color c, PieceType pt) const {
             return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
+        }
+
+        // Returns the bitboard of a given piece type (includes both colors)
+        template <PieceType pt>
+        constexpr Bitboard bitboard() const {
+            return bitboard<Color::WHITE, pt>() | bitboard<Color::BLACK, pt>();
+        }
+
+        // Returns the bitboard of a given piece type (includes both colors)
+        constexpr Bitboard bitboard(PieceType pt) const {
+            return bitboard(Color::WHITE, pt) | bitboard(Color::BLACK, pt);
         }
 
         // Place a piece on a square
@@ -120,19 +131,19 @@ namespace chess {
         }
 
         // Move a piece from one square to another
-        constexpr void movePiece(Piece piece, Square from, Square to) {
+        void movePiece(Piece piece, Square from, Square to) {
             m_pieces.move(piece, from, to);
         }
 
         // Returns the mailbox of 64 squares containing a piece
-        constexpr const Mailbox64& pieces() const {
+        const Mailbox64& pieces() const {
             return m_pieces;
         }
 
         // set the board to a given fen
         void setFen(std::string_view fen);
 
-        constexpr bool isAttacked(Square s, Color c) const {
+        bool isAttacked(Square s, Color c) const {
             if (Attacks::pawnAttacks(s, c) & bitboard(c, PieceType::PAWN)) {
                 return true;
             }
@@ -156,7 +167,7 @@ namespace chess {
             return false;
         }
 
-        constexpr Square kingSq(Color c) const {
+        Square kingSq(Color c) const {
             return m_bitboards[static_cast<bool>(c)][static_cast<int>(PieceType::KING)].lsb();
         }
 
@@ -165,7 +176,7 @@ namespace chess {
             return m_bitboards[static_cast<bool>(c)][static_cast<int>(PieceType::KING)].lsb();
         }
 
-        constexpr bool isCheck() const {
+        bool isCheck() const {
             return isAttacked(kingSq(sideToMove()), ~sideToMove());
         }
 
@@ -183,6 +194,10 @@ namespace chess {
 
         constexpr Piece movedPiece(const Move& move) const {
             return at(move.from());
+        }
+
+        Color colorOf(const Square sq) const {
+            return pieceToColor(at(sq));
         }
 
         void makeMove(const Move& move);
@@ -259,6 +274,30 @@ namespace chess {
             }
 
             return false;
+        }
+
+        template <Color c>
+        Bitboard attackers(Square sq, Bitboard occ) const {
+            Bitboard bishops = bitboard<c, PieceType::BISHOP>() | bitboard<c, PieceType::QUEEN>();
+            Bitboard rooks   = bitboard<c, PieceType::ROOK>() | bitboard<c, PieceType::QUEEN>();
+            Bitboard knights = bitboard<c, PieceType::KNIGHT>();
+            Bitboard pawns   = bitboard<c, PieceType::PAWN>();
+            Bitboard kings   = bitboard<c, PieceType::KING>();
+
+            Bitboard dRays  = Attacks::bishopAttacks(sq, occ);
+            Bitboard hvRays = Attacks::rookAttacks(sq, occ);
+
+            Bitboard attackers_bb = dRays & bishops;
+            attackers_bb |= hvRays & rooks;
+            attackers_bb |= Attacks::knightAttacks(sq) & knights;
+            attackers_bb |= Attacks::pawnAttacks(sq, c) & pawns;
+            attackers_bb |= Attacks::kingAttacks(sq) & kings;
+
+            return attackers_bb;
+        }
+
+        Bitboard attackers(Square sq, Bitboard occ) const {
+            return attackers<Color::WHITE>(sq, occ) | attackers<Color::BLACK>(sq, occ);
         }
 
     private:

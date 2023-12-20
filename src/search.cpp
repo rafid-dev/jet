@@ -42,7 +42,7 @@ namespace jet {
             Board&   board = st.board();
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::CAPTURE>(board, movelist);
-            MoveOrdering::captures(board, movelist);
+            MoveOrdering::capturesWithSee(board, movelist);
 
             Value score = -constants::VALUE_INFINITY;
 
@@ -50,6 +50,11 @@ namespace jet {
                 movelist.nextmove(i);
 
                 const auto& move = movelist[i];
+
+                if (move.score() < MoveOrdering::SEE_SCORE) {
+                    break;
+                }
+
                 board.makeMove(move);
                 st.nodes++;
 
