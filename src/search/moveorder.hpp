@@ -1,7 +1,7 @@
 #pragma once
 
-#include "chess/board.hpp"
-#include "chess/moves.hpp"
+#include "../chess/board.hpp"
+#include "../chess/moves.hpp"
 
 namespace jet {
 
