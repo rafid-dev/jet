@@ -22,24 +22,14 @@ namespace jet {
         template Value negamax<NodeType::NONPV>(Value, Value, Depth, SearchThread&, SearchStack*);
 
         template <NodeType nt>
-        Value qsearch(Value alpha, Value beta, int depth, SearchThread& st) {
+        Value qsearch(Value alpha, Value beta, SearchThread& st) {
             st.checkup();
 
             if (st.board().isRepetition()) {
                 return 0;
             }
 
-            if (st.board().isCheck()) {
-                depth++;
-            }
-
-            if (depth == 0) {
-                return evaluation::evaluate(st);
-            }
-
             Value standing_pat = evaluation::evaluate(st);
-            Value bestscore    = standing_pat;
-            Value score        = -constants::VALUE_INFINITY;
 
             if (standing_pat >= beta) {
                 return beta;
@@ -52,12 +42,18 @@ namespace jet {
             Board&   board = st.board();
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::CAPTURE>(board, movelist);
+            MoveOrdering::captures(board, movelist);
 
-            for (const auto& move : movelist) {
+            Value score = -constants::VALUE_INFINITY;
+
+            for (int i = 0; i < movelist.size(); i++) {
+                movelist.nextmove(i);
+
+                const auto& move = movelist[i];
                 board.makeMove(move);
                 st.nodes++;
 
-                score = -qsearch<NodeType::NONPV>(-beta, -alpha, depth - 1, st);
+                score = -qsearch<NodeType::PV>(-beta, -alpha, st);
 
                 board.unmakeMove(move);
 
@@ -65,20 +61,16 @@ namespace jet {
                     return 0;
                 }
 
-                if (score > bestscore) {
-                    bestscore = score;
+                if (score > alpha) {
+                    alpha = score;
 
-                    if (score > alpha) {
-                        alpha = score;
-
-                        if (score >= beta) {
-                            break;
-                        }
+                    if (score >= beta) {
+                        break;
                     }
                 }
             }
 
-            return bestscore;
+            return alpha;
         }
 
         template <NodeType nt>
@@ -90,8 +82,7 @@ namespace jet {
             st.checkup(); // check for time/nodes
 
             if (depth == 0) {
-                return evaluation::evaluate(st);
-                // return qsearch<nt>(alpha, beta, 3, st);
+                return qsearch<nt>(alpha, beta, st);
             }
 
             Board& board = st.board();
