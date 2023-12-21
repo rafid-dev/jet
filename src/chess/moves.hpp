@@ -14,26 +14,18 @@ namespace chess {
 
     struct Move {
     private:
-        template <typename T>
-        struct MoveBase {
-            T from : 6;
-            T to : 6;
-            T type : 2;
-            T promoted : 2;
-        };
-        MoveBase<uint16_t> m_data;
-        int16_t            m_score;
+        uint16_t m_data;
+        int16_t  m_score;
 
         template <MoveType mt = MoveType::NORMAL>
         static inline constexpr Move _make(Square from, Square to, PieceType promoted = PieceType::KNIGHT) {
-            Move m;
-            m.m_data.from     = static_cast<uint16_t>(from);
-            m.m_data.to       = static_cast<uint16_t>(to);
-            m.m_data.type     = static_cast<uint16_t>(mt);
-            m.m_data.promoted = _encodePieceType(promoted);
-            m.m_score         = 0;
-
-            return m;
+            if constexpr (mt != MoveType::PROMOTION) {
+                return Move((static_cast<uint16_t>(from) << 10) | (static_cast<uint16_t>(to) << 4) |
+                            (static_cast<uint16_t>(mt)));
+            } else {
+                return Move((static_cast<uint16_t>(from) << 10) | (static_cast<uint16_t>(to) << 4) |
+                            (_encodePieceType(promoted) << 2) | (static_cast<uint16_t>(mt)));
+            }
         }
 
         static constexpr uint8_t _encodePieceType(PieceType pt) {
@@ -49,9 +41,15 @@ namespace chess {
 
     public:
         Move() = default;
+        constexpr Move(uint16_t data) : m_data(data), m_score(0) {
+        }
 
         static inline constexpr Move none() {
-            return _make<MoveType::NORMAL>(0, 0);
+            return Move(0);
+        }
+
+        static inline constexpr Move nullmove() {
+            return _make<MoveType::NORMAL>(63, 63);
         }
 
         static inline constexpr Move makeNormal(Square from, Square to) {
@@ -71,19 +69,19 @@ namespace chess {
         }
 
         constexpr Square from() const {
-            return static_cast<Square>(m_data.from);
+            return static_cast<Square>(m_data >> 10);
         }
 
         constexpr Square to() const {
-            return static_cast<Square>(m_data.to);
+            return static_cast<Square>((m_data >> 4) & 0x3f);
         }
 
         constexpr MoveType type() const {
-            return MoveType(m_data.type);
+            return static_cast<MoveType>(m_data & 0x3);
         }
 
         constexpr PieceType promoted() const {
-            return _decodePieceType(m_data.promoted);
+            return _decodePieceType((m_data >> 2) & 0x3);
         }
 
         constexpr bool isPromotion() const {
@@ -112,6 +110,10 @@ namespace chess {
 
         constexpr auto score() const {
             return m_score;
+        }
+
+        constexpr bool operator==(const Move& rhs) const {
+            return m_data == rhs.m_data;
         }
     };
 
