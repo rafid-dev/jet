@@ -48,6 +48,10 @@ namespace chess {
             return m_pieces.get(sq);
         }
 
+        constexpr PieceType pieceTypeAt(Square sq) const {
+            return pieceToPieceType(at(sq));
+        }
+
         constexpr Bitboard us(Color c) const {
             // clang-format off
             return m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::PAWN)] |
@@ -404,7 +408,7 @@ namespace chess {
         const Color     side           = sideToMove();
         const Piece     piece          = movedPiece(move);
         const PieceType pt             = pieceToPieceType(piece);
-        const bool      is_capture     = isCapture(move);
+        const bool      is_capture     = isCapture(move) && move.type() != MoveType::CASTLING;
         const Piece     captured_piece = capturedPiece(move);
 
         _recordState(captured_piece);
@@ -460,6 +464,9 @@ namespace chess {
         }
 
         if (move.type() == MoveType::CASTLING) {
+            assert(at(move.from()) == makePiece(side, PieceType::KING));
+            assert(at(move.to()) == makePiece(side, PieceType::ROOK));
+
             const CastlingSide castleSide = CastlingRights::getCastlingSide(move.to(), move.from());
 
             const Square rookTo = CastlingRights::rookTo(side, castleSide);

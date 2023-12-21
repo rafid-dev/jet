@@ -13,7 +13,7 @@ namespace jet {
             using Color     = chess::Color;
             using PieceType = chess::PieceType;
 
-            static int16_t _mvvlva(chess::Piece target, chess::Piece attacker) {
+            static int16_t _mvvlva(PieceType target, PieceType attacker) {
                 return static_cast<int16_t>(target) * static_cast<int16_t>(10) - static_cast<int16_t>(attacker);
             }
 
@@ -22,10 +22,10 @@ namespace jet {
 
             static void captures(const chess::Board& board, chess::Movelist& movelist) {
                 for (auto& move : movelist) {
-                    const auto attacker = board.at(move.from());
-                    const auto target   = board.at(move.to());
+                    const auto attacker = board.pieceTypeAt(move.from());
+                    const auto target   = board.pieceTypeAt(move.to());
 
-                    if (target != chess::Piece::NONE) {
+                    if (target != PieceType::NONE) {
                         move.setScore(_mvvlva(target, attacker));
                     }
                 }
@@ -33,10 +33,10 @@ namespace jet {
 
             static void capturesWithSee(const chess::Board& board, chess::Movelist& movelist) {
                 for (auto& move : movelist) {
-                    const auto attacker = board.at(move.from());
-                    const auto target   = board.at(move.to());
+                    const auto attacker = board.pieceTypeAt(move.from());
+                    const auto target   = board.pieceTypeAt(move.to());
 
-                    if (target != chess::Piece::NONE) {
+                    if (target != PieceType::NONE) {
                         move.setScore(see(board, move, 0) * SEE_SCORE + _mvvlva(target, attacker));
                     }
                 }
@@ -48,7 +48,7 @@ namespace jet {
                 const auto from = move.from();
                 const auto to   = move.to();
 
-                auto target = chess::pieceToPieceType(board.at(to));
+                const auto target = board.pieceTypeAt(to);
 
                 int score = values[static_cast<int>(target)] - threshold;
 
@@ -56,7 +56,7 @@ namespace jet {
                     return false;
                 }
 
-                const auto attacker = board.at(from);
+                const auto attacker = board.pieceTypeAt(from);
 
                 score -= values[static_cast<int>(attacker)];
 
