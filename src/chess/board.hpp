@@ -148,7 +148,7 @@ namespace chess {
         void setFen(std::string_view fen);
 
         bool isAttacked(Square s, Color c) const {
-            if (Attacks::pawnAttacks(s, c) & bitboard(c, PieceType::PAWN)) {
+            if (Attacks::pawnAttacks(s, ~c) & bitboard(c, PieceType::PAWN)) {
                 return true;
             }
 
@@ -206,6 +206,18 @@ namespace chess {
 
         void makeMove(const Move& move);
         void unmakeMove(const Move& move);
+
+        void makeNullMove();
+        void unmakeNullMove();
+
+        bool hasNonPawnMat(Color c) const {
+            return (bitboard(c, PieceType::KNIGHT) | bitboard(c, PieceType::BISHOP) | bitboard(c, PieceType::ROOK) |
+                    bitboard(c, PieceType::QUEEN));
+        }
+
+        bool hasNonPawnMat() const {
+            return hasNonPawnMat(sideToMove());
+        }
 
         constexpr U64 hash() const {
             return m_hash;
@@ -550,6 +562,35 @@ namespace chess {
         } else if (previouslyCaptured != Piece::NONE) {
             placePiece(previouslyCaptured, move.to());
         }
+    }
+
+    inline void Board::makeNullMove() {
+        _recordState(Piece::NONE);
+
+        if (m_enPassantSq.isValid()) {
+            m_hash ^= Zobrist::enpassantKey(m_enPassantSq.file());
+        }
+
+        m_enPassantSq = Square();
+
+        m_ply++;
+
+        m_hash ^= Zobrist::sideKey();
+        m_sideToMove = ~m_sideToMove;
+    }
+
+    inline void Board::unmakeNullMove() {
+        const State& state = m_history.back();
+
+        m_castlingRights = state.m_castlingRights;
+        m_enPassantSq    = state.m_enPassantSq;
+        m_halfmoveClock  = state.m_halfmoveClock;
+        m_hash           = state.hash;
+
+        m_history.pop_back();
+
+        m_ply--;
+        m_sideToMove = ~m_sideToMove;
     }
 
     inline void Board::setFen(std::string_view fen) {

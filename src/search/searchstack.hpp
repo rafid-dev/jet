@@ -12,18 +12,20 @@ namespace jet {
             using List    = std::array<SearchStack, constants::SEARCH_STACK_SIZE>;
             using pointer = SearchStack*;
 
-            types::Depth ply      = 0;
-            int          pvLength = 0;
+            types::Depth ply         = 0;
+            int          pv_length   = 0;
+            types::Value static_eval = 0;
+            chess::Move  move        = chess::Move::none();
             PvTable      pv;
 
             void updatePV(chess::Move bestmove, SearchStack* next) {
                 pv[ply] = bestmove;
 
-                for (int i = ply + 1; i < next->pvLength; ++i) {
+                for (int i = ply + 1; i < next->pv_length; ++i) {
                     pv[i] = next->pv[i];
                 }
 
-                pvLength = next->pvLength;
+                pv_length = next->pv_length;
             };
 
             static pointer init(List& list) {
@@ -35,7 +37,7 @@ namespace jet {
             }
 
             static void printPVs(pointer ss) {
-                for (int i = 0; i < ss->pvLength; i++) {
+                for (int i = 0; i < ss->pv_length; i++) {
                     std::cout << " " << ss->pv[i];
                 }
             }

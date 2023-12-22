@@ -110,6 +110,10 @@ namespace chess {
             return m_squares == 0;
         }
 
+        constexpr inline bool nonEmpty() const {
+            return !empty();
+        }
+
         constexpr inline bool single() const {
             return popcount() == 1;
         }

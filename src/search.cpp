@@ -81,12 +81,12 @@ namespace jet {
         template <NodeType nt>
         Value negamax(Value alpha, Value beta, Depth depth, SearchThread& st, SearchStack* ss) {
             if constexpr (nt == NodeType::PV || nt == NodeType::ROOT) {
-                ss->pvLength = ss->ply;
+                ss->pv_length = ss->ply;
             }
 
             st.checkup(); // check for time/nodes
 
-            if (depth == 0) {
+            if (depth <= 0) {
                 return qsearch<nt>(alpha, beta, st);
             }
 
@@ -101,8 +101,16 @@ namespace jet {
                 }
             }
 
+            constexpr bool isPvNode = (nt == NodeType::PV || nt == NodeType::ROOT);
+
             const bool inCheck = board.isCheck();
-            depth += inCheck; // check extension
+
+            if (inCheck) {
+                depth++;
+                ss->static_eval = 0;
+            } else {
+                ss->static_eval = evaluation::evaluate(st);
+            }
 
             Value score     = 0;
             Value bestscore = -constants::VALUE_INFINITY;
@@ -120,6 +128,7 @@ namespace jet {
                 const auto& move = movelist[i];
                 board.makeMove(move);
                 (ss + 1)->ply = ss->ply + 1;
+                ss->move      = move;
                 st.nodes++;
                 movecount++;
 
@@ -144,7 +153,9 @@ namespace jet {
                         bestmove = move;
                         alpha    = score;
 
-                        ss->updatePV(move, ss + 1);
+                        if constexpr (isPvNode) {
+                            ss->updatePV(move, ss + 1);
+                        }
 
                         if (score >= beta) {
                             break;
