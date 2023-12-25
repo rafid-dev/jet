@@ -49,6 +49,9 @@ namespace chess {
         }
 
         constexpr PieceType pieceTypeAt(Square sq) const {
+            if (at(sq) == Piece::NONE) {
+                return PieceType::NONE;
+            }
             return pieceToPieceType(at(sq));
         }
 

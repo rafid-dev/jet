@@ -49,7 +49,11 @@ namespace jet {
                     const auto target   = board.pieceTypeAt(move.to());
 
                     if (target != PieceType::NONE) {
-                        move.setScore(_mvvlva(target, attacker));
+                        move.setScore(SEE_SCORE + _mvvlva(target, attacker));
+                    } else if (move == ss->killers[0]) {
+                        move.setScore(8000);
+                    } else if (move == ss->killers[1]) {
+                        move.setScore(7000);
                     }
                 }
             }

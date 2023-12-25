@@ -161,6 +161,7 @@ namespace jet {
 
                         if (score >= beta) {
                             if (isQuiet) {
+                                // update killer moves
                                 ss->updateKiller(move);
                             }
 
@@ -216,10 +217,6 @@ namespace jet {
             auto start = misc::tick();
 
             for (Depth d = 1; d <= depth; d++) {
-                if (st.stop()) {
-                    break;
-                }
-
                 Value score = negamax<NodeType::ROOT>(-constants::VALUE_INFINITY, constants::VALUE_INFINITY, d, st, ss);
 
                 auto time_elapsed = misc::tick() - start;

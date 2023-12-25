@@ -112,6 +112,10 @@ namespace chess {
             return m_score;
         }
 
+        constexpr auto data() const {
+            return m_data;
+        }
+
         constexpr bool operator==(const Move& rhs) const {
             return m_data == rhs.m_data;
         }
@@ -139,6 +143,16 @@ namespace chess {
         Movelist(std::initializer_list<Move> moves) : m_size(moves.size()) {
             assert(moves.size() <= MAX_SIZE);
             std::copy(moves.begin(), moves.end(), m_moves.begin());
+        }
+
+        constexpr auto find(const Move& m) const {
+            for (int i = 0; i < m_size; ++i) {
+                if (m_moves[i] == m) {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         constexpr void add(Move m) {
