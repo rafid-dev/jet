@@ -2,6 +2,7 @@
 
 #include "../chess/board.hpp"
 #include "../chess/moves.hpp"
+#include "searchstack.hpp"
 
 namespace jet {
 
@@ -38,6 +39,17 @@ namespace jet {
 
                     if (target != PieceType::NONE) {
                         move.setScore(see(board, move, 0) * SEE_SCORE + _mvvlva(target, attacker));
+                    }
+                }
+            }
+
+            static void all(const chess::Board& board, chess::Movelist& movelist, SearchStack* ss) {
+                for (auto& move : movelist) {
+                    const auto attacker = board.pieceTypeAt(move.from());
+                    const auto target   = board.pieceTypeAt(move.to());
+
+                    if (target != PieceType::NONE) {
+                        move.setScore(_mvvlva(target, attacker));
                     }
                 }
             }

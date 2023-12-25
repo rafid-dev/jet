@@ -192,6 +192,14 @@ namespace chess {
             return at(move.to()) != Piece::NONE;
         }
 
+        constexpr bool isNoisy(const Move& move) const {
+            return isCapture(move) || move.type() == MoveType::PROMOTION;
+        }
+
+        constexpr bool isQuiet(const Move& move) const {
+            return !isNoisy(move);
+        }
+
         constexpr Piece capturedPiece(const Move& move) const {
             return at(move.to());
         }

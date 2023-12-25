@@ -1,3 +1,4 @@
+#include "bench.hpp"
 #include "chess/movegen.hpp"
 #include "chess/zobrist.hpp"
 #include "evaluation/evaluate.hpp"
@@ -17,7 +18,7 @@ using namespace jet::search;
 static constexpr std::string_view NAME   = "Jet";
 static constexpr std::string_view AUTHOR = "Rafid Ahsan";
 
-int main() {
+int main(int argc, char** argv) {
     Attacks::init();
 
     std::cout << NAME << std::endl;
@@ -32,6 +33,11 @@ int main() {
     std::vector<Move> moves;
 
     jet::search::SearchInfo info;
+
+    if (argc > 1 && std::string(argv[1]) == "bench") {
+        StartBenchmark(st);
+        return 0;
+    }
 
     while (std::getline(std::cin, line)) {
         token.clear();

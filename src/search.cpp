@@ -117,7 +117,7 @@ namespace jet {
 
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::ALL>(board, movelist);
-            MoveOrdering::captures(board, movelist);
+            MoveOrdering::all(board, movelist, ss);
 
             Move bestmove  = Move::none();
             int  movecount = 0;
@@ -125,7 +125,9 @@ namespace jet {
             for (int i = 0; i < movelist.size(); i++) {
                 movelist.nextmove(i);
 
-                const auto& move = movelist[i];
+                const auto& move    = movelist[i];
+                const bool  isQuiet = board.isQuiet(move);
+
                 board.makeMove(move);
                 (ss + 1)->ply = ss->ply + 1;
                 ss->move      = move;
@@ -158,6 +160,10 @@ namespace jet {
                         }
 
                         if (score >= beta) {
+                            if (isQuiet) {
+                                ss->updateKiller(move);
+                            }
+
                             break;
                         }
                     }
@@ -180,6 +186,36 @@ namespace jet {
             auto start = misc::tick();
 
             for (Depth d = 1; d <= info.depth(); d++) {
+                if (st.stop()) {
+                    break;
+                }
+
+                Value score = negamax<NodeType::ROOT>(-constants::VALUE_INFINITY, constants::VALUE_INFINITY, d, st, ss);
+
+                auto time_elapsed = misc::tick() - start;
+
+                std::cout << "info depth " << d << " score cp " << score;
+                std::cout << " time " << time_elapsed;
+                std::cout << " nodes " << st.nodes;
+                std::cout << " nps " << static_cast<int>(1000.0f * st.nodes / (time_elapsed + 1));
+                std::cout << " pv";
+                SearchStack::printPVs(ss);
+
+                std::cout << std::endl;
+            }
+
+            std::cout << "bestmove " << ss->pv[0] << std::endl;
+        }
+
+        void search(SearchThread& st, Depth depth) {
+            st.start();
+
+            SearchStack::List stack;
+            SearchStack*      ss = SearchStack::init(stack);
+
+            auto start = misc::tick();
+
+            for (Depth d = 1; d <= depth; d++) {
                 if (st.stop()) {
                     break;
                 }

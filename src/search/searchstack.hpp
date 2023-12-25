@@ -16,7 +16,13 @@ namespace jet {
             int          pv_length   = 0;
             types::Value static_eval = 0;
             chess::Move  move        = chess::Move::none();
+            chess::Move  killers[2]  = {chess::Move::none(), chess::Move::none()};
             PvTable      pv;
+
+            void updateKiller(chess::Move move) {
+                killers[1] = killers[0];
+                killers[0] = move;
+            }
 
             void updatePV(chess::Move bestmove, SearchStack* next) {
                 pv[ply] = bestmove;
