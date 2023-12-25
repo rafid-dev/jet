@@ -40,7 +40,7 @@ namespace jet {
 
                 Time inc = (c == chess::Color::WHITE) ? winc : binc;
 
-                stoptime = t + inc;
+                stoptime = t + inc/2;
             }
 
             bool shouldStop() const {
