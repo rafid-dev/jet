@@ -1,9 +1,12 @@
 #pragma once
 
+#include "tt.hpp"
 #include "types.hpp"
 
 namespace jet {
     namespace search {
+        extern TT::Table TranspositionTable;
+
         class SearchThread;
         class SearchInfo;
         struct SearchStack;

@@ -17,6 +17,8 @@ using jet::types::Value;
 namespace jet {
     namespace search {
 
+        TT::Table TranspositionTable;
+
         template Value negamax<NodeType::ROOT>(Value, Value, Depth, SearchThread&, SearchStack*);
         template Value negamax<NodeType::PV>(Value, Value, Depth, SearchThread&, SearchStack*);
         template Value negamax<NodeType::NONPV>(Value, Value, Depth, SearchThread&, SearchStack*);
@@ -103,6 +105,9 @@ namespace jet {
 
             constexpr bool isPvNode = (nt == NodeType::PV || nt == NodeType::ROOT);
 
+            bool        ttHit = false;
+            const auto& entry = TranspositionTable.probe(board.hash(), ttHit);
+
             const bool inCheck = board.isCheck();
 
             if (inCheck) {
@@ -112,12 +117,13 @@ namespace jet {
                 ss->static_eval = evaluation::evaluate(st);
             }
 
+            Value oldAlpha  = alpha;
             Value score     = 0;
             Value bestscore = -constants::VALUE_INFINITY;
 
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::ALL>(board, movelist);
-            MoveOrdering::all(board, movelist, ss);
+            MoveOrdering::all(board, movelist, ss, entry.move());
 
             Move bestmove  = Move::none();
             int  movecount = 0;
@@ -174,6 +180,10 @@ namespace jet {
             if (!movecount) {
                 bestscore = inCheck ? -constants::IS_MATE + ss->ply : 0;
             }
+
+            TT::Flag flag = bestscore >= beta ? TT::Flag::LOWER : (alpha != oldAlpha) ? TT::Flag::EXACT : TT::Flag::UPPER;
+
+            TranspositionTable.store(board.hash(), bestmove, bestscore, depth, flag);
 
             return bestscore;
         }

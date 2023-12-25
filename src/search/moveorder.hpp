@@ -19,7 +19,8 @@ namespace jet {
             }
 
         public:
-            static constexpr inline int16_t SEE_SCORE = 30000;
+            static constexpr inline int16_t TT_MOVE_SCORE = 30000;
+            static constexpr inline int16_t SEE_SCORE     = 10000;
 
             static void captures(const chess::Board& board, chess::Movelist& movelist) {
                 for (auto& move : movelist) {
@@ -43,12 +44,14 @@ namespace jet {
                 }
             }
 
-            static void all(const chess::Board& board, chess::Movelist& movelist, SearchStack* ss) {
+            static void all(const chess::Board& board, chess::Movelist& movelist, SearchStack* ss, const chess::Move& ttMove) {
                 for (auto& move : movelist) {
                     const auto attacker = board.pieceTypeAt(move.from());
                     const auto target   = board.pieceTypeAt(move.to());
 
-                    if (target != PieceType::NONE) {
+                    if (move == ttMove) {
+                        move.setScore(TT_MOVE_SCORE);
+                    } else if (target != PieceType::NONE) {
                         move.setScore(SEE_SCORE + _mvvlva(target, attacker));
                     } else if (move == ss->killers[0]) {
                         move.setScore(8000);

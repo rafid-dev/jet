@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
 
     std::cout << NAME << std::endl;
     std::cout << AUTHOR << std::endl;
+    search::TranspositionTable.initialize(16);
 
     SearchThread st;
     Board&       board = st.board();
