@@ -27,18 +27,14 @@ namespace jet {
         Value qsearch(Value alpha, Value beta, SearchThread& st) {
             st.checkup();
 
-            if (st.board().isRepetition()) {
-                return 0;
+            Value bestscore = evaluation::evaluate(st);
+
+            if (bestscore >= beta) {
+                return bestscore;
             }
 
-            Value standing_pat = evaluation::evaluate(st);
-
-            if (standing_pat >= beta) {
-                return beta;
-            }
-
-            if (standing_pat > alpha) {
-                alpha = standing_pat;
+            if (bestscore > alpha) {
+                alpha = bestscore;
             }
 
             Board&   board = st.board();
@@ -68,16 +64,20 @@ namespace jet {
                     return 0;
                 }
 
-                if (score > alpha) {
-                    alpha = score;
+                if (score > bestscore) {
+                    bestscore = score;
 
-                    if (score >= beta) {
-                        break;
+                    if (score > alpha) {
+                        alpha = score;
+
+                        if (score >= beta) {
+                            break;
+                        }
                     }
                 }
             }
 
-            return alpha;
+            return bestscore;
         }
 
         template <NodeType nt>
