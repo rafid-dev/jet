@@ -118,6 +118,10 @@ namespace jet {
             }
 
             if constexpr (!isPvNode) {
+                if (!inCheck && depth < 9 && ss->static_eval - depth * 77 >= beta) {
+                    return ss->static_eval;
+                }
+
                 if (!inCheck && depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() &&
                     ss->static_eval >= beta) {
                     Depth reduction = 3;
