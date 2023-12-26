@@ -117,6 +117,33 @@ namespace jet {
                 ss->static_eval = evaluation::evaluate(st);
             }
 
+            if constexpr (!isPvNode) {
+                if (!inCheck && depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() &&
+                    ss->static_eval >= beta) {
+                    Depth reduction = 3;
+
+                    board.makeNullMove();
+                    ss->move      = Move::nullmove();
+                    (ss + 1)->ply = ss->ply + 1;
+
+                    Value score = -negamax<NodeType::NONPV>(-beta, -beta + 1, depth - reduction, st, ss + 1);
+
+                    board.unmakeNullMove();
+
+                    if (st.stop()) {
+                        return 0;
+                    }
+
+                    if (score >= beta) {
+                        if (score > constants::IS_MATE) {
+                            score = beta;
+                        }
+
+                        return score;
+                    }
+                }
+            }
+
             Value oldAlpha  = alpha;
             Value score     = 0;
             Value bestscore = -constants::VALUE_INFINITY;
@@ -149,7 +176,7 @@ namespace jet {
                 bool do_fullsearch = !isPvNode || movecount > 1;
 
                 if (!inCheck && isQuiet && movecount > 4 && depth >= 3) {
-                    Depth reduction = 2;            
+                    Depth reduction = 2;
 
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
