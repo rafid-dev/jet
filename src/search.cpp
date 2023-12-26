@@ -108,6 +108,17 @@ namespace jet {
             bool        ttHit = false;
             const auto& entry = TranspositionTable.probe(board.hash(), ttHit);
 
+            Value ttScore = ttHit ? TT::fromScore(entry.score(), ss->ply) : 0;
+
+            if constexpr (!isPvNode) {
+                if (ttHit && entry.depth() >= depth) {
+                    if ((entry.flag() == TT::Flag::UPPER && ttScore <= alpha) ||
+                        (entry.flag() == TT::Flag::LOWER && ttScore >= beta) || (entry.flag() == TT::Flag::EXACT)) {
+                        return ttScore;
+                    }
+                }
+            }
+
             const bool inCheck = board.isCheck();
 
             if (inCheck) {
@@ -217,7 +228,6 @@ namespace jet {
 
                         if (score >= beta) {
                             if (isQuiet) {
-                                // update killer moves
                                 ss->updateKiller(move);
                             }
 
@@ -233,7 +243,7 @@ namespace jet {
 
             TT::Flag flag = bestscore >= beta ? TT::Flag::LOWER : (alpha != oldAlpha) ? TT::Flag::EXACT : TT::Flag::UPPER;
 
-            TranspositionTable.store(board.hash(), bestmove, bestscore, depth, flag);
+            TranspositionTable.store(board.hash(), bestmove, TT::toScore(bestscore, ss->ply), depth, flag);
 
             return bestscore;
         }

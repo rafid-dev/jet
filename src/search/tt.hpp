@@ -9,6 +9,26 @@ namespace jet {
     namespace search {
         class TT {
         public:
+            static types::Value toScore(types::Value score, types::Depth ply) {
+                if (score >= constants::IS_MATE_IN_PLY_MAX) {
+                    return score - ply;
+                } else if (score <= constants::IS_MATED_IN_PLY_MAX) {
+                    return score + ply;
+                }
+
+                return score;
+            }
+
+            static types::Value fromScore(types::Value score, types::Depth ply) {
+                if (score >= constants::IS_MATE_IN_PLY_MAX) {
+                    return score - ply;
+                } else if (score <= constants::IS_MATED_IN_PLY_MAX) {
+                    return score + ply;
+                }
+
+                return score;
+            }
+
             using U64 = uint64_t;
             enum class Flag : uint8_t { NONE, EXACT, LOWER, UPPER };
 
