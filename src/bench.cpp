@@ -67,7 +67,7 @@ namespace jet {
             st.board().setFen(fen);
 
             auto start = misc::tick();
-            search::search(st, 5);
+            search::search(st, 10);
             auto end = misc::tick();
 
             nodes += st.nodes;

@@ -9,7 +9,7 @@ namespace jet {
     namespace search {
         class TT {
         public:
-            using Key = uint16_t;
+            using U64 = uint64_t;
             enum class Flag : uint8_t { NONE, EXACT, LOWER, UPPER };
 
             class Entry {
@@ -18,12 +18,12 @@ namespace jet {
                 types::Value_i16 m_score;
                 types::Depth_u8  m_depth;
                 Flag             m_flag;
-                Key              m_key;
+                U64              m_key;
 
             public:
                 Entry() = default;
 
-                void set(types::RawMove move, types::Value_i16 score, types::Depth_u8 depth, Flag flag, Key key) {
+                void set(types::RawMove move, types::Value_i16 score, types::Depth_u8 depth, Flag flag, U64 key) {
                     m_move  = move;
                     m_score = score;
                     m_depth = depth;
@@ -50,10 +50,6 @@ namespace jet {
                 auto key() const {
                     return m_key;
                 }
-
-                auto keyMatches(uint64_t hash) const {
-                    return static_cast<Key>(hash) == key();
-                }
             };
 
             class Table {
@@ -67,22 +63,24 @@ namespace jet {
             public:
                 Table() = default;
 
+                template <bool print = true>
                 void initialize(int MB) {
-                    m_table.resize(MB * 1024 * 1024 / sizeof(Entry));
-                    std::fill(m_table.begin(), m_table.end(), Entry());
+                    resize(MB * 0x100000 / sizeof(Entry));
 
-                    std::cout << "Transposition table initialized with " << MB << " MB ( " << m_table.size() << ") entries"
-                              << std::endl;
+                    if constexpr (print) {
+                        std::cout << "Transposition table initialized with " << MB << " MB ( " << m_table.size() << ") entries"
+                                  << std::endl;
+                    }
                 }
 
-                void store(uint64_t hash, const chess::Move& move, types::Depth depth, types::Value score, Flag flag) {
+                void store(U64 hash, const chess::Move& move, types::Depth depth, types::Value score, Flag flag) {
                     auto& entry = m_table[_index(hash, m_table.size())];
-                    entry.set(move.data(), score, depth, flag, static_cast<Key>(hash));
+                    entry.set(move.data(), score, depth, flag, hash);
                 }
 
-                const Entry& probe(uint64_t hash, bool& hit) const {
+                const Entry& probe(U64 hash, bool& hit) const {
                     const auto& entry = m_table[_index(hash, m_table.size())];
-                    hit               = entry.keyMatches(hash);
+                    hit               = hash == entry.key();
                     return entry;
                 }
 

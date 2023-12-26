@@ -54,6 +54,8 @@ int main(int argc, char** argv) {
         } else if (token == "isready") {
             std::cout << "readyok\n";
         } else if (token == "ucinewgame") {
+            // Re initialize the transposition table upon a new game
+            search::TranspositionTable.initialize<false>(16);
             board.setFen(FENS::STARTPOS);
         } else if (token == "movegen") {
             Movelist list;
