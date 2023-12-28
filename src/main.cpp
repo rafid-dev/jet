@@ -17,16 +17,17 @@ using namespace chess;
 using namespace jet;
 using namespace jet::search;
 
-static constexpr std::string_view NAME   = "Jet";
-static constexpr std::string_view AUTHOR = "Rafid Ahsan";
+static constexpr std::string_view NAME    = "Jet";
+static constexpr std::string_view VERSION = "1.0";
+static constexpr std::string_view AUTHOR  = "Rafid Ahsan";
 
 int main(int argc, char** argv) {
     Attacks::init();
     nnue::readFromIncludedBinary();
 
-    std::cout << NAME << std::endl;
-    std::cout << AUTHOR << std::endl;
-    search::TranspositionTable.initialize(16);
+    std::cout << NAME << " " << VERSION << std::endl;
+    std::cout << "Copyright (C) 2023  " << AUTHOR << std::endl;
+    search::TranspositionTable.initialize<false>(16);
 
     auto   heapSt = std::make_unique<SearchThread>();
     auto&  st     = *heapSt;
@@ -52,8 +53,9 @@ int main(int argc, char** argv) {
         iss >> token;
 
         if (token == "uci") {
-            std::cout << "id name " << NAME << '\n';
+            std::cout << "id name " << NAME << " " << VERSION << '\n';
             std::cout << "id author " << AUTHOR << '\n';
+            std::cout << "option name Hash type spin default 16 min 16 max 32768\n";
             std::cout << "uciok\n";
         } else if (token == "isready") {
             std::cout << "readyok\n";
@@ -175,6 +177,17 @@ int main(int argc, char** argv) {
             }
 
             jet::search::search(st, info);
+        } else if (token == "setoption") {
+            iss >> token;
+
+            if (token == "name") {
+                iss >> token;
+                if (token == "Hash") {
+                    iss >> token;
+                    iss >> token;
+                    search::TranspositionTable.initialize<true>(std::clamp(std::stoi(token), 16, 32768));
+                }
+            }
         } else if (token == "print") {
             std::cout << board << std::endl;
             std::cout << "Eval: " << jet::evaluation::evaluate(st) << std::endl;
