@@ -6,9 +6,6 @@
 #include "accumulator.hpp"
 #include "types.hpp"
 
-#define INPUT_QUANTIZATION (32)
-#define HIDDEN_QUANTIZATON (128)
-
 namespace jet {
 
     namespace nnue {
@@ -65,7 +62,7 @@ namespace jet {
                     output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
 
-                return output / INPUT_QUANTIZATION / HIDDEN_QUANTIZATON;
+                return output / constants::INPUT_QUANTIZATION / constants::HIDDEN_QUANTIZATON;
             }
 
             template <chess::Color side, AccumulatorOP operation>

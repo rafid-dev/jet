@@ -21,6 +21,9 @@ namespace jet {
             constexpr int HIDDEN_LAYER_SIZE = HIDDEN_SIZE * 2;
             constexpr int OUTPUT_LAYER_SIZE = OUTPUT_SIZE;
 
+            constexpr int INPUT_QUANTIZATION = 32;
+            constexpr int HIDDEN_QUANTIZATON = 128;
+
             // clang-format off
             constexpr std::array<int, 64> KING_BUCKET {
                 0, 0, 1, 1, 1, 1, 0, 0,
