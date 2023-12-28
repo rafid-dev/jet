@@ -23,7 +23,7 @@ EXE := Jet
 # Append .exe to the binary name on Windows
 ifeq ($(OS),Windows_NT)
 	CXXFLAGS += -fuse-ld=lld
-    EXE := $(EXE).exe
+    override EXE := $(EXE).exe
 endif
 
 # Default target
