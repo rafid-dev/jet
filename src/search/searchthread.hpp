@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../chess/board.hpp"
+#include "../nnue/nnue.hpp"
 #include "constants.hpp"
 #include "searchinfo.hpp"
 #include "timeman.hpp"
@@ -20,11 +21,14 @@ namespace jet {
                 return m_board;
             }
 
-            constexpr void setFen(std::string_view fen) {
+            void setFen(std::string_view fen) {
                 m_board.setFen(fen);
+                network.reset();
+                refresh();
             }
 
             constexpr void start() {
+                refresh();
                 stop_flag = false;
                 nodes     = 0;
                 timeman.start(m_board.sideToMove());
@@ -48,10 +52,121 @@ namespace jet {
                 }
             }
 
+            template <bool updateNNUE = false>
+            void makeMove(const chess::Move& move) {
+                if constexpr (!updateNNUE) {
+                    m_board.makeMove(move);
+                    return;
+                }
+
+                const auto from         = move.from();
+                const auto to           = move.to();
+                const auto pieceType    = m_board.pieceTypeAt(from);
+                const bool is_capture   = m_board.isCapture(move) && move.type() != chess::MoveType::CASTLING;
+                const auto capturedType = m_board.pieceTypeAt(to);
+
+                const auto side = m_board.sideToMove();
+
+                const auto kingSqWhite = m_board.kingSq<chess::Color::WHITE>();
+                const auto kingSqBlack = m_board.kingSq<chess::Color::BLACK>();
+
+                network.push();
+
+                if (pieceType == chess::PieceType::KING &&
+                    (nnue::constants::KING_BUCKET[from] != nnue::constants::KING_BUCKET[to] ||
+                     static_cast<int>(from.file()) + static_cast<int>(to.file()) == 7)) {
+                    m_board.makeMove(move);
+                    refresh();
+
+                    return;
+                }
+
+                if (is_capture) {
+                    network.updateAccumulator<nnue::AccumulatorOP::SUB>(capturedType, ~side, to, kingSqWhite, kingSqBlack);
+                }
+
+                if (move.type() == chess::MoveType::CASTLING) {
+                    const auto castleSide = chess::CastlingRights::getCastlingSide(move.to(), move.from());
+
+                    const auto rookTo = chess::CastlingRights::rookTo(side, castleSide);
+                    const auto kingTo = chess::CastlingRights::kingTo(side, castleSide);
+
+                    if (nnue::constants::KING_BUCKET[from] != nnue::constants::KING_BUCKET[kingTo] ||
+                        static_cast<int>(from.file()) + static_cast<int>(kingTo.file()) == 7) {
+                        m_board.makeMove(move);
+                        refresh();
+                        return;
+                    }
+
+                    network.updateAccumulator<nnue::AccumulatorOP::SUB>(pieceType, side, from, kingSqWhite, kingSqBlack);
+                    network.updateAccumulator<nnue::AccumulatorOP::SUB>(capturedType, side, to, kingSqWhite, kingSqBlack);
+                    network.updateAccumulator<nnue::AccumulatorOP::ADD>(pieceType, side, kingTo, kingSqWhite, kingSqBlack);
+                    network.updateAccumulator<nnue::AccumulatorOP::ADD>(capturedType, side, rookTo, kingSqWhite, kingSqBlack);
+
+                    m_board.makeMove(move);
+                    return;
+                }
+
+                if (move.type() == chess::MoveType::ENPASSANT) {
+                    network.updateAccumulator<nnue::AccumulatorOP::SUB>(
+                        chess::PieceType::PAWN, ~side, chess::Square(int(move.to()) ^ 8), kingSqWhite, kingSqBlack);
+                }
+
+                if (move.type() == chess::MoveType::PROMOTION) {
+                    network.updateAccumulator<nnue::AccumulatorOP::SUB>(chess::PieceType::PAWN, side, from, kingSqWhite,
+                                                                        kingSqBlack);
+                    network.updateAccumulator<nnue::AccumulatorOP::ADD>(move.promoted(), side, to, kingSqWhite, kingSqBlack);
+
+                    m_board.makeMove(move);
+                    return;
+                }
+
+                network.updateAccumulator<nnue::AccumulatorOP::ADD_SUB>(pieceType, side, from, to, kingSqWhite, kingSqBlack);
+
+                m_board.makeMove(move);
+            }
+
+            template <bool updateNNUE = false>
+            void unmakeMove(const chess::Move& move) {
+                m_board.unmakeMove(move);
+
+                if constexpr (updateNNUE) {
+                    network.pull();
+                }
+            }
+
+            int32_t eval() {
+                if (m_board.sideToMove() == chess::Color::WHITE) {
+                    return network.eval<chess::Color::WHITE>();
+                } else {
+                    return network.eval<chess::Color::BLACK>();
+                }
+            }
+
+            void refresh() {
+                network.resetCurrentAccumulator();
+
+                chess::Bitboard pieces = m_board.all();
+
+                const chess::Square kingSqWhite = m_board.kingSq<chess::Color::WHITE>();
+                const chess::Square kingSqBlack = m_board.kingSq<chess::Color::BLACK>();
+
+                while (pieces.nonEmpty()) {
+                    const chess::Square sq = pieces.poplsb();
+
+                    const chess::PieceType pieceType = m_board.pieceTypeAt(sq);
+                    const chess::Color     side      = m_board.colorOf(sq);
+
+                    network.updateAccumulator<nnue::AccumulatorOP::ADD>(pieceType, side, sq, kingSqWhite, kingSqBlack);
+                }
+            }
+
         private:
             chess::Board m_board;
             TimeManager  timeman;
             bool         stop_flag = false;
+
+            nnue::Network network;
         };
     } // namespace search
 } // namespace jet

@@ -2,6 +2,7 @@
 #include "chess/movegen.hpp"
 #include "chess/zobrist.hpp"
 #include "evaluation/evaluate.hpp"
+#include "nnue/nnue.hpp"
 #include "perfsuite.hpp"
 #include "search/search.hpp"
 #include "search/searchinfo.hpp"
@@ -9,6 +10,7 @@
 
 #include <iostream>
 #include <istream>
+#include <memory>
 #include <sstream>
 
 using namespace chess;
@@ -20,13 +22,15 @@ static constexpr std::string_view AUTHOR = "Rafid Ahsan";
 
 int main(int argc, char** argv) {
     Attacks::init();
+    nnue::readFromIncludedBinary();
 
     std::cout << NAME << std::endl;
     std::cout << AUTHOR << std::endl;
     search::TranspositionTable.initialize(16);
 
-    SearchThread st;
-    Board&       board = st.board();
+    auto   heapSt = std::make_unique<SearchThread>();
+    auto&  st     = *heapSt;
+    Board& board  = st.board();
 
     std::string line;
     std::string token;
@@ -56,7 +60,7 @@ int main(int argc, char** argv) {
         } else if (token == "ucinewgame") {
             // Re initialize the transposition table upon a new game
             search::TranspositionTable.initialize<false>(16);
-            board.setFen(FENS::STARTPOS);
+            st.setFen(FENS::STARTPOS);
         } else if (token == "movegen") {
             Movelist list;
             MoveGen::legalmoves<MoveGenType::ALL>(board, list);
@@ -77,9 +81,9 @@ int main(int argc, char** argv) {
             iss >> token;
 
             if (token == "startpos") {
-                board.setFen(FENS::STARTPOS);
+                st.setFen(FENS::STARTPOS);
             } else if (token == "kiwipete") {
-                board.setFen(FENS::KIWIPETE);
+                st.setFen(FENS::KIWIPETE);
             } else if (token == "fen") {
                 std::string fen;
 
@@ -87,7 +91,7 @@ int main(int argc, char** argv) {
                     fen += token + ' ';
                 }
 
-                board.setFen(fen);
+                st.setFen(fen);
             }
 
             iss >> token;
@@ -173,7 +177,7 @@ int main(int argc, char** argv) {
             jet::search::search(st, info);
         } else if (token == "print") {
             std::cout << board << std::endl;
-            std::cout << "Eval: " << jet::evaluation::evaluate(board) << std::endl;
+            std::cout << "Eval: " << jet::evaluation::evaluate(st) << std::endl;
         } else if (token == "quit" || token == "exit") {
             break;
         } else if (token == "\n") {

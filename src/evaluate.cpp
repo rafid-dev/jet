@@ -34,9 +34,7 @@ namespace jet {
         }
 
         Value evaluate(search::SearchThread& st) {
-            Board& board = st.board();
-
-            return evaluate(board);
+            return st.eval();
         }
 
     } // namespace evaluation

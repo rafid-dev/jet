@@ -53,12 +53,12 @@ namespace jet {
                     break;
                 }
 
-                board.makeMove(move);
+                st.makeMove<true>(move);
                 st.nodes++;
 
                 score = -qsearch<NodeType::PV>(-beta, -alpha, st);
 
-                board.unmakeMove(move);
+                st.unmakeMove<true>(move);
 
                 if (st.stop()) {
                     return 0;
@@ -174,7 +174,7 @@ namespace jet {
                 const auto& move    = movelist[i];
                 const bool  isQuiet = board.isQuiet(move);
 
-                board.makeMove(move);
+                st.makeMove<true>(move);
                 (ss + 1)->ply = ss->ply + 1;
                 ss->move      = move;
                 st.nodes++;
@@ -206,7 +206,7 @@ namespace jet {
                     }
                 }
 
-                board.unmakeMove(move);
+                st.unmakeMove<true>(move);
 
                 // if we stop, return 0
                 if (st.stop()) {
