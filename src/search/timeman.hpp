@@ -29,7 +29,7 @@ namespace jet {
                 t -= OVERHEAD;
 
                 if (movestogo) {
-                    stoptime = t / static_cast<Time>(movestogo);
+                    stoptime = t / static_cast<Time>(movestogo) + inc / 2;
                 } else if (movetime) {
                     stoptime = movetime - OVERHEAD;
                 } else {
