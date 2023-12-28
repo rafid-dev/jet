@@ -126,14 +126,20 @@ namespace jet {
                 ss->static_eval = evaluation::evaluate(st);
             }
 
+            Value eval = ss->static_eval;
+
             if constexpr (!isPvNode) {
+                if (ttHit) {
+                    eval = entry.score();
+                }
+
                 if (!inCheck && depth < 9 && ss->static_eval - depth * 77 >= beta) {
                     return ss->static_eval;
                 }
 
                 if (!inCheck && depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() &&
-                    ss->static_eval >= beta) {
-                    Depth reduction = 3;
+                    ss->static_eval >= beta && (!ttHit || entry.flag() != TT::Flag::UPPER || eval >= beta)) {
+                    Depth reduction = 3 + depth / 3 + std::min(3, (eval - beta) / 180);
 
                     board.makeNullMove();
                     ss->move      = Move::nullmove();
