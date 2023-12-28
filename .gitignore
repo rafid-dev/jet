@@ -29,14 +29,3 @@ libs/
 
 # Windows-specific
 Thumbs.db
-
-
-# NN specific
-*.binpack
-*.ckpt
-*.nnue
-*.net
-*.nn
-dataset/
-net/
-finals/
