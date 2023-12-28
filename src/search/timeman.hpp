@@ -23,24 +23,20 @@ namespace jet {
             void start(chess::Color c) {
                 m_start = misc::tick();
 
-                Time t = (c == chess::Color::WHITE) ? wtime : btime;
-
-                if (movestogo) {
-                    t -= OVERHEAD;
-
-                    stoptime = t / static_cast<Time>(movestogo);
-                    return;
-                } else if (movetime) {
-                    stoptime = movetime - OVERHEAD;
-                    return;
-                }
-
-                t -= OVERHEAD;
-                t /= 20;
-
+                Time t   = (c == chess::Color::WHITE) ? wtime : btime;
                 Time inc = (c == chess::Color::WHITE) ? winc : binc;
 
-                stoptime = t + inc/2;
+                t -= OVERHEAD;
+
+                if (movestogo) {
+                    stoptime = t / static_cast<Time>(movestogo);
+                } else if (movetime) {
+                    stoptime = movetime - OVERHEAD;
+                } else {
+                    t /= 20;
+
+                    stoptime = t + inc / 2;
+                }
             }
 
             bool shouldStop() const {
