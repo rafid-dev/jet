@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
             std::cout << "id name " << NAME << " " << VERSION << '\n';
             std::cout << "id author " << AUTHOR << '\n';
             std::cout << "option name Hash type spin default 16 min 16 max 32768\n";
-            std::cout << "option name Threads type spin default 1 min 1 max 1]n";
+            std::cout << "option name Threads type spin default 1 min 1 max 1\n";
             std::cout << "uciok" << std::endl;
         } else if (token == "isready") {
             std::cout << "readyok\n";
