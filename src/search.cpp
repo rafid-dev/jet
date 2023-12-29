@@ -19,6 +19,16 @@ namespace jet {
 
         TT::Table TranspositionTable;
 
+        std::array<std::array<Depth, 64>, 64> LmrTable;
+
+        void init() {
+            for (int depth = 1; depth < 64; depth++) {
+                for (int played = 1; played < 64; played++) {
+                    LmrTable[depth][played] = 0.75 + std::log(depth) * std::log(played) / 2.25;
+                }
+            }
+        }
+
         template Value negamax<NodeType::ROOT>(Value, Value, Depth, SearchThread&, SearchStack*);
         template Value negamax<NodeType::PV>(Value, Value, Depth, SearchThread&, SearchStack*);
         template Value negamax<NodeType::NONPV>(Value, Value, Depth, SearchThread&, SearchStack*);
@@ -195,11 +205,11 @@ namespace jet {
                 bool do_fullsearch = !isPvNode || movecount > 1;
 
                 if (!inCheck && isQuiet && movecount > 4 && depth >= 3) {
-                    Depth reduction = 2;
+                    Depth reduction = LmrTable[std::min(depth, 63)][std::min(movecount, 63)];
 
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
-                    do_fullsearch = score > alpha;
+                    do_fullsearch = score > alpha && reduction != 0;
                 }
 
                 if (do_fullsearch) {
