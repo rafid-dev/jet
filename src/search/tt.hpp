@@ -56,8 +56,8 @@ namespace jet {
             private:
                 std::vector<Entry> m_table;
 
-                static inline uint32_t _index(uint32_t x, uint32_t N) {
-                    return (static_cast<uint64_t>(x) * static_cast<uint64_t>(N)) >> 32;
+                static inline uint64_t _index(uint64_t x, uint64_t N) {
+                    return static_cast<__uint128_t>((static_cast<__uint128_t>(x) * static_cast<__uint128_t>(N)) >> 64);
                 }
 
             public:
