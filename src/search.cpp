@@ -207,7 +207,9 @@ namespace jet {
                 if (!inCheck && isQuiet && movecount > 2 && depth >= 3) {
                     Depth reduction = LmrTable[std::min(depth, 63)][std::min(movecount, 63)];
 
-                    score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - 1 - reduction, st, ss + 1);
+                    reduction = std::clamp(reduction, 1, depth - 1);
+
+                    score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
                     do_fullsearch = score > alpha && reduction != 1;
                 }
