@@ -18,7 +18,7 @@ using namespace jet;
 using namespace jet::search;
 
 static constexpr std::string_view NAME    = "Jet";
-static constexpr std::string_view VERSION = "1.0";
+static constexpr std::string_view VERSION = "1.1";
 static constexpr std::string_view AUTHOR  = "Rafid Ahsan";
 
 int main(int argc, char** argv) {
@@ -85,8 +85,12 @@ int main(int argc, char** argv) {
 
             if (token == "startpos") {
                 st.setFen(FENS::STARTPOS);
+                iss >> token;
+
             } else if (token == "kiwipete") {
                 st.setFen(FENS::KIWIPETE);
+                iss >> token;
+
             } else if (token == "fen") {
                 std::string fen;
 
@@ -96,8 +100,6 @@ int main(int argc, char** argv) {
 
                 st.setFen(fen);
             }
-
-            iss >> token;
 
             if (token == "moves") {
                 while (iss >> token) {
