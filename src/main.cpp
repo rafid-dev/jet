@@ -53,10 +53,10 @@ int main(int argc, char** argv) {
         iss >> token;
 
         if (token == "uci") {
-            std::cout << "id name " << NAME << " " << VERSION << '\n';
-            std::cout << "id author " << AUTHOR << '\n';
-            std::cout << "option name Hash type spin default 16 min 16 max 32768\n";
-            std::cout << "option name Threads type spin default 1 min 1 max 1\n";
+            std::cout << "id name " << NAME << " " << VERSION << std::endl;
+            std::cout << "id author " << AUTHOR << std::endl;
+            std::cout << "option name Hash type spin default 8 min 8 max 32768" << std::endl;
+            std::cout << "option name Threads type spin default 1 min 1 max 1" << std::endl;
             std::cout << "uciok" << std::endl;
         } else if (token == "isready") {
             std::cout << "readyok\n";
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
                 if (token == "Hash") {
                     iss >> token;
                     iss >> token;
-                    search::TranspositionTable.initialize<true>(std::clamp(std::stoi(token), 16, 32768));
+                    search::TranspositionTable.initialize<true>(std::clamp(std::stoi(token), 8, 32768));
                 }
             }
         } else if (token == "print") {
