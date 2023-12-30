@@ -202,14 +202,18 @@ namespace jet {
                     }
                 }
 
-                bool do_fullsearch = !isPvNode || movecount > 1;
+                bool do_fullsearch = false;
 
                 if (!inCheck && isQuiet && movecount > 2 && depth >= 3) {
                     Depth reduction = LmrTable[std::min(depth, 63)][std::min(movecount, 63)];
 
+                    reduction = std::min(depth - 1, std::max(reduction, 1));
+
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
-                    do_fullsearch = score > alpha;
+                    do_fullsearch = score > alpha && reduction != 1;
+                } else {
+                    do_fullsearch = !isPvNode || movecount > 1;
                 }
 
                 if (do_fullsearch) {
