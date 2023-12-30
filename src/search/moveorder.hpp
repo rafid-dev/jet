@@ -3,6 +3,7 @@
 #include "../chess/board.hpp"
 #include "../chess/moves.hpp"
 #include "searchstack.hpp"
+#include "searchthread.hpp"
 
 namespace jet {
 
@@ -18,9 +19,19 @@ namespace jet {
                 return static_cast<int16_t>(target) * static_cast<int16_t>(10) - static_cast<int16_t>(attacker);
             }
 
+            static int16_t _updateHistoryScore(int16_t& history, int16_t depth) {
+                return history + depth * depth;
+            }
+
         public:
-            static constexpr inline int16_t TT_MOVE_SCORE = 30000;
-            static constexpr inline int16_t SEE_SCORE     = 10000;
+            static constexpr inline int TT_MOVE_SCORE  = 300000;
+            static constexpr inline int SEE_SCORE      = 100000;
+            static constexpr inline int KILLER_1_SCORE = 80000;
+            static constexpr inline int KILLER_2_SCORE = 70000;
+
+            static void updateHistory(SearchThread& st, const chess::Move& move, int depth) {
+                st.history.update(st.board(), move, History::bonus(depth));
+            }
 
             static void captures(const chess::Board& board, chess::Movelist& movelist) {
                 for (auto& move : movelist) {
@@ -44,7 +55,9 @@ namespace jet {
                 }
             }
 
-            static void all(const chess::Board& board, chess::Movelist& movelist, SearchStack* ss, const chess::Move& ttMove) {
+            static void all(chess::Movelist& movelist, const SearchThread& st, const SearchStack* ss,
+                            const chess::Move& ttMove) {
+                const auto& board = st.board();
                 for (auto& move : movelist) {
                     const auto attacker = board.pieceTypeAt(move.from());
                     const auto target   = board.pieceTypeAt(move.to());
@@ -54,9 +67,11 @@ namespace jet {
                     } else if (target != PieceType::NONE) {
                         move.setScore(SEE_SCORE + _mvvlva(target, attacker));
                     } else if (move == ss->killers[0]) {
-                        move.setScore(8000);
+                        move.setScore(KILLER_1_SCORE);
                     } else if (move == ss->killers[1]) {
-                        move.setScore(7000);
+                        move.setScore(KILLER_2_SCORE);
+                    } else {
+                        move.setScore(st.history.index(board, move));
                     }
                 }
             }

@@ -15,7 +15,7 @@ namespace chess {
     struct Move {
     private:
         uint16_t m_data;
-        int16_t  m_score;
+        int      m_score;
 
         template <MoveType mt = MoveType::NORMAL>
         static inline constexpr Move _make(Square from, Square to, PieceType promoted = PieceType::KNIGHT) {
@@ -104,7 +104,7 @@ namespace chess {
             return !(from() == to());
         }
 
-        constexpr void setScore(int16_t s) {
+        constexpr void setScore(int s) {
             m_score = s;
         }
 
@@ -229,8 +229,8 @@ namespace chess {
         void nextmove(const int move_index) {
             Move temp;
 
-            int     i         = 0;
-            int16_t bestscore = INT16_MIN;
+            int i         = 0;
+            int bestscore = INT32_MIN;
 
             for (int j = move_index; j < m_size; ++j) {
                 if (m_moves[j].score() > bestscore) {
