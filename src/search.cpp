@@ -24,7 +24,7 @@ namespace jet {
         void init() {
             for (int depth = 1; depth < 64; depth++) {
                 for (int played = 1; played < 64; played++) {
-                    LmrTable[depth][played] = 0.77 + std::log(depth) * std::log(played) / 2.36;
+                    LmrTable[depth][played] = 1 + std::log(depth) * std::log(played) / 3;
                 }
             }
         }
@@ -202,7 +202,7 @@ namespace jet {
                     }
                 }
 
-                bool do_fullsearch = false;
+                bool do_fullsearch = !isPvNode || movecount > 1;
 
                 if (!inCheck && isQuiet && movecount > 2 && depth >= 3) {
                     Depth reduction = LmrTable[std::min(depth, 63)][std::min(movecount, 63)];
@@ -211,9 +211,7 @@ namespace jet {
 
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
-                    do_fullsearch = score > alpha && reduction != 1;
-                } else {
-                    do_fullsearch = !isPvNode || movecount > 1;
+                    do_fullsearch = score > alpha;
                 }
 
                 if (do_fullsearch) {
