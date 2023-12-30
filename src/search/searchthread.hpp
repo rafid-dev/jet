@@ -3,6 +3,7 @@
 #include "../chess/board.hpp"
 #include "../nnue/nnue.hpp"
 #include "constants.hpp"
+#include "history.hpp"
 #include "searchinfo.hpp"
 #include "timeman.hpp"
 
@@ -12,12 +13,17 @@ namespace jet {
         class SearchThread {
         public:
             uint64_t nodes = 0;
+            History  history;
 
             SearchThread() = default;
             SearchThread(const chess::Board& b) : m_board{b} {
             }
 
-            constexpr chess::Board& board() {
+            auto& board() {
+                return m_board;
+            }
+
+            const auto& board() const {
                 return m_board;
             }
 
@@ -32,6 +38,8 @@ namespace jet {
                 stop_flag = false;
                 nodes     = 0;
                 timeman.start(m_board.sideToMove());
+
+                history.clear();
             }
 
             TimeManager& timeManager() {

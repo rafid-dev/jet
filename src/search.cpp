@@ -169,7 +169,7 @@ namespace jet {
 
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::ALL>(board, movelist);
-            MoveOrdering::all(board, movelist, ss, entry.move());
+            MoveOrdering::all(movelist, st, ss, entry.move());
 
             Move bestmove  = Move::none();
             int  movecount = 0;
@@ -232,7 +232,7 @@ namespace jet {
 
                         if (score >= beta) {
                             if (isQuiet) {
-                                // update killer moves
+                                MoveOrdering::updateHistory(st, move, depth);
                                 ss->updateKiller(move);
                             }
 
