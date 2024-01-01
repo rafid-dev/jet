@@ -24,6 +24,7 @@ static constexpr std::string_view AUTHOR  = "Rafid Ahsan";
 int main(int argc, char** argv) {
     Attacks::init();
     nnue::readFromIncludedBinary();
+    search::init();
 
     std::cout << NAME << " " << VERSION << std::endl;
     std::cout << "Copyright (C) 2023  " << AUTHOR << std::endl;
