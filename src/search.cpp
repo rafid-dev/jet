@@ -197,6 +197,8 @@ namespace jet {
                 if (!inCheck && isQuiet && movecount > 4 && depth >= 3) {
                     Depth reduction = 2;
 
+                    reduction += !isPvNode;
+
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
                     do_fullsearch = score > alpha;
