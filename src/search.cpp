@@ -269,6 +269,52 @@ namespace jet {
             return bestscore;
         }
 
+        Value aspiration_window(SearchThread& st, SearchStack* ss, Depth depth, Value prevEval) {
+            Value score = 0;
+
+            Value delta = 10;
+
+            Value alpha = -constants::VALUE_INFINITY;
+            Value beta  = constants::VALUE_INFINITY;
+
+            Depth initial_depth = depth;
+
+            if (depth > 3) {
+                alpha = std::max(prevEval - delta, -constants::VALUE_INFINITY);
+                beta  = std::min(prevEval + delta, constants::VALUE_INFINITY);
+            }
+
+            while (true) {
+                score = negamax<NodeType::ROOT>(alpha, beta, depth, st, ss);
+
+                if (st.stop()) {
+                    break;
+                }
+
+                if (score <= alpha) {
+                    beta  = (alpha + beta) / 2;
+                    alpha = std::max(score - delta, -constants::VALUE_INFINITY);
+
+                    depth = initial_depth;
+                } else if (score >= beta) {
+                    beta = std::min(score + delta, constants::VALUE_INFINITY);
+
+                    if (std::abs(beta) <= constants::IS_MATE / 2 && depth > 1) {
+                        depth--;
+                    }
+
+                    ss->updatePV(ss->pv[0], ss + 1);
+
+                } else {
+                    break;
+                }
+
+                delta += delta / 2;
+            }
+
+            return score;
+        }
+
         void search(SearchThread& st, SearchInfo& info) {
             st.start();
 
@@ -277,12 +323,16 @@ namespace jet {
 
             auto start = misc::tick();
 
+            Value score = 0;
+
             for (Depth d = 1; d <= info.depth(); d++) {
                 if (st.stop()) {
                     break;
                 }
 
-                Value score = negamax<NodeType::ROOT>(-constants::VALUE_INFINITY, constants::VALUE_INFINITY, d, st, ss);
+                // Value score = negamax<NodeType::ROOT>(-constants::VALUE_INFINITY, constants::VALUE_INFINITY, d, st, ss);
+
+                score = aspiration_window(st, ss, d, score);
 
                 auto time_elapsed = misc::tick() - start;
 
@@ -302,27 +352,10 @@ namespace jet {
         void search(SearchThread& st, Depth depth) {
             st.start();
 
-            SearchStack::List stack;
-            SearchStack*      ss = SearchStack::init(stack);
+            SearchInfo info;
+            info.setDepth(depth);
 
-            auto start = misc::tick();
-
-            for (Depth d = 1; d <= depth; d++) {
-                Value score = negamax<NodeType::ROOT>(-constants::VALUE_INFINITY, constants::VALUE_INFINITY, d, st, ss);
-
-                auto time_elapsed = misc::tick() - start;
-
-                std::cout << "info depth " << d << " score cp " << score;
-                std::cout << " time " << time_elapsed;
-                std::cout << " nodes " << st.nodes;
-                std::cout << " nps " << static_cast<int>(1000.0f * st.nodes / (time_elapsed + 1));
-                std::cout << " pv";
-                SearchStack::printPVs(ss);
-
-                std::cout << std::endl;
-            }
-
-            std::cout << "bestmove " << ss->pv[0] << std::endl;
+            search(st, info);
         }
 
     } // namespace search
