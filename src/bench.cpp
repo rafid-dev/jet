@@ -61,9 +61,9 @@ namespace jet {
         uint64_t nodes        = 0;
         uint64_t time_elapsed = 0;
 
-        // Inspired from Koivisto
+        int count = 0;
 
-        for (auto& fen : bench_fens) {
+        for (const auto& fen : bench_fens) {
             st.board().setFen(fen);
 
             auto start = misc::tick();
@@ -72,9 +72,15 @@ namespace jet {
 
             nodes += st.nodes;
             time_elapsed += (end - start);
+
+            count++;
+
+            printf("Position [%2d]: %12d nodes %8d nps", count, static_cast<int>(st.nodes),
+                   static_cast<int>(1000.0f * nodes / (time_elapsed + 1)));
+            std::cout << std::endl;
         }
 
-        printf("Finished: %42d nodes %8d nps\n", static_cast<int>(nodes),
+        printf("Finished: %17d nodes %8d nps\n", static_cast<int>(nodes),
                static_cast<int>(1000.0f * nodes / (time_elapsed + 1)));
         std::cout << std::flush;
     }

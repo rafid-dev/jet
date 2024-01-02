@@ -13,24 +13,24 @@ namespace chess {
     public:
         Mailbox64() = default;
 
-        constexpr Piece get(Square sq) const {
+         Piece get(Square sq) const {
             return m_squares[sq];
         }
 
-        constexpr void set(Piece piece, Square sq) {
+         void set(Piece piece, Square sq) {
             m_squares[sq] = piece;
         }
 
-        constexpr void move(Piece piece, Square from, Square to) {
+         void move(Piece piece, Square from, Square to) {
             m_squares[to]   = piece;
             m_squares[from] = Piece::NONE;
         }
 
-        constexpr void clear(Square sq) {
+         void clear(Square sq) {
             m_squares[sq] = Piece::NONE;
         }
 
-        constexpr void clear() {
+         void clear() {
             m_squares.fill(Piece::NONE);
         }
 

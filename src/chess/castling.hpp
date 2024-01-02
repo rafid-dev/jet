@@ -19,14 +19,14 @@ namespace chess {
 
     class CastlingRights {
     public:
-        constexpr CastlingRights() : m_rights({1, 1, 1, 1}) {
+         CastlingRights() : m_rights({1, 1, 1, 1}) {
         }
 
-        constexpr void clear() {
+         void clear() {
             std::memset(&m_rights, 0, sizeof(m_rights));
         }
 
-        constexpr void loadFromString(std::string_view str) {
+         void loadFromString(std::string_view str) {
             clear();
 
             for (auto c : str) {
@@ -62,7 +62,7 @@ namespace chess {
             return _getRights<c, side>();
         }
 
-        constexpr void setCastlingRights(Color c, CastlingSide side, bool value) {
+         void setCastlingRights(Color c, CastlingSide side, bool value) {
             _setRights(c, side, value);
         }
 
@@ -179,7 +179,7 @@ namespace chess {
             }
         }
 
-        constexpr void _setRights(Color c, CastlingSide side, bool value) {
+         void _setRights(Color c, CastlingSide side, bool value) {
             if (c == Color::WHITE) {
                 if (side == CastlingSide::KING_SIDE) {
                     m_rights.whiteKingSide = value;

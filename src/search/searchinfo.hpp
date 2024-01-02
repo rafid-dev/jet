@@ -11,12 +11,22 @@ namespace jet {
                 return m_depth;
             }
 
-            inline constexpr void setDepth(types::Depth d) {
+            inline void setDepth(types::Depth d) {
                 m_depth = d;
+            }
+
+            inline void setPrintInfo(bool b) {
+                printInfo = b;
+            }
+
+            inline bool shouldPrintInfo() const {
+                return printInfo;
             }
 
         private:
             types::Depth m_depth = constants::DEPTH_MAX;
+
+            bool printInfo = true;
         };
     } // namespace search
 } // namespace jet

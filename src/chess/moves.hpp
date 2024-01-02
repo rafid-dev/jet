@@ -18,7 +18,7 @@ namespace chess {
         int      m_score;
 
         template <MoveType mt = MoveType::NORMAL>
-        static inline constexpr Move _make(Square from, Square to, PieceType promoted = PieceType::KNIGHT) {
+        static inline Move _make(Square from, Square to, PieceType promoted = PieceType::KNIGHT) {
             if constexpr (mt != MoveType::PROMOTION) {
                 return Move((static_cast<uint16_t>(from) << 10) | (static_cast<uint16_t>(to) << 4) |
                             (static_cast<uint16_t>(mt)));
@@ -28,95 +28,95 @@ namespace chess {
             }
         }
 
-        static constexpr uint8_t _encodePieceType(PieceType pt) {
+        static uint8_t _encodePieceType(PieceType pt) {
             assert(static_cast<uint8_t>(pt) >= static_cast<uint8_t>(PieceType::KNIGHT) &&
                    static_cast<uint8_t>(pt) <= static_cast<uint8_t>(PieceType::QUEEN));
             return static_cast<uint8_t>(pt) - 1;
         }
 
-        static constexpr PieceType _decodePieceType(uint8_t pt) {
+        static PieceType _decodePieceType(uint8_t pt) {
             assert(pt >= 0 && pt <= 3);
             return static_cast<PieceType>(pt + 1);
         }
 
     public:
         Move() = default;
-        constexpr Move(uint16_t data) : m_data(data), m_score(0) {
+        Move(uint16_t data) : m_data(data), m_score(0) {
         }
 
-        static inline constexpr Move none() {
+        static inline Move none() {
             return Move(0);
         }
 
-        static inline constexpr Move nullmove() {
+        static inline Move nullmove() {
             return _make<MoveType::NORMAL>(63, 63);
         }
 
-        static inline constexpr Move makeNormal(Square from, Square to) {
+        static inline Move makeNormal(Square from, Square to) {
             return _make<MoveType::NORMAL>(from, to);
         }
 
-        static inline constexpr Move makeEnpassant(Square from, Square to) {
+        static inline Move makeEnpassant(Square from, Square to) {
             return _make<MoveType::ENPASSANT>(from, to);
         }
 
-        static inline constexpr Move makeCastling(Square from, Square to) {
+        static inline Move makeCastling(Square from, Square to) {
             return _make<MoveType::CASTLING>(from, to);
         }
 
-        static inline constexpr Move makePromotion(Square from, Square to, PieceType promoted) {
+        static inline Move makePromotion(Square from, Square to, PieceType promoted) {
             return _make<MoveType::PROMOTION>(from, to, promoted);
         }
 
-        constexpr Square from() const {
+        Square from() const {
             return static_cast<Square>(m_data >> 10);
         }
 
-        constexpr Square to() const {
+        Square to() const {
             return static_cast<Square>((m_data >> 4) & 0x3f);
         }
 
-        constexpr MoveType type() const {
+        MoveType type() const {
             return static_cast<MoveType>(m_data & 0x3);
         }
 
-        constexpr PieceType promoted() const {
+        PieceType promoted() const {
             return _decodePieceType((m_data >> 2) & 0x3);
         }
 
-        constexpr bool isPromotion() const {
+        bool isPromotion() const {
             return type() == MoveType::PROMOTION;
         }
 
-        constexpr bool isEnPassant() const {
+        bool isEnPassant() const {
             return type() == MoveType::ENPASSANT;
         }
 
-        constexpr bool isCastling() const {
+        bool isCastling() const {
             return type() == MoveType::CASTLING;
         }
 
-        constexpr auto move() const {
+        auto move() const {
             return m_data;
         }
 
-        constexpr bool isValid() const {
+        bool isValid() const {
             return !(from() == to());
         }
 
-        constexpr void setScore(int s) {
+        void setScore(int s) {
             m_score = s;
         }
 
-        constexpr auto score() const {
+        auto score() const {
             return m_score;
         }
 
-        constexpr auto data() const {
+        auto data() const {
             return m_data;
         }
 
-        constexpr bool operator==(const Move& rhs) const {
+        bool operator==(const Move& rhs) const {
             return m_data == rhs.m_data;
         }
     };
@@ -145,7 +145,7 @@ namespace chess {
             std::copy(moves.begin(), moves.end(), m_moves.begin());
         }
 
-        constexpr auto find(const Move& m) const {
+        auto find(const Move& m) const {
             for (int i = 0; i < m_size; ++i) {
                 if (m_moves[i] == m) {
                     return i;
@@ -155,12 +155,12 @@ namespace chess {
             return -1;
         }
 
-        constexpr void add(Move m) {
+        void add(Move m) {
             assert(m_size < MAX_SIZE);
             m_moves[m_size++] = m;
         }
 
-        constexpr void addIf(Move m, bool condition) {
+        void addIf(Move m, bool condition) {
             assert(m_size < MAX_SIZE);
             if (!condition) {
                 return;
@@ -168,60 +168,60 @@ namespace chess {
             m_moves[m_size++] = m;
         }
 
-        constexpr void addPromotions(Square from, Square to) {
+        void addPromotions(Square from, Square to) {
             add(Move::makePromotion(from, to, PieceType::KNIGHT));
             add(Move::makePromotion(from, to, PieceType::BISHOP));
             add(Move::makePromotion(from, to, PieceType::ROOK));
             add(Move::makePromotion(from, to, PieceType::QUEEN));
         }
 
-        constexpr void clear() {
+        void clear() {
             m_size = 0;
         }
 
-        constexpr void setSize(int size) {
+        void setSize(int size) {
             m_size = size;
         }
 
-        constexpr int size() const {
+        int size() const {
             return m_size;
         }
 
-        constexpr Move operator[](int i) const {
+        Move operator[](int i) const {
             assert(i >= 0 && i < m_size);
             return m_moves[i];
         }
 
-        constexpr Move& operator[](int i) {
+        Move& operator[](int i) {
             assert(i >= 0 && i < m_size);
             return m_moves[i];
         }
 
-        constexpr Move& front() {
+        Move& front() {
             assert(m_size > 0);
             return m_moves[0];
         }
 
-        constexpr Move& back() {
+        Move& back() {
             assert(m_size > 0);
             return m_moves[m_size - 1];
         }
 
-        constexpr Move front() const {
+        Move front() const {
             assert(m_size > 0);
             return m_moves[0];
         }
 
-        constexpr Move back() const {
+        Move back() const {
             assert(m_size > 0);
             return m_moves[m_size - 1];
         }
 
-        constexpr bool empty() const {
+        bool empty() const {
             return m_size == 0;
         }
 
-        constexpr void pop_back() {
+        void pop_back() {
             assert(m_size > 0);
             --m_size;
         }

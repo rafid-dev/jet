@@ -10,8 +10,7 @@ namespace jet {
 
     namespace nnue {
 
-        void readFromIncludedBinary();
-        void init(const std::string_view& path);
+        void init();
 
         extern std::array<int16_t, constants::INPUT_LAYER_SIZE> inputWeights;
         extern std::array<int16_t, constants::HIDDEN_SIZE>      inputBias;

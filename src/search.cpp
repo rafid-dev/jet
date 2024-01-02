@@ -330,23 +330,25 @@ namespace jet {
                     break;
                 }
 
-                // Value score = negamax<NodeType::ROOT>(-constants::VALUE_INFINITY, constants::VALUE_INFINITY, d, st, ss);
-
                 score = aspiration_window(st, ss, d, score);
 
-                auto time_elapsed = misc::tick() - start;
+                if (info.shouldPrintInfo()) {
+                    auto time_elapsed = misc::tick() - start;
 
-                std::cout << "info depth " << d << " score cp " << score;
-                std::cout << " time " << time_elapsed;
-                std::cout << " nodes " << st.nodes;
-                std::cout << " nps " << static_cast<int>(1000.0f * st.nodes / (time_elapsed + 1));
-                std::cout << " pv";
-                SearchStack::printPVs(ss);
+                    std::cout << "info depth " << d << " score cp " << score;
+                    std::cout << " time " << time_elapsed;
+                    std::cout << " nodes " << st.nodes;
+                    std::cout << " nps " << static_cast<int>(1000.0f * st.nodes / (time_elapsed + 1));
+                    std::cout << " pv";
+                    SearchStack::printPVs(ss);
 
-                std::cout << std::endl;
+                    std::cout << std::endl;
+                }
             }
 
-            std::cout << "bestmove " << ss->pv[0] << std::endl;
+            if (info.shouldPrintInfo()) {
+                std::cout << "bestmove " << ss->pv[0] << std::endl;
+            }
         }
 
         void search(SearchThread& st, Depth depth) {
@@ -354,6 +356,7 @@ namespace jet {
 
             SearchInfo info;
             info.setDepth(depth);
+            info.setPrintInfo(false);
 
             search(st, info);
         }

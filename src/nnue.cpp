@@ -4,7 +4,7 @@
 
 #define INCBIN_STYLE INCBIN_STYLE_CAMEL
 #include "incbin/incbin.h"
-INCBIN(EVAL, "src/net.nn");
+INCBIN(EVAL, NNFILE);
 
 namespace jet {
     namespace nnue {
@@ -14,7 +14,7 @@ namespace jet {
         std::array<int16_t, constants::HIDDEN_SIZE * 2>  hiddenWeights;
         std::array<int32_t, constants::OUTPUT_SIZE>      hiddenBias;
 
-        void readFromIncludedBinary() {
+        void init() {
             uint64_t memoryIndex = 0;
 
             std::memcpy(inputWeights.data(), &gEVALData[memoryIndex], constants::INPUT_LAYER_SIZE * sizeof(int16_t));
@@ -36,29 +36,6 @@ namespace jet {
 
             std::cout << std::endl;
 #endif
-        }
-
-        void init(const std::string_view& path) {
-            uint64_t bytesRead = 0;
-
-            std::ifstream file(path.data(), std::ios::binary | std::ios::in);
-
-            if (!file) {
-                readFromIncludedBinary();
-                return;
-            }
-
-            file.read(reinterpret_cast<char*>(inputWeights.data()), sizeof(inputWeights));
-            bytesRead += sizeof(inputWeights);
-
-            file.read(reinterpret_cast<char*>(inputBias.data()), sizeof(inputBias));
-            bytesRead += sizeof(inputBias);
-
-            file.read(reinterpret_cast<char*>(hiddenWeights.data()), sizeof(hiddenWeights));
-            bytesRead += sizeof(hiddenWeights);
-
-            file.read(reinterpret_cast<char*>(hiddenBias.data()), sizeof(hiddenBias));
-            bytesRead += sizeof(hiddenBias);
         }
 
     } // namespace nnue

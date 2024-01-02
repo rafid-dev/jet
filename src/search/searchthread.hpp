@@ -33,7 +33,7 @@ namespace jet {
                 refresh();
             }
 
-            constexpr void start() {
+             void start() {
                 refresh();
                 stop_flag = false;
                 nodes     = 0;

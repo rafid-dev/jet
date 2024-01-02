@@ -27,35 +27,35 @@ namespace chess {
             return m_halfmoveClock;
         }
 
-        constexpr inline CastlingRights castlingRights() const {
+        inline CastlingRights castlingRights() const {
             return m_castlingRights;
         }
 
-        constexpr inline Square enPassant() const {
+        inline Square enPassant() const {
             return m_enPassantSq;
         }
 
-        constexpr inline Color sideToMove() const {
+        inline Color sideToMove() const {
             return m_sideToMove;
         }
 
-        constexpr Bitboard occupied() const {
+        Bitboard occupied() const {
             return m_occupancy;
         }
 
         // Returns the piece on a square
-        constexpr Piece at(Square sq) const {
+        Piece at(Square sq) const {
             return m_pieces.get(sq);
         }
 
-        constexpr PieceType pieceTypeAt(Square sq) const {
+        PieceType pieceTypeAt(Square sq) const {
             if (at(sq) == Piece::NONE) {
                 return PieceType::NONE;
             }
             return pieceToPieceType(at(sq));
         }
 
-        constexpr Bitboard us(Color c) const {
+        Bitboard us(Color c) const {
             // clang-format off
             return m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::PAWN)] |
                    m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KNIGHT)] |
@@ -67,7 +67,7 @@ namespace chess {
         }
 
         template <Color c>
-        constexpr Bitboard us() const {
+        Bitboard us() const {
             // clang-format off
             return m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::PAWN)] |
                    m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KNIGHT)] |
@@ -78,44 +78,44 @@ namespace chess {
             // clang-format on
         }
 
-        constexpr Bitboard them(Color c) const {
+        Bitboard them(Color c) const {
             return us(~c);
         }
 
         template <Color c>
-        constexpr Bitboard them() const {
+        Bitboard them() const {
             return us<~c>();
         }
 
         // Returns all pieces occupied by both colors
-        constexpr Bitboard all() const {
+        Bitboard all() const {
             return us<Color::WHITE>() | us<Color::BLACK>();
         }
 
         // Returns the bitboard of a given color and piece type
         template <Color c, PieceType pt>
-        constexpr Bitboard bitboard() const {
+        Bitboard bitboard() const {
             return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
         }
 
         // Returns the bitboard of a given color and piece type
-        constexpr Bitboard bitboard(Color c, PieceType pt) const {
+        Bitboard bitboard(Color c, PieceType pt) const {
             return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
         }
 
         // Returns the bitboard of a given piece type (includes both colors)
         template <PieceType pt>
-        constexpr Bitboard bitboard() const {
+        Bitboard bitboard() const {
             return bitboard<Color::WHITE, pt>() | bitboard<Color::BLACK, pt>();
         }
 
         // Returns the bitboard of a given piece type (includes both colors)
-        constexpr Bitboard bitboard(PieceType pt) const {
+        Bitboard bitboard(PieceType pt) const {
             return bitboard(Color::WHITE, pt) | bitboard(Color::BLACK, pt);
         }
 
         // Place a piece on a square
-        constexpr void placePiece(Piece piece, Square sq) {
+        void placePiece(Piece piece, Square sq) {
             m_pieces.set(piece, sq);
 
             // Update bitboards
@@ -126,7 +126,7 @@ namespace chess {
         }
 
         // Remove a piece from a square
-        constexpr void removePiece(Piece piece, Square sq) {
+        void removePiece(Piece piece, Square sq) {
             assert(m_pieces.get(sq) == piece && piece != Piece::NONE);
             m_pieces.clear(sq);
 
@@ -335,7 +335,7 @@ namespace chess {
             int            m_halfmoveClock;
             U64            hash;
 
-            constexpr State(CastlingRights castle, Square enPassant, Piece capturedPiece, int halfmoveClock, U64 hash)
+            State(CastlingRights castle, Square enPassant, Piece capturedPiece, int halfmoveClock, U64 hash)
                 : m_castlingRights(castle)
                 , m_capturedPiece(capturedPiece)
                 , m_enPassantSq(enPassant)
@@ -374,7 +374,7 @@ namespace chess {
         // History
         std::vector<State> m_history{};
 
-        constexpr void _clearAllPieces() {
+        void _clearAllPieces() {
             m_pieces.clear();
             m_occupancy.zero();
             for (int i = 0; i < NUM_COLORS; ++i) {
@@ -384,11 +384,11 @@ namespace chess {
             }
         }
 
-        constexpr void _recordState(Piece capturedPiece) {
+        void _recordState(Piece capturedPiece) {
             m_history.emplace_back(m_castlingRights, m_enPassantSq, capturedPiece, m_halfmoveClock, m_hash);
         }
 
-        constexpr Piece _restoreState() {
+        Piece _restoreState() {
             const State& state = m_history.back();
 
             m_castlingRights = state.m_castlingRights;
