@@ -13,6 +13,7 @@ namespace jet {
 
         enum class NodeType : uint8_t { ROOT, PV, NONPV };
 
+        void init();
         void search(SearchThread&, SearchInfo&);
         void search(SearchThread&, types::Depth);
 
