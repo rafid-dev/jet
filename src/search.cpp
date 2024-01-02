@@ -213,8 +213,6 @@ namespace jet {
 
                     reduction = std::clamp(reduction, 0, depth - 1);
 
-                    reduction += !isPvNode;
-
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
                     do_fullsearch = score > alpha;
