@@ -205,7 +205,7 @@ namespace jet {
 
                 bool do_fullsearch = !isPvNode || movecount > 1;
 
-                if (!inCheck && isQuiet && movecount > 4 && depth >= 3) {
+                if (!inCheck && isQuiet && movecount > 2 && depth >= 3) {
                     Depth reduction = LmrTable[std::min(63, depth)][std::min(63, movecount)];
 
                     reduction += !isPvNode;
