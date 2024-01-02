@@ -127,7 +127,8 @@ namespace jet {
                 }
             }
 
-            const bool inCheck = board.isCheck();
+            const bool inCheck   = board.isCheck();
+            const bool improving = !inCheck && ss->static_eval > (ss - 2)->static_eval;
 
             if (inCheck) {
                 depth++;
@@ -207,14 +208,11 @@ namespace jet {
                 if (!inCheck && isQuiet && movecount > 4 && depth >= 3) {
                     Depth reduction = LmrTable[std::min(63, depth)][std::min(63, movecount)];
 
-<<<<<<< HEAD
-=======
                     reduction += !isPvNode;
                     reduction += !improving;
 
                     reduction = std::clamp(reduction, 0, depth - 1);
 
->>>>>>> e8950b3 (Bench: 8059718)
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
                     do_fullsearch = score > alpha;
