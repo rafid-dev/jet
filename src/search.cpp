@@ -145,7 +145,7 @@ namespace jet {
                     eval = entry.score();
                 }
 
-                if (!inCheck && depth < 9 && eval - depth * 70 - improvement / 30 >= beta) {
+                if (!inCheck && depth < 9 && eval >= beta && eval - ((depth - improving) * 75) >= beta) {
                     return eval;
                 }
 
