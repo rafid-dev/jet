@@ -137,15 +137,22 @@ namespace jet {
                 ss->static_eval = evaluation::evaluate(st);
             }
 
-            Value eval        = ss->static_eval;
-            Value improvement = ss->ply >= 2 ? eval - (ss - 2)->static_eval : 0;
+            Value eval = ss->static_eval;
 
-            if constexpr (!isPvNode) {
-                if (ttHit) {
+            if (ttHit) {
+                if (entry.flag() == TT::Flag::EXACT) {
                     eval = entry.score();
                 }
+                if (entry.flag() == TT::Flag::LOWER && entry.score() >= eval) {
+                    eval = entry.score();
+                }
+                if (entry.flag() == TT::Flag::UPPER && entry.score() <= eval) {
+                    eval = entry.score();
+                }
+            }
 
-                if (!inCheck && depth < 9 && eval >= beta && eval - ((depth - improving) * 75) >= beta) {
+            if constexpr (!isPvNode) {
+                if (!inCheck && depth < 7 && eval - ((depth - improving) * 65) >= beta) {
                     return eval;
                 }
 
