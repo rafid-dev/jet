@@ -142,6 +142,7 @@ namespace jet {
                 if (entry.flag() == TT::Flag::UPPER && entry.score() <= eval) {
                     eval = entry.score();
                 }
+                ss->static_eval = eval;
             } else {
                 ss->static_eval = eval = evaluation::evaluate(st);
             }
