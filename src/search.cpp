@@ -152,7 +152,7 @@ namespace jet {
             }
 
             if constexpr (!isPvNode) {
-                if (!inCheck && depth < 7 && eval - ((depth - improving) * 65) >= beta) {
+                if (!inCheck && depth < 7 && eval - (std::max(0, depth - improving) * 65) >= beta) {
                     return eval;
                 }
 
