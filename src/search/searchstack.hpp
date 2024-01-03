@@ -18,6 +18,7 @@ namespace jet {
             chess::Move  move        = chess::Move::none();
             chess::Move  killers[2]  = {chess::Move::none(), chess::Move::none()};
             PvTable      pv;
+            int          failHighCount = 0;
 
             void updateKiller(chess::Move move) {
                 killers[1] = killers[0];

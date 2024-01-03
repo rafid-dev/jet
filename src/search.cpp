@@ -211,6 +211,8 @@ namespace jet {
                     reduction += !isPvNode;
                     reduction += !improving;
 
+                    reduction += (ss - 1)->failHighCount > 3;
+
                     reduction = std::clamp(reduction, 0, depth - 1);
 
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
@@ -247,6 +249,7 @@ namespace jet {
                         }
 
                         if (score >= beta) {
+                            ss->failHighCount++;
                             if (isQuiet) {
                                 MoveOrdering::updateHistory(st, move, depth);
                                 ss->updateKiller(move);
