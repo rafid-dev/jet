@@ -144,8 +144,8 @@ namespace jet {
                     eval = entry.score();
                 }
 
-                if (!inCheck && depth < 9 && ss->static_eval - depth * 77 >= beta) {
-                    return ss->static_eval;
+                if (!inCheck && depth < 8 && eval >= beta && eval - ((depth - improving) * 70) >= beta) {
+                    return eval;
                 }
 
                 if (!inCheck && depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() &&
