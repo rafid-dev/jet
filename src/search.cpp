@@ -130,22 +130,30 @@ namespace jet {
             const bool inCheck   = board.isCheck();
             const bool improving = !inCheck && ss->static_eval > (ss - 2)->static_eval;
 
-            if (inCheck) {
-                depth++;
-                ss->static_eval = 0;
-            } else {
-                ss->static_eval = evaluation::evaluate(st);
-            }
+            Value eval = 0;
 
-            Value eval = ss->static_eval;
-
-            if constexpr (!isPvNode) {
-                if (ttHit) {
+            if (ttHit) {
+                if (entry.flag() == TT::Flag::EXACT) {
                     eval = entry.score();
                 }
+                if (entry.flag() == TT::Flag::LOWER && entry.score() >= eval) {
+                    eval = entry.score();
+                }
+                if (entry.flag() == TT::Flag::UPPER && entry.score() <= eval) {
+                    eval = entry.score();
+                }
+            } else {
+                ss->static_eval = eval = evaluation::evaluate(st);
+            }
 
-                if (!inCheck && depth < 9 && ss->static_eval - depth * 77 >= beta) {
-                    return ss->static_eval;
+            if (inCheck) {
+                depth++;
+                ss->static_eval = eval = 0;
+            }
+
+            if constexpr (!isPvNode) {
+                if (!inCheck && depth < 9 && eval - depth * 77 >= beta) {
+                    return eval;
                 }
 
                 if (!inCheck && depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() &&
