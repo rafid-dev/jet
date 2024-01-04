@@ -12,7 +12,7 @@ namespace jet {
             std::array<std::array<int16_t, 12>, 64> m_table;
 
         public:
-            static constexpr inline int16_t MAX_HISTORY = 8192;
+            static constexpr inline int16_t MAX_HISTORY = 2 << 13;
 
             auto& index(const chess::Board& board, const chess::Move& move) {
                 const auto piece = board.at(move.from());

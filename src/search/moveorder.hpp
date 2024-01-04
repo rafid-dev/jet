@@ -29,8 +29,14 @@ namespace jet {
             static constexpr inline int KILLER_1_SCORE = 80000;
             static constexpr inline int KILLER_2_SCORE = 70000;
 
-            static void updateHistory(SearchThread& st, const chess::Move& move, int depth) {
+            static void updateHistory(SearchThread& st, chess::Movelist& quiets, const chess::Move& move, int depth) {
                 st.history.update(st.board(), move, History::bonus(depth));
+
+                for (auto& quiet : quiets) {
+                    if (quiet != move) {
+                        st.history.update(st.board(), quiet, -History::bonus(depth));
+                    }
+                }
             }
 
             static void captures(const chess::Board& board, chess::Movelist& movelist) {

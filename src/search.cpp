@@ -182,6 +182,8 @@ namespace jet {
             MoveGen::legalmoves<MoveGenType::ALL>(board, movelist);
             MoveOrdering::all(movelist, st, ss, entry.move());
 
+            Movelist quietlist;
+
             Move bestmove  = Move::none();
             int  movecount = 0;
 
@@ -196,6 +198,10 @@ namespace jet {
                 ss->move      = move;
                 st.nodes++;
                 movecount++;
+
+                if (isQuiet) {
+                    quietlist.add(move);
+                }
 
                 if constexpr (nt == NodeType::ROOT) {
                     if (movecount == 1 && depth == 1) {
@@ -248,13 +254,18 @@ namespace jet {
 
                         if (score >= beta) {
                             if (isQuiet) {
-                                MoveOrdering::updateHistory(st, move, depth);
                                 ss->updateKiller(move);
                             }
 
                             break;
                         }
                     }
+                }
+            }
+
+            if (alpha != oldAlpha) {
+                if (bestscore >= beta && board.isQuiet(bestmove)) {
+                    MoveOrdering::updateHistory(st, quietlist, bestmove, depth);
                 }
             }
 
