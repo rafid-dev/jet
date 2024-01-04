@@ -231,7 +231,10 @@ namespace jet {
 
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
-                    do_fullsearch = score > alpha;
+                    do_fullsearch = score > alpha && reduction != 1;
+
+                    bool deeper = score > bestscore + 70 + 12 * (depth - reduction);
+                    depth += deeper;
                 }
 
                 if (do_fullsearch) {
