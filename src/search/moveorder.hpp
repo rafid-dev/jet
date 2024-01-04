@@ -71,7 +71,7 @@ namespace jet {
                     if (move == ttMove) {
                         move.setScore(TT_MOVE_SCORE);
                     } else if (target != PieceType::NONE) {
-                        move.setScore(SEE_SCORE + _mvvlva(target, attacker));
+                        move.setScore(see(board, move, 0) * SEE_SCORE + _mvvlva(target, attacker));
                     } else if (move == ss->killers[0]) {
                         move.setScore(KILLER_1_SCORE);
                     } else if (move == ss->killers[1]) {
