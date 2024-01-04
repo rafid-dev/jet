@@ -29,7 +29,7 @@ namespace jet {
             }
 
             static auto bonus(int depth) {
-                return depth * depth;
+                return 32 * depth;
             }
 
             void update(const chess::Board& board, const chess::Move& move, int bonus) {
