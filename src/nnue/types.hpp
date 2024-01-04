@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstring>
 
 #include "../chess/square.hpp"
 #include "../chess/types.hpp"
