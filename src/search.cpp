@@ -187,11 +187,21 @@ namespace jet {
             Move bestmove  = Move::none();
             int  movecount = 0;
 
+            bool hasNonPawnMat = board.hasNonPawnMat();
+
             for (int i = 0; i < movelist.size(); i++) {
                 movelist.nextmove(i);
 
                 const auto& move    = movelist[i];
                 const bool  isQuiet = board.isQuiet(move);
+
+                if constexpr (nt != NodeType::ROOT) {
+                    if (isQuiet && bestscore > -constants::IS_MATE && hasNonPawnMat) {
+                        if (!inCheck && !isPvNode && depth <= 7 && quietlist.size() >= (4 + depth * 4)) {
+                            break;
+                        }
+                    }
+                }
 
                 st.makeMove<true>(move);
                 (ss + 1)->ply = ss->ply + 1;
