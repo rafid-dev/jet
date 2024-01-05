@@ -221,8 +221,12 @@ namespace jet {
 
                 bool do_fullsearch = !isPvNode || movecount > 1;
 
-                if (!inCheck && isQuiet && movecount > 2 + 2 * isPvNode && depth >= 3) {
+                if (!inCheck && movecount > 2 + 2 * isPvNode && depth >= 3) {
                     Depth reduction = LmrTable[std::min(63, depth)][std::min(63, movecount)];
+
+                    if (!isQuiet) {
+                        reduction -= MoveOrdering::see(board, move, -100 * depth);
+                    }
 
                     reduction += !isPvNode;
                     reduction += !improving;
@@ -231,7 +235,7 @@ namespace jet {
 
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, depth - reduction, st, ss + 1);
 
-                    do_fullsearch = score > alpha;
+                    do_fullsearch = score > alpha && reduction;
                 }
 
                 if (do_fullsearch) {
