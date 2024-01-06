@@ -213,7 +213,7 @@ namespace jet {
                         Depth singularDepth = depth / 2;
 
                         ss->excluded        = move;
-                        Value singularScore = negamax<NodeType::NONPV>(singularBeta, singularBeta - 1, singularDepth, st, ss);
+                        Value singularScore = negamax<NodeType::NONPV>(singularBeta - 1, singularBeta, singularDepth, st, ss);
                         ss->excluded        = Move::none();
 
                         if (singularScore < singularBeta) {
