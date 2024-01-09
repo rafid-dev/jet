@@ -218,6 +218,8 @@ namespace jet {
 
                         if (singularScore < singularBeta) {
                             extension = 1;
+                        } else if (singularBeta >= beta) {
+                            return singularBeta;
                         }
                     }
 
