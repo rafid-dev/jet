@@ -17,6 +17,7 @@ namespace jet {
             types::Value static_eval = 0;
             chess::Move  move        = chess::Move::none();
             chess::Move  killers[2]  = {chess::Move::none(), chess::Move::none()};
+            chess::Move  excluded    = chess::Move::none();
             PvTable      pv;
 
             void updateKiller(chess::Move move) {
