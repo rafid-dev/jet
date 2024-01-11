@@ -59,6 +59,7 @@ namespace jet {
 
                 const auto& move = movelist[i];
 
+                // SEE pruning
                 if (move.score() < MoveOrdering::SEE_SCORE) {
                     break;
                 }
@@ -149,10 +150,12 @@ namespace jet {
                 }
 
                 if (!inCheck && !ss->excluded.isValid()) {
+                    // Reverse futility pruning
                     if (depth < 8 && eval >= beta && eval - ((depth - improving) * 70) >= beta) {
                         return eval;
                     }
 
+                    // Null move pruning
                     if (depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() && ss->static_eval >= beta &&
                         (!ttHit || entry.flag() != TT::Flag::UPPER || eval >= beta)) {
                         Depth reduction = 3 + depth / 3 + std::min(3, (eval - beta) / 180);
@@ -207,6 +210,7 @@ namespace jet {
                 }
 
                 if constexpr (nt != NodeType::ROOT) {
+                    // Singular extensions
                     if (depth >= 8 && move == entry.move() && entry.flag() == TT::Flag::LOWER &&
                         std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - 3 && !ss->excluded.isValid()) {
                         Value singularBeta  = entry.score() - depth;
@@ -221,6 +225,7 @@ namespace jet {
                         }
                     }
 
+                    // Late move pruning
                     if (isQuiet && bestscore > -constants::IS_MATE && hasNonPawnMat) {
                         if (!inCheck && !isPvNode && depth <= 7 && quietlist.size() >= (4 + depth * 4)) {
                             break;
@@ -248,6 +253,7 @@ namespace jet {
 
                 bool do_fullsearch = !isPvNode || movecount > 1;
 
+                // Late move reductions
                 if (!inCheck && movecount > 2 + 2 * isPvNode && depth >= 3) {
                     Depth reduction = LmrTable[std::min(63, depth)][std::min(63, movecount)];
 
@@ -269,6 +275,7 @@ namespace jet {
                     score = -negamax<NodeType::NONPV>(-alpha - 1, -alpha, newDepth - 1, st, ss + 1);
                 }
 
+                // Principal variation search
                 if constexpr (isPvNode) {
                     if (movecount == 1 || (score > alpha && score < beta)) {
                         score = -negamax<NodeType::PV>(-beta, -alpha, newDepth - 1, st, ss + 1);
