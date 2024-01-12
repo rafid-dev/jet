@@ -50,13 +50,13 @@ namespace jet {
                 }
             }
 
-            static void capturesWithSee(const chess::Board& board, chess::Movelist& movelist) {
+            static void capturesWithSee(const chess::Board& board, chess::Movelist& movelist, int threshold = 0) {
                 for (auto& move : movelist) {
                     const auto attacker = board.pieceTypeAt(move.from());
                     const auto target   = board.pieceTypeAt(move.to());
 
                     if (target != PieceType::NONE) {
-                        move.setScore(see(board, move, 0) * SEE_SCORE + _mvvlva(target, attacker));
+                        move.setScore(see(board, move, threshold) * SEE_SCORE + _mvvlva(target, attacker));
                     }
                 }
             }

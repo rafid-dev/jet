@@ -50,7 +50,7 @@ namespace jet {
             Board&   board = st.board();
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::CAPTURE>(board, movelist);
-            MoveOrdering::capturesWithSee(board, movelist);
+            MoveOrdering::capturesWithSee(board, movelist, -100);
 
             Value score = -constants::VALUE_INFINITY;
 
