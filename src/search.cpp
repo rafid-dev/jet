@@ -225,10 +225,20 @@ namespace jet {
                         }
                     }
 
-                    // Late move pruning
                     if (isQuiet && bestscore > -constants::IS_MATE && hasNonPawnMat) {
+                        // Late move pruning
                         if (!inCheck && !isPvNode && depth <= 7 && quietlist.size() >= (4 + depth * 4)) {
                             break;
+                        }
+
+                        // SEE pruning for quiets
+                        if (depth <= 8 && !MoveOrdering::see(board, move, -70 * depth)) {
+                            continue;
+                        }
+                    } else if (!isQuiet && bestscore > -constants::IS_MATE && hasNonPawnMat) {
+                        // SEE pruning for noisies
+                        if (depth <= 6 && !MoveOrdering::see(board, move, -60 * depth)) {
+                            continue;
                         }
                     }
                 }
