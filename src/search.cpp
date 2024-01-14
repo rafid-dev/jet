@@ -231,8 +231,10 @@ namespace jet {
                             break;
                         }
 
+                        int seeMargin = isQuiet ? -70 * depth : -15 * depth * depth;
+
                         // SEE pruning
-                        if (depth <= 8 && !MoveOrdering::see(board, move, -50 * depth)) {
+                        if (depth <= 8 && !MoveOrdering::see(board, move, seeMargin)) {
                             continue;
                         }
                     }
