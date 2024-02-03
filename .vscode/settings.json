@@ -70,6 +70,9 @@
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
         "cassert": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "xtree": "cpp"
     }
 }

@@ -198,12 +198,17 @@ namespace jet {
             Depth extension = 0;
 
             bool hasNonPawnMat = board.hasNonPawnMat();
+            bool skipQuiets    = false;
 
             for (int i = 0; i < movelist.size(); i++) {
                 movelist.nextmove(i);
 
                 const auto& move    = movelist[i];
                 const bool  isQuiet = board.isQuiet(move);
+
+                if (isQuiet && skipQuiets) {
+                    continue;
+                }
 
                 if (move == ss->excluded) {
                     continue;
@@ -230,6 +235,13 @@ namespace jet {
                         if (!inCheck && !isPvNode && depth <= 7 && quietlist.size() >= (4 + depth * 4)) {
                             break;
                         }
+                    }
+
+                    Depth lmrDepth = LmrTable[std::min(63, depth)][std::min(63, movecount)];
+
+                    // Futility pruning
+                    if (lmrDepth <= 6 && !inCheck && eval + 217 + 71 * depth <= alpha) {
+                        skipQuiets = true;
                     }
                 }
 
