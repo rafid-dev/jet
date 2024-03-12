@@ -81,7 +81,7 @@ namespace jet {
                 network.push();
 
                 if (pieceType == chess::PieceType::KING &&
-                    (nnue::constants::KING_BUCKET[from] != nnue::constants::KING_BUCKET[to] ||
+                    (nnue::constants::KING_BUCKET[from ^ (static_cast<bool>(side) * 56)] != nnue::constants::KING_BUCKET[to ^ (static_cast<bool>(side) * 56)] ||
                      static_cast<int>(from.file()) + static_cast<int>(to.file()) == 7)) {
                     m_board.makeMove(move);
                     refresh();
@@ -99,7 +99,7 @@ namespace jet {
                     const auto rookTo = chess::CastlingRights::rookTo(side, castleSide);
                     const auto kingTo = chess::CastlingRights::kingTo(side, castleSide);
 
-                    if (nnue::constants::KING_BUCKET[from] != nnue::constants::KING_BUCKET[kingTo] ||
+                    if (nnue::constants::KING_BUCKET[from ^ (static_cast<bool>(side) * 56)] != nnue::constants::KING_BUCKET[kingTo ^ (static_cast<bool>(side) * 56)] ||
                         static_cast<int>(from.file()) + static_cast<int>(kingTo.file()) == 7) {
                         m_board.makeMove(move);
                         refresh();
