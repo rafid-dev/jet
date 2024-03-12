@@ -18,7 +18,7 @@ namespace jet {
         template <typename T>
         class AccumulatorBase {
         private:
-            using Weights = std::array<T, constants::HIDDEN_SIZE>;
+            using Weights = std::array<T, constants::N_HIDDEN>;
 
             // 0 = white POV, 1 = black POV
             std::array<Weights, 2> weights;
@@ -33,21 +33,21 @@ namespace jet {
 
             template <chess::Color c>
             void add(const T* input) {
-                for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
+                for (int i = 0; i < constants::N_HIDDEN; ++i) {
                     weights[static_cast<int>(c)][i] += input[i];
                 }
             }
 
             template <chess::Color c>
             void sub(const T* input) {
-                for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
+                for (int i = 0; i < constants::N_HIDDEN; ++i) {
                     weights[static_cast<int>(c)][i] -= input[i];
                 }
             }
 
             template <chess::Color c>
             void addSub(const T* inputAdd, const T* inputSub) {
-                for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
+                for (int i = 0; i < constants::N_HIDDEN; ++i) {
                     weights[static_cast<int>(c)][i] += inputAdd[i] - inputSub[i];
                 }
             }

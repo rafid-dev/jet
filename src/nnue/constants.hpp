@@ -6,12 +6,17 @@ namespace jet {
         namespace constants {
 
             constexpr int BUCKETS     = 16;
+            
             constexpr int INPUT_SIZE  = 64 * 6 * 2 * BUCKETS;
-            constexpr int HIDDEN_SIZE = 512;
+
+            constexpr int N_HIDDEN = 256;
+            constexpr int N_L1 = N_HIDDEN * 2;
+            
+            constexpr int N_L2 = 32;
+
             constexpr int OUTPUT_SIZE = 1;
 
-            constexpr int INPUT_LAYER_SIZE  = INPUT_SIZE * HIDDEN_SIZE;
-            constexpr int HIDDEN_LAYER_SIZE = HIDDEN_SIZE * 2;
+            constexpr int INPUT_LAYER_SIZE  = INPUT_SIZE * N_HIDDEN;
             constexpr int OUTPUT_LAYER_SIZE = OUTPUT_SIZE;
 
             constexpr int INPUT_QUANTIZATION = 32;

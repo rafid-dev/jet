@@ -6,16 +6,23 @@
 #include "accumulator.hpp"
 #include "types.hpp"
 
+#include <algorithm>
+
 namespace jet {
 
     namespace nnue {
 
         void init();
 
+
         extern std::array<int16_t, constants::INPUT_LAYER_SIZE> inputWeights;
-        extern std::array<int16_t, constants::HIDDEN_SIZE>      inputBias;
-        extern std::array<int16_t, constants::HIDDEN_SIZE * 2>  hiddenWeights;
-        extern std::array<int32_t, constants::OUTPUT_SIZE>      hiddenBias;
+        extern std::array<int16_t, constants::N_HIDDEN>      inputBias;
+
+        extern std::array<int16_t, constants::N_L1 * constants::N_L2>  L1_Weights;
+        extern std::array<float, constants::N_L2>      L1_Bias;
+
+        extern std::array<float, constants::N_L2 * constants::OUTPUT_SIZE>  L2_Weights;
+        extern std::array<float, constants::OUTPUT_SIZE>      L2_Bias;
 
         class Network {
         private:
@@ -51,17 +58,30 @@ namespace jet {
             int32_t eval() const {
                 const auto& accumulator = accumulatorStack[currentAccumulator];
 
-                int32_t output = hiddenBias[0];
+                int16_t activatedInputs[constants::N_L1];
 
-                for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
+                for (int i = 0; i < constants::N_HIDDEN; ++i){
+                    activatedInputs[i] = ReLU(accumulator.data<side>()[i]);
+                    activatedInputs[i + constants::N_HIDDEN] = ReLU(accumulator.data<~side>()[i]);
                 }
 
-                for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
+                float l1_outputs[constants::N_L2];
+
+                std::memcpy(l1_outputs, L1_Bias.data(), sizeof(float) * L1_Bias.size());
+
+                for (int i = 0; i < constants::N_L1; ++i){
+                    for (int j = 0; j < constants::N_L2; j++){
+                        l1_outputs[j] += activatedInputs[i] * L1_Weights[j * constants::N_L1 + i];
+                    }
                 }
 
-                return output / constants::INPUT_QUANTIZATION / constants::HIDDEN_QUANTIZATON;
+                float output = L2_Bias[0];
+
+                for (int i = 0; i < constants::N_L2; ++i){
+                    output += std::max(l1_outputs[i], 0.0f) * L2_Weights[i];
+                }
+
+                return output / 32;
             }
 
             template <chess::Color side, AccumulatorOP operation>
@@ -74,9 +94,9 @@ namespace jet {
                 const int inputs      = index<side>(pieceType, pieceColor, square, kingSq);
 
                 if constexpr (operation == AccumulatorOP::ADD) {
-                    accumulator.add<side>(inputWeights.data() + inputs * constants::HIDDEN_SIZE);
+                    accumulator.add<side>(inputWeights.data() + inputs * constants::N_HIDDEN);
                 } else if constexpr (operation == AccumulatorOP::SUB) {
-                    accumulator.sub<side>(inputWeights.data() + inputs * constants::HIDDEN_SIZE);
+                    accumulator.sub<side>(inputWeights.data() + inputs * constants::N_HIDDEN);
                 }
             }
 
@@ -91,8 +111,8 @@ namespace jet {
                 const int inputsAdd = index<side>(pieceType, pieceColor, to, kingSq);
                 const int inputsSub = index<side>(pieceType, pieceColor, from, kingSq);
 
-                accumulator.addSub<side>(inputWeights.data() + inputsAdd * constants::HIDDEN_SIZE,
-                                         inputWeights.data() + inputsSub * constants::HIDDEN_SIZE);
+                accumulator.addSub<side>(inputWeights.data() + inputsAdd * constants::N_HIDDEN,
+                                         inputWeights.data() + inputsSub * constants::N_HIDDEN);
             }
 
             template <AccumulatorOP operation>
