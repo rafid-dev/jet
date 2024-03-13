@@ -6,6 +6,8 @@
 #include "accumulator.hpp"
 #include "types.hpp"
 
+#include <algorithm>
+
 namespace jet {
 
     namespace nnue {
@@ -25,6 +27,10 @@ namespace jet {
 
             static int16_t ReLU(int16_t x) {
                 return std::max(x, static_cast<int16_t>(0));
+            }
+
+            static int16_t ClippedReLU(int16_t x){
+                return std::clamp(x, static_cast<int16_t>(0), static_cast<int16_t>(128));
             }
 
         public:
@@ -54,11 +60,11 @@ namespace jet {
                 int32_t output = hiddenBias[0];
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
+                    output += ClippedReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
                 }
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
+                    output += ClippedReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
 
                 return output / constants::INPUT_QUANTIZATION / constants::HIDDEN_QUANTIZATON;
