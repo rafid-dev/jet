@@ -19,7 +19,7 @@ namespace jet {
         extern std::array<int16_t, constants::N_HIDDEN>      inputBias;
 
         extern std::array<int16_t, constants::N_L1 * constants::N_L2>  L1_Weights;
-        extern std::array<float, constants::N_L2>      L1_Bias;
+        extern std::array<int32_t, constants::N_L2>      L1_Bias;
 
         extern std::array<float, constants::N_L2 * constants::OUTPUT_SIZE>  L2_Weights;
         extern std::array<float, constants::OUTPUT_SIZE>      L2_Bias;
@@ -57,7 +57,6 @@ namespace jet {
             template <chess::Color side>
             int32_t eval() const {
                 const auto& accumulator = accumulatorStack[currentAccumulator];
-
                 int16_t activatedInputs[constants::N_L1];
 
                 for (int i = 0; i < constants::N_HIDDEN; ++i){
@@ -65,23 +64,25 @@ namespace jet {
                     activatedInputs[i + constants::N_HIDDEN] = ReLU(accumulator.data<~side>()[i]);
                 }
 
-                float l1_outputs[constants::N_L2];
+                int32_t l1_outputs[constants::N_L2];
 
-                std::memcpy(l1_outputs, L1_Bias.data(), sizeof(float) * L1_Bias.size());
-
-                for (int i = 0; i < constants::N_L1; ++i){
-                    for (int j = 0; j < constants::N_L2; j++){
-                        l1_outputs[j] += activatedInputs[i] * L1_Weights[j * constants::N_L1 + i];
+                for (int i = 0; i < constants::N_L2; ++i){
+                    l1_outputs[i] = L1_Bias[i];
+                }
+                
+                for (int i = 0; i < constants::N_L2; ++i){
+                    for (int j = 0; j < constants::N_L1; j++){
+                        l1_outputs[i] += activatedInputs[j] * L1_Weights[i * constants::N_L1 + j];  
                     }
                 }
 
                 float output = L2_Bias[0];
 
                 for (int i = 0; i < constants::N_L2; ++i){
-                    output += std::max(l1_outputs[i], 0.0f) * L2_Weights[i];
+                    output += std::max(l1_outputs[i], 0) * L2_Weights[i];
                 }
 
-                return output / 32;
+                return output / 32 / 32;
             }
 
             template <chess::Color side, AccumulatorOP operation>

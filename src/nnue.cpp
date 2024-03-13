@@ -13,7 +13,7 @@ namespace jet {
         std::array<int16_t, constants::N_HIDDEN>         inputBias;
 
         std::array<int16_t, constants::N_L1 * constants::N_L2> L1_Weights;
-        std::array<float, constants::N_L2>                   L1_Bias;
+        std::array<int32_t, constants::N_L2>                   L1_Bias;
 
         std::array<float, constants::N_L2 * constants::OUTPUT_SIZE> L2_Weights;
         std::array<float, constants::OUTPUT_SIZE>                   L2_Bias;
@@ -27,18 +27,6 @@ namespace jet {
         void init() {
             uint64_t memoryIndex = 0;
 
-            // std::memcpy(inputWeights.data(), &gEVALData[memoryIndex], constants::INPUT_LAYER_SIZE * sizeof(int16_t));
-            // memoryIndex += constants::INPUT_LAYER_SIZE * sizeof(int16_t);
-
-            // std::memcpy(inputBias.data(), &gEVALData[memoryIndex], constants::N_L1 * sizeof(int16_t));
-            // memoryIndex += constants::N_L1 * sizeof(int16_t);
-
-            // std::memcpy(L1_Weights.data(), &gEVALData[memoryIndex], constants::HIDDEN_LAYER_SIZE * sizeof(int16_t));
-            // memoryIndex += constants::HIDDEN_LAYER_SIZE * sizeof(int16_t);
-
-            // std::memcpy(L1_Bias.data(), &gEVALData[memoryIndex], constants::OUTPUT_LAYER_SIZE * sizeof(int32_t));
-            // memoryIndex += constants::OUTPUT_LAYER_SIZE * sizeof(int32_t);
-
             copyEVALData(inputWeights, memoryIndex);
             copyEVALData(inputBias, memoryIndex);
             copyEVALData(L1_Weights, memoryIndex);
@@ -49,7 +37,6 @@ namespace jet {
             // #ifdef DEBUG
             std::cout << "Memory index: " << memoryIndex << std::endl;
             std::cout << "Size: " << gEVALSize << std::endl;
-            std::cout << "Bias: " << L2_Bias[0] / 32 << std::endl;
 
             std::cout << std::endl;
             // #endif
