@@ -30,7 +30,7 @@ namespace jet {
             }
 
             static int16_t ClippedReLU(int16_t x){
-                return std::clamp(x, static_cast<int16_t>(0), static_cast<int16_t>(32));
+                return std::clamp(x, static_cast<int16_t>(128), static_cast<int16_t>(0));
             }
 
         public:
