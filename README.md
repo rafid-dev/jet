@@ -1,6 +1,6 @@
 # Jet Chess Engine 🛠️
 
-Jet is a cutting-edge chess engine designed for high-performance computing tasks. With its ultra-fast move generator, advanced search algorithms, and neural network-based evaluation system, Jet pushes the boundaries of chess engine development. 🚀
+Jet is a cutting-edge chess engine renowned for its highly intelligent chess playing capabilities. With its ultra-fast move generator, advanced search algorithms, and neural network-based evaluation system, Jet pushes the boundaries of chess engine development. 🚀
 
 ## Key Features 🌟
 
