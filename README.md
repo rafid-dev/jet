@@ -8,7 +8,7 @@ Jet is a cutting-edge chess engine designed for high-performance computing tasks
 
 - **GPL 3 Licensed**: Jet is released under the GNU General Public License Version 3, affirming its commitment to openness and collaboration within the community.
 
-- **NNUE Evaluation with Autovectorized Inference**: Jet leverages Neural Network with Efficiently Updatable Neural Network (NNUE) evaluation, utilizing autovectorized inference for efficient and accurate position evaluation.
+- **NNUE Evaluation with Autovectorized Inference**: Jet leverages Neural Network with Efficiently Updatable Neural Network (NNUE) evaluation, utilizing autovectorized inference for position evaluations.
 
 - **Search features** Jet employs Alpha-beta pruning alongside advanced search techniques like Late Move Reduction and Singular Extensions to optimize its search, enhancing computational efficiency and playing strength.
 
