@@ -49,9 +49,6 @@ namespace jet {
                 currentAccumulator = 0;
             }
 
-            #define Min(a, b) (((a) < (b)) ? (a) : (b))
-            #define Max(a, b) (((a) > (b)) ? (a) : (b))
-
             template <chess::Color side>
             int32_t eval() const {
                 const auto& accumulator = accumulatorStack[currentAccumulator];
@@ -65,7 +62,7 @@ namespace jet {
                     int8_t* out = &activatedInputs[constants::HIDDEN_SIZE * stm];
 
                     for (int i = 0; i < constants::HIDDEN_SIZE; i++){
-                        out[i] = Min(127, Max(0, in[i])) >> 5;
+                        out[i] = std::clamp<int16_t>(in[i], 0, max) >> 5;
                     }
                 }
                 
@@ -76,7 +73,7 @@ namespace jet {
                 }
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += activatedInputs[i + constants::HIDDEN_SIZE] * hiddenWeights[constants::HIDDEN_SIZE + i];
+                    output += activatedInputs[i + constants::HIDDEN_SIZE] * hiddenWeights[i + constants::HIDDEN_SIZE];
                 }
 
                 return output / 32;
