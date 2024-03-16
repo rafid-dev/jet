@@ -6,6 +6,8 @@
 #include "accumulator.hpp"
 #include "types.hpp"
 
+#include <algorithm>
+
 namespace jet {
 
     namespace nnue {
@@ -14,7 +16,7 @@ namespace jet {
 
         extern std::array<int16_t, constants::INPUT_LAYER_SIZE> inputWeights;
         extern std::array<int16_t, constants::HIDDEN_SIZE>      inputBias;
-        extern std::array<int16_t, constants::HIDDEN_SIZE * 2>  hiddenWeights;
+        extern std::array<int8_t, constants::HIDDEN_SIZE * 2>  hiddenWeights;
         extern std::array<int32_t, constants::OUTPUT_SIZE>      hiddenBias;
 
         class Network {
@@ -47,21 +49,37 @@ namespace jet {
                 currentAccumulator = 0;
             }
 
+            #define Min(a, b) (((a) < (b)) ? (a) : (b))
+            #define Max(a, b) (((a) > (b)) ? (a) : (b))
+
             template <chess::Color side>
             int32_t eval() const {
                 const auto& accumulator = accumulatorStack[currentAccumulator];
 
+                int8_t activatedInputs[constants::HIDDEN_SIZE * 2];
+
+                const int max = 127 << 5;
+
+                for (int stm = 0; stm < 2; stm++){
+                    const auto& in = stm ? accumulator.data<~side>() : accumulator.data<side>();
+                    int8_t* out = &activatedInputs[constants::HIDDEN_SIZE * stm];
+
+                    for (int i = 0; i < constants::HIDDEN_SIZE; i++){
+                        out[i] = Min(127, Max(0, in[i])) >> 5;
+                    }
+                }
+                
                 int32_t output = hiddenBias[0];
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
+                    output += activatedInputs[i] * hiddenWeights[i];
                 }
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
+                    output += activatedInputs[i + constants::HIDDEN_SIZE] * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
 
-                return output / constants::INPUT_QUANTIZATION / constants::HIDDEN_QUANTIZATON;
+                return output / 32;
             }
 
             template <chess::Color side, AccumulatorOP operation>
