@@ -288,14 +288,14 @@ namespace chess {
         }
 
         bool isRepetition(int count = 2) const {
-            int n = 1;
+            int n = 0;
 
-            for (int i = static_cast<int>(m_history.size()) - 2; i >= 0; i -= 2) {
+            for (int i = static_cast<int>(m_history.size()) - 2; i >= 0 && i >= static_cast<int>(m_history.size()) - m_halfmoveClock - 1; i -= 2) {
                 if (m_history[i].hash == m_hash) {
                     n++;
                 }
 
-                if (n >= count) {
+                if (n == count) {
                     return true;
                 }
             }
