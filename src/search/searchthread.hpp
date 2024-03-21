@@ -144,10 +144,11 @@ namespace jet {
             }
 
             int32_t eval() {
+                const int output_buckets = (m_board.all().popcount() - 2) / (32 / nnue::constants::OUTPUT_SIZE);
                 if (m_board.sideToMove() == chess::Color::WHITE) {
-                    return network.eval<chess::Color::WHITE>();
+                    return network.eval<chess::Color::WHITE>(output_buckets);
                 } else {
-                    return network.eval<chess::Color::BLACK>();
+                    return network.eval<chess::Color::BLACK>(output_buckets);
                 }
             }
 

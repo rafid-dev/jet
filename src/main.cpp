@@ -194,6 +194,7 @@ int main(int argc, char** argv) {
             }
         } else if (token == "print") {
             std::cout << board << std::endl;
+            st.refresh();
             std::cout << "Eval: " << jet::evaluation::evaluate(st) << std::endl;
         } else if (token == "quit" || token == "exit") {
             break;

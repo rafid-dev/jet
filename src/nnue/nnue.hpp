@@ -14,7 +14,7 @@ namespace jet {
 
         extern std::array<int16_t, constants::INPUT_LAYER_SIZE> inputWeights;
         extern std::array<int16_t, constants::HIDDEN_SIZE>      inputBias;
-        extern std::array<int16_t, constants::HIDDEN_SIZE * 2>  hiddenWeights;
+        extern std::array<int16_t, constants::HIDDEN_SIZE * 2 * constants::OUTPUT_SIZE>  hiddenWeights;
         extern std::array<int32_t, constants::OUTPUT_SIZE>      hiddenBias;
 
         class Network {
@@ -48,17 +48,19 @@ namespace jet {
             }
 
             template <chess::Color side>
-            int32_t eval() const {
+            int32_t eval(const int output_buckets) const {
                 const auto& accumulator = accumulatorStack[currentAccumulator];
 
-                int32_t output = hiddenBias[0];
+                int32_t output = hiddenBias[output_buckets];
+
+                const auto output_bucket_offset = output_buckets * constants::HIDDEN_SIZE * 2;
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
+                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[output_bucket_offset + i];
                 }
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
+                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[output_bucket_offset + constants::HIDDEN_SIZE + i];
                 }
 
                 return output / constants::INPUT_QUANTIZATION / constants::HIDDEN_QUANTIZATON;

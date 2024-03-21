@@ -8,7 +8,7 @@ namespace jet {
             constexpr int BUCKETS     = 16;
             constexpr int INPUT_SIZE  = 64 * 6 * 2 * BUCKETS;
             constexpr int HIDDEN_SIZE = 512;
-            constexpr int OUTPUT_SIZE = 1;
+            constexpr int OUTPUT_SIZE = 8;
 
             constexpr int INPUT_LAYER_SIZE  = INPUT_SIZE * HIDDEN_SIZE;
             constexpr int HIDDEN_LAYER_SIZE = HIDDEN_SIZE * 2;
@@ -16,6 +16,8 @@ namespace jet {
 
             constexpr int INPUT_QUANTIZATION = 32;
             constexpr int HIDDEN_QUANTIZATON = 128;
+
+            constexpr int OUTPUT_BUCKET_DIVISOR = 32 / OUTPUT_SIZE;
 
             // clang-format off
             constexpr std::array<int, 64> KING_BUCKET {
