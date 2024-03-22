@@ -18,7 +18,7 @@ using namespace jet;
 using namespace jet::search;
 
 static constexpr std::string_view NAME    = "Jet";
-static constexpr std::string_view VERSION = "1.1";
+static constexpr std::string_view VERSION = "1.2";
 static constexpr std::string_view AUTHOR  = "Rafid Ahsan";
 
 int main(int argc, char** argv) {
