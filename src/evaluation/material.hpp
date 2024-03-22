@@ -14,8 +14,14 @@ namespace jet {
         constexpr std::array<types::Value, 6> material = {100, 300, 300, 500, 900, 0};
 
         template <PieceType pt, Color c>
-        types::Value evaluateMaterial(Board& board) {
+        types::Value evaluateMaterial(const Board& board) {
             Bitboard pieceBB = board.bitboard<c, pt>();
+            return pieceBB.popcount() * material[static_cast<int>(pt)];
+        }
+
+        template<PieceType pt>
+        types::Value evaluateMaterial(const Board& board){
+            Bitboard pieceBB = board.bitboard<pt>();
             return pieceBB.popcount() * material[static_cast<int>(pt)];
         }
 

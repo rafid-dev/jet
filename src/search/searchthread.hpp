@@ -6,6 +6,7 @@
 #include "history.hpp"
 #include "searchinfo.hpp"
 #include "timeman.hpp"
+#include "../evaluation/material.hpp"
 
 namespace jet {
     namespace search {
@@ -143,12 +144,27 @@ namespace jet {
                 }
             }
 
+            float materialScale(){
+                //clang-format off
+                return 22400 
+                + evaluation::evaluateMaterial<chess::PieceType::KNIGHT>(m_board);
+                + evaluation::evaluateMaterial<chess::PieceType::BISHOP>(m_board);
+                + evaluation::evaluateMaterial<chess::PieceType::ROOK>(m_board);
+                + evaluation::evaluateMaterial<chess::PieceType::QUEEN>(m_board);
+                //clang-format on
+            }
+
             int32_t eval() {
+                int32_t eval = 0;
                 if (m_board.sideToMove() == chess::Color::WHITE) {
-                    return network.eval<chess::Color::WHITE>();
+                    eval = network.eval<chess::Color::WHITE>();
                 } else {
-                    return network.eval<chess::Color::BLACK>();
+                    eval = network.eval<chess::Color::BLACK>();
                 }
+
+                eval = eval * materialScale() / 32768;
+
+                return eval;
             }
 
             void refresh() {
