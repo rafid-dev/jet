@@ -21,7 +21,7 @@ namespace jet {
             TimeManager() = default;
 
             void start(chess::Color c) {
-                m_start = misc::tick();
+                start_time = misc::tick();
 
                 Time t   = (c == chess::Color::WHITE) ? wtime : btime;
                 Time inc = (c == chess::Color::WHITE) ? winc : binc;
@@ -29,18 +29,28 @@ namespace jet {
                 t -= OVERHEAD;
 
                 if (movestogo) {
-                    stoptime = t / static_cast<Time>(movestogo) + inc / 2;
+                    Time x = t / static_cast<Time>(movestogo) + inc / 2;
+
+                    stoptime_max = average_time = stoptime_opt = x;
                 } else if (movetime) {
-                    stoptime = movetime - OVERHEAD;
+                    stoptime_max = average_time = stoptime_opt = (movetime - OVERHEAD);
                 } else {
                     t /= 20;
 
-                    stoptime = t + inc / 2;
+                    Time x = average_time = t + inc / 2;
+                    Time base = x;
+
+                    stoptime_opt = base * 0.6;
+                    stoptime_max = std::min(t, base * 2);
                 }
             }
 
             bool shouldStop() const {
-                return misc::tick() > (m_start + stoptime);
+                return misc::tick() > (start_time + stoptime_max);
+            }
+
+            bool shouldStopEarly() const {
+                return misc::tick() > (start_time + stoptime_opt);
             }
 
             template <TimeType tt>
@@ -79,7 +89,6 @@ namespace jet {
             bool timeset = false;
 
         private:
-            Time     m_start{};
             Time     wtime{};
             Time     btime{};
             Time     winc{};
@@ -88,7 +97,10 @@ namespace jet {
             int      movestogo = 0;
             uint64_t nodes     = 0;
 
-            Time stoptime{};
+            Time start_time{};
+            Time stoptime_opt{};
+            Time stoptime_max{};
+            Time average_time{};
         };
     } // namespace search
 } // namespace jet

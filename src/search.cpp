@@ -347,7 +347,7 @@ namespace jet {
             while (true) {
                 score = negamax<NodeType::ROOT>(alpha, beta, depth, st, ss);
 
-                if (st.stop()) {
+                if (st.stop_early()) {
                     break;
                 }
 
@@ -386,7 +386,8 @@ namespace jet {
             Value score = 0;
 
             for (Depth d = 1; d <= info.depth(); d++) {
-                if (st.stop()) {
+                if (st.stop() || st.stop_early()) {
+
                     break;
                 }
 

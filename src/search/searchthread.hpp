@@ -50,6 +50,10 @@ namespace jet {
                 return stop_flag && (timeman.timeset || timeman.nodeset());
             }
 
+            bool stop_early() const {
+                return timeman.timeset && timeman.shouldStopEarly();
+            }
+
             void checkup() {
                 if (timeman.nodeset()) {
                     stop_flag = timeman.checkNodes(nodes);
