@@ -232,7 +232,7 @@ namespace jet {
                         }
                     }
 
-                    if (depth <= 8 && !MoveOrdering::see(board, move, isQuiet ? -70 * depth : -30 * depth * depth))
+                    if (depth <= 8 && !MoveOrdering::see(board, move, isQuiet ? -70 * depth : -30 * depth * depth) && bestscore > -constants::IS_MATE )
                     {
                         continue;
                     }
