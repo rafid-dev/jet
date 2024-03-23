@@ -231,6 +231,11 @@ namespace jet {
                             break;
                         }
                     }
+
+                    if (depth <= 8 && !MoveOrdering::see(board, move, isQuiet ? -70 * depth : -30 * depth * depth))
+                    {
+                        continue;
+                    }
                 }
 
                 Depth newDepth = depth + extension;
