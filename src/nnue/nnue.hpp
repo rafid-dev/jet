@@ -29,12 +29,11 @@ namespace jet {
                 return std::max(x, static_cast<int16_t>(0));
             }
 
-            template<typename T, T max>
-            static T SquaredClippedReLU(T x){
-                
-                auto crelu = std::clamp(x, static_cast<T>(0), max);
+            static int16_t SquaredClippedReLU(int16_t x){
+                constexpr int16_t max = 32;
+                auto crelu = std::min(ReLU(x), max);
 
-                return crelu * crelu;
+                return (crelu * crelu) >> 5;
             }
 
         public:
@@ -70,7 +69,7 @@ namespace jet {
                     int16_t* out = &activatedInputs[constants::HIDDEN_SIZE * stm];
 
                     for (int i = 0; i < constants::HIDDEN_SIZE; i++){
-                        out[i] = SquaredClippedReLU<int16_t, 32>(in[i]) >> 5;
+                        out[i] = SquaredClippedReLU(in[i]);
                     }
                 }
 
@@ -82,7 +81,7 @@ namespace jet {
                     output += activatedInputs[i + constants::HIDDEN_SIZE] * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
 
-                return output / 32 / 32;
+                return output / 32 / 128;
             }
 
             template <chess::Color side, AccumulatorOP operation>
