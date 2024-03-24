@@ -33,7 +33,7 @@ namespace jet {
                 constexpr int16_t max = 32;
                 auto crelu = std::min(ReLU(x), max);
 
-                return (crelu * crelu) >> 5;
+                return (crelu * crelu);
             }
 
         public:
@@ -60,7 +60,7 @@ namespace jet {
             int32_t eval() const {
                 const auto& accumulator = accumulatorStack[currentAccumulator];
 
-                int32_t output = hiddenBias[0];
+                int32_t output = 0;
 
                 int16_t activatedInputs[constants::HIDDEN_SIZE * 2];
 
@@ -80,6 +80,8 @@ namespace jet {
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
                     output += activatedInputs[i + constants::HIDDEN_SIZE] * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
+
+                output = output / 32 + hiddenBias[0];
 
                 return output / 32 / 128;
             }
