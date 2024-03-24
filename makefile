@@ -1,9 +1,9 @@
 # Compiler and flags
-CXX := clang++-17
+CXX := clang++
 ARCH := -march=native
 CXXFLAGS := -std=c++20 -flto $(ARCH) -fexceptions -Wall -Wextra
 LDFLAGS :=
-EVALFILE := src/hexadecane_512_v3_sqrcrelu.net
+EVALFILE := src/hexadecane_512_v3_sqcrelu.net
 
 CXXFLAGS += -DNNFILE=\"$(EVALFILE)\"
 
