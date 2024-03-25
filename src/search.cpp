@@ -17,6 +17,36 @@ using jet::types::Value;
 namespace jet {
     namespace search {
 
+        namespace search_params {
+            float lmr_base = 0.75;
+            float lmr_division = 2.5;
+            int lmr_see_margin = -100;
+
+            int qs_see_ordering_threshold = -100;
+
+            int nmp_base = 3;
+            int nmp_depth_divisor = 3;
+            int nmp_max_scaled_depth = 3;
+            int nmp_divisor = 180;
+
+            int rfp_margin = 70;
+            int rfp_depth = 7;
+
+            int lmp_depth = 7;
+            int lmp_base = 4;
+            int lmp_scalar = 4;
+
+            int se_depth = 8;
+            int se_depth_offset = 3;
+            int singular_scalar = 1;
+            int singular_divisor = 1;
+            int singular_depth_divisor = 2;
+
+            int asp_delta = 10;
+        }
+
+        using namespace search_params;
+
         TT::Table TranspositionTable;
 
         std::array<std::array<Depth, 64>, 64> LmrTable;
@@ -24,7 +54,7 @@ namespace jet {
         void init() {
             for (int depth = 1; depth < 64; depth++) {
                 for (int played = 1; played < 64; played++) {
-                    LmrTable[depth][played] = 0.75 + std::log(depth) * std::log(played) / 2.5;
+                    LmrTable[depth][played] = lmr_base + std::log(depth) * std::log(played) / lmr_division;
                 }
             }
         }
@@ -50,7 +80,7 @@ namespace jet {
             Board&   board = st.board();
             Movelist movelist;
             MoveGen::legalmoves<MoveGenType::CAPTURE>(board, movelist);
-            MoveOrdering::capturesWithSee(board, movelist, -100);
+            MoveOrdering::capturesWithSee(board, movelist, qs_see_ordering_threshold);
 
             Value score = -constants::VALUE_INFINITY;
 
@@ -151,14 +181,14 @@ namespace jet {
 
                 if (!inCheck && !ss->excluded.isValid()) {
                     // Reverse futility pruning
-                    if (depth < 8 && eval >= beta && eval - ((depth - improving) * 70) >= beta) {
+                    if (depth <= rfp_depth && eval >= beta && eval - ((depth - improving) * rfp_margin) >= beta) {
                         return eval;
                     }
 
                     // Null move pruning
                     if (depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() && ss->static_eval >= beta &&
                         (!ttHit || entry.flag() != TT::Flag::UPPER || eval >= beta)) {
-                        Depth reduction = 3 + depth / 3 + std::min(3, (eval - beta) / 180);
+                        Depth reduction = nmp_base + depth / nmp_depth_divisor + std::min(nmp_max_scaled_depth, (eval - beta) / nmp_divisor);
 
                         board.makeNullMove();
                         ss->move      = Move::nullmove();
@@ -211,10 +241,11 @@ namespace jet {
 
                 if constexpr (nt != NodeType::ROOT) {
                     // Singular extensions
-                    if (depth >= 8 && move == entry.move() && entry.flag() == TT::Flag::LOWER &&
-                        std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - 3 && !ss->excluded.isValid()) {
-                        Value singularBeta  = entry.score() - depth;
-                        Depth singularDepth = depth / 2;
+                    int singular_depth_intercept = 0;
+                    if (depth >= se_depth && move == entry.move() && entry.flag() == TT::Flag::LOWER &&
+                        std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - se_depth_offset && !ss->excluded.isValid()) {
+                        Value singularBeta  = entry.score() - singular_scalar * depth / singular_divisor;
+                        Depth singularDepth = depth / singular_depth_divisor + singular_depth_intercept;
 
                         ss->excluded        = move;
                         Value singularScore = negamax<NodeType::NONPV>(singularBeta - 1, singularBeta, singularDepth, st, ss);
@@ -227,7 +258,7 @@ namespace jet {
 
                     // Late move pruning
                     if (isQuiet && bestscore > -constants::IS_MATE && hasNonPawnMat) {
-                        if (!inCheck && !isPvNode && depth <= 7 && quietlist.size() >= (4 + depth * 4)) {
+                        if (!inCheck && !isPvNode && depth <= lmp_depth && quietlist.size() >= (lmp_base + depth * lmp_scalar)) {
                             break;
                         }
                     }
@@ -258,7 +289,7 @@ namespace jet {
                     Depth reduction = LmrTable[std::min(63, depth)][std::min(63, movecount)];
 
                     if (!isQuiet) {
-                        reduction -= MoveOrdering::see(board, move, -100 * depth);
+                        reduction -= MoveOrdering::see(board, move, lmr_see_margin * depth);
                     }
 
                     reduction += !isPvNode;
@@ -332,7 +363,7 @@ namespace jet {
         Value aspiration_window(SearchThread& st, SearchStack* ss, Depth depth, Value prevEval) {
             Value score = 0;
 
-            Value delta = 10;
+            Value delta = asp_delta;
 
             Value alpha = -constants::VALUE_INFINITY;
             Value beta  = constants::VALUE_INFINITY;

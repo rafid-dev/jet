@@ -12,6 +12,7 @@
 #include <istream>
 #include <memory>
 #include <sstream>
+#include <type_traits>
 
 using namespace chess;
 using namespace jet;
@@ -21,6 +22,58 @@ static constexpr std::string_view NAME    = "Jet";
 static constexpr std::string_view VERSION = "1.2";
 static constexpr std::string_view AUTHOR  = "Rafid Ahsan";
 
+template<typename T>
+void set_option(std::istream &is, std::string &token, const std::string& name, T &value) {
+    if (token == name) {
+        is >> std::skipws >> token;
+        is >> std::skipws >> token;
+
+        if constexpr (std::is_floating_point_v<T>) {
+            value = std::stof(token);
+        } else {
+            value = std::stoi(token);
+        }
+    }
+}
+
+template<typename T>
+void print_parameter(const std::string& str, T value){
+    std::cout << "option name " << str << " type spin default " << value << " min -100000 max 100000" << std::endl;
+}
+
+#define TUNING_OPTION(param) set_option(iss, token, #param, param)
+#define PRINT_OPTION(param) print_parameter(#param, param)
+
+void print_search_parameters(){
+    using namespace search::search_params;
+
+    PRINT_OPTION(lmr_base);
+    PRINT_OPTION(lmr_division);
+    PRINT_OPTION(lmr_see_margin);
+
+    PRINT_OPTION(qs_see_ordering_threshold);
+
+    PRINT_OPTION(nmp_base);
+    PRINT_OPTION(nmp_depth_divisor);
+    PRINT_OPTION(nmp_max_scaled_depth);
+    PRINT_OPTION(nmp_divisor);
+
+    PRINT_OPTION(rfp_margin);
+    PRINT_OPTION(rfp_depth);
+
+    PRINT_OPTION(lmp_depth);
+    PRINT_OPTION(lmp_base);
+    PRINT_OPTION(lmp_scalar);
+
+    PRINT_OPTION(se_depth);
+    PRINT_OPTION(se_depth_offset);
+    PRINT_OPTION(singular_scalar);
+    PRINT_OPTION(singular_divisor);
+    PRINT_OPTION(singular_depth_divisor);
+
+    PRINT_OPTION(asp_delta);
+}
+
 int main(int argc, char** argv) {
     Attacks::init();
     nnue::init();
@@ -28,6 +81,7 @@ int main(int argc, char** argv) {
 
     std::cout << NAME << " " << VERSION << std::endl;
     std::cout << "Copyright (C) 2023  " << AUTHOR << std::endl;
+    print_search_parameters();
     search::TranspositionTable.initialize<false>(16);
 
     auto   heapSt = std::make_unique<SearchThread>();
@@ -81,6 +135,9 @@ int main(int argc, char** argv) {
             std::cout << "Capture moves: " << list.size() << '\n';
             std::cout << list << std::endl;
 
+        } else if (token == "bench"){
+            StartBenchmark(st);
+            exit(0);
         } else if (token == "position") {
             iss >> token;
 
@@ -183,15 +240,43 @@ int main(int argc, char** argv) {
             jet::search::search(st, info);
         } else if (token == "setoption") {
             iss >> token;
+            iss >> token;
 
-            if (token == "name") {
+            using namespace search::search_params;
+
+            TUNING_OPTION(lmr_base);
+            TUNING_OPTION(lmr_division);
+            TUNING_OPTION(lmr_see_margin);
+
+            TUNING_OPTION(qs_see_ordering_threshold);
+
+            TUNING_OPTION(nmp_base);
+            TUNING_OPTION(nmp_depth_divisor);
+            TUNING_OPTION(nmp_max_scaled_depth);
+            TUNING_OPTION(nmp_divisor);
+
+            TUNING_OPTION(rfp_margin);
+            TUNING_OPTION(rfp_depth);
+
+            TUNING_OPTION(lmp_depth);
+            TUNING_OPTION(lmp_base);
+            TUNING_OPTION(lmp_scalar);
+
+            TUNING_OPTION(se_depth);
+            TUNING_OPTION(se_depth_offset);
+            TUNING_OPTION(singular_scalar);
+            TUNING_OPTION(singular_divisor);
+            TUNING_OPTION(singular_depth_divisor);
+
+            TUNING_OPTION(asp_delta);
+
+            if (token == "Hash") {
                 iss >> token;
-                if (token == "Hash") {
-                    iss >> token;
-                    iss >> token;
-                    search::TranspositionTable.initialize<true>(std::clamp(std::stoi(token), 8, 32768));
-                }
+                iss >> token;
+                search::TranspositionTable.initialize<true>(std::clamp(std::stoi(token), 8, 32768));
             }
+
+            search::init();
         } else if (token == "print") {
             std::cout << board << std::endl;
             st.refresh();
