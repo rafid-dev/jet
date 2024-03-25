@@ -29,7 +29,8 @@ namespace jet {
             extern int singular_scalar;
             extern int singular_divisor;
             extern int singular_depth_divisor;
-
+            extern int singular_depth_intercept;
+            
             extern int asp_delta;
         } // namespace search_params
 

@@ -41,6 +41,7 @@ namespace jet {
             int singular_scalar = 1;
             int singular_divisor = 1;
             int singular_depth_divisor = 2;
+            int singular_depth_intercept = 0;
 
             int asp_delta = 10;
         }
@@ -241,7 +242,6 @@ namespace jet {
 
                 if constexpr (nt != NodeType::ROOT) {
                     // Singular extensions
-                    int singular_depth_intercept = 0;
                     if (depth >= se_depth && move == entry.move() && entry.flag() == TT::Flag::LOWER &&
                         std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - se_depth_offset && !ss->excluded.isValid()) {
                         Value singularBeta  = entry.score() - singular_scalar * depth / singular_divisor;

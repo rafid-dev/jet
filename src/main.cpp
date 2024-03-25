@@ -37,41 +37,54 @@ void set_option(std::istream &is, std::string &token, const std::string& name, T
 }
 
 template<typename T>
-void print_parameter(const std::string& str, T value){
-    std::cout << "option name " << str << " type spin default " << value << " min -100000 max 100000" << std::endl;
+struct TypeName {
+    static std::string get() {
+        return typeid(T).name();
+    }
+};
+
+template<bool uci = false, typename T>
+void print_parameter_inputs(const std::string& name,
+                    T current_val, float min_val, float max_val,
+                    float start_lr, float end_lr) {
+    if constexpr(uci){
+        std::cout << "option name " << name << " type spin default " << current_val << " min " << min_val << " max " << max_val << std::endl;
+    }else{
+        std::cout << name << ", " << TypeName<T>::get() << ", " << current_val << ", " << min_val << ", " << max_val << ", "
+         << start_lr << ", " << end_lr << std::endl;
+    }
 }
 
 #define TUNING_OPTION(param) set_option(iss, token, #param, param)
-#define PRINT_OPTION(param) print_parameter(#param, param)
+#define PARAM_INPUT(param, min, max, start, end) if (!uci) { print_parameter_inputs(#param, param, min, max, start, end); } else { print_parameter_inputs<true>(#param, param, min, max, start, end); }  
 
-void print_search_parameters(){
+void print_parameter_inputs(bool uci) {
     using namespace search::search_params;
 
-    PRINT_OPTION(lmr_base);
-    PRINT_OPTION(lmr_division);
-    PRINT_OPTION(lmr_see_margin);
+    PARAM_INPUT(lmr_base, 0.5, 3.0, 0.1, 0.002);
+    PARAM_INPUT(lmr_division, 0.5, 3.0, 0.1, 0.002);
+    PARAM_INPUT(lmr_see_margin, -1000, 0, 2.25, 0.002);
+    PARAM_INPUT(qs_see_ordering_threshold, -1000, 0, 2.25, 0.002);
 
-    PRINT_OPTION(qs_see_ordering_threshold);
+    PARAM_INPUT(nmp_base, 3, 5, 1, 0.002);
+    PARAM_INPUT(nmp_depth_divisor, 1, 5, 1, 0.002);
+    PARAM_INPUT(nmp_max_scaled_depth, 2, 5, 1, 0.002);
+    PARAM_INPUT(nmp_divisor, 100, 300, 2, 0.002);
 
-    PRINT_OPTION(nmp_base);
-    PRINT_OPTION(nmp_depth_divisor);
-    PRINT_OPTION(nmp_max_scaled_depth);
-    PRINT_OPTION(nmp_divisor);
+    PARAM_INPUT(rfp_margin, 10, 100, 1, 0.002);
+    PARAM_INPUT(rfp_depth, 6, 9, 1, 0.002);
 
-    PRINT_OPTION(rfp_margin);
-    PRINT_OPTION(rfp_depth);
+    PARAM_INPUT(lmp_depth, 5, 9, 1, 0.002);
+    PARAM_INPUT(lmp_base, 2, 5, 1, 0.002);
+    PARAM_INPUT(lmp_scalar, 1, 5, 1, 0.002);
 
-    PRINT_OPTION(lmp_depth);
-    PRINT_OPTION(lmp_base);
-    PRINT_OPTION(lmp_scalar);
+    PARAM_INPUT(se_depth, 5, 10, 1, 0.002);
+    PARAM_INPUT(se_depth_offset, 1, 4, 1, 0.002);
+    PARAM_INPUT(singular_scalar, 1, 10, 1, 0.002);
+    PARAM_INPUT(singular_divisor, 1, 10, 1, 0.002);
+    PARAM_INPUT(singular_depth_divisor, 1, 3, 1, 0.002);
 
-    PRINT_OPTION(se_depth);
-    PRINT_OPTION(se_depth_offset);
-    PRINT_OPTION(singular_scalar);
-    PRINT_OPTION(singular_divisor);
-    PRINT_OPTION(singular_depth_divisor);
-
-    PRINT_OPTION(asp_delta);
+    PARAM_INPUT(asp_delta, 5, 15, 1, 0.002);
 }
 
 int main(int argc, char** argv) {
@@ -81,7 +94,7 @@ int main(int argc, char** argv) {
 
     std::cout << NAME << " " << VERSION << std::endl;
     std::cout << "Copyright (C) 2023  " << AUTHOR << std::endl;
-    print_search_parameters();
+    print_parameter_inputs(true);
     search::TranspositionTable.initialize<false>(16);
 
     auto   heapSt = std::make_unique<SearchThread>();
@@ -107,7 +120,16 @@ int main(int argc, char** argv) {
 
         iss >> token;
 
-        if (token == "uci") {
+        if (token == "export"){
+            iss >> token;
+            if (token == "searchparams"){
+                print_parameter_inputs(false);
+            } else {
+                std::cout << "Unknown export option: " << token << std::endl;
+                std::cout << "Did you mean: export searchparams" << std::endl;
+            }
+        }
+        else if (token == "uci") {
             std::cout << "id name " << NAME << " " << VERSION << std::endl;
             std::cout << "id author " << AUTHOR << std::endl;
             std::cout << "option name Hash type spin default 8 min 8 max 32768" << std::endl;
@@ -267,6 +289,7 @@ int main(int argc, char** argv) {
             TUNING_OPTION(singular_scalar);
             TUNING_OPTION(singular_divisor);
             TUNING_OPTION(singular_depth_divisor);
+            TUNING_OPTION(singular_depth_intercept);
 
             TUNING_OPTION(asp_delta);
 
