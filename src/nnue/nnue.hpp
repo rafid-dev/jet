@@ -30,6 +30,16 @@ namespace jet {
         public:
             Network() = default;
 
+            AccumulatorTable accumulatorTable;
+
+            void reset() {
+                accumulatorTable.init(inputBias);
+                currentAccumulator = 0;
+                resetCurrentAccumulator();
+
+                
+            }
+
             void resetCurrentAccumulator() {
                 accumulatorStack[currentAccumulator].load(inputBias);
             }
@@ -41,10 +51,6 @@ namespace jet {
 
             void pull() {
                 currentAccumulator--;
-            }
-
-            void reset() {
-                currentAccumulator = 0;
             }
 
             template <chess::Color side>

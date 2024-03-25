@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "types.hpp"
+#include "../chess/board.hpp"
 
 namespace jet {
 
@@ -65,6 +66,26 @@ namespace jet {
 
         using Accumulator = AccumulatorBase<int16_t>;
 
+        struct AccumulatorTable {
+            struct Entry {
+                Accumulator accumulator;
+                std::array<chess::Board::Position, 2> boards;
+
+                auto& us(chess::Color c){
+                    return boards[static_cast<int>(c)];
+                }
+            };
+
+            std::array<Entry, constants::BUCKETS> table{};
+
+            template<typename T>
+            void init (const std::array<T, constants::HIDDEN_SIZE>& bias){
+                for (auto& entry : table){
+                    entry.accumulator.load(bias);
+                    entry.boards.fill(chess::Board::Position{});
+                }
+            }
+        };
     } // namespace nnue
 
 } // namespace jet

@@ -290,7 +290,8 @@ namespace chess {
         bool isRepetition(int count = 2) const {
             int n = 0;
 
-            for (int i = static_cast<int>(m_history.size()) - 2; i >= 0 && i >= static_cast<int>(m_history.size()) - m_halfmoveClock - 1; i -= 2) {
+            for (int i = static_cast<int>(m_history.size()) - 2;
+                 i >= 0 && i >= static_cast<int>(m_history.size()) - m_halfmoveClock - 1; i -= 2) {
                 if (m_history[i].hash == m_hash) {
                     n++;
                 }
@@ -325,6 +326,78 @@ namespace chess {
 
         Bitboard attackers(Square sq, Bitboard occ) const {
             return attackers<Color::WHITE>(sq, occ) | attackers<Color::BLACK>(sq, occ);
+        }
+
+        struct Position {
+            Bitboard m_bitboards[2][6]{};
+
+            Bitboard us(Color c) const {
+                // clang-format off
+            return m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::PAWN)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KNIGHT)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::BISHOP)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::ROOK)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::QUEEN)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KING)];
+                // clang-format on
+            }
+
+            template <Color c>
+            Bitboard us() const {
+                // clang-format off
+            return m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::PAWN)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KNIGHT)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::BISHOP)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::ROOK)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::QUEEN)] |
+                   m_bitboards[static_cast<int>(c)][static_cast<int>(PieceType::KING)];
+                // clang-format on
+            }
+
+            Bitboard them(Color c) const {
+                return us(~c);
+            }
+
+            template <Color c>
+            Bitboard them() const {
+                return us<~c>();
+            }
+
+            // Returns all pieces occupied by both colors
+            Bitboard all() const {
+                return us<Color::WHITE>() | us<Color::BLACK>();
+            }
+
+            // Returns the bitboard of a given color and piece type
+            template <Color c, PieceType pt>
+            Bitboard bitboard() const {
+                return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
+            }
+
+            // Returns the bitboard of a given color and piece type
+            Bitboard bitboard(Color c, PieceType pt) const {
+                return m_bitboards[static_cast<int>(c)][static_cast<int>(pt)];
+            }
+
+            // Returns the bitboard of a given piece type (includes both colors)
+            template <PieceType pt>
+            Bitboard bitboard() const {
+                return bitboard<Color::WHITE, pt>() | bitboard<Color::BLACK, pt>();
+            }
+
+            // Returns the bitboard of a given piece type (includes both colors)
+            Bitboard bitboard(PieceType pt) const {
+                return bitboard(Color::WHITE, pt) | bitboard(Color::BLACK, pt);
+            }
+        };
+
+        static auto getPosition(const Board& board){
+            Position position;
+
+            std::memcpy(position.m_bitboards[0], board.m_bitboards[0], sizeof(Bitboard) * 6);
+            std::memcpy(position.m_bitboards[1], board.m_bitboards[1], sizeof(Bitboard) * 6);
+
+            return position;
         }
 
     private:
