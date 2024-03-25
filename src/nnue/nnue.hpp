@@ -53,12 +53,23 @@ namespace jet {
 
                 int32_t output = hiddenBias[0];
 
-                for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
+                int16_t activatedInputs[constants::HIDDEN_SIZE * 2];
+
+                for (int stm = 0; stm < 2; stm++){
+                    const auto& in = stm ? accumulator.data<~side>() : accumulator.data<side>();
+                    int16_t* out = &activatedInputs[constants::HIDDEN_SIZE * stm];
+
+                    for (int i = 0; i < constants::HIDDEN_SIZE; i++){
+                        out[i] = ReLU(in[i]);
+                    }
                 }
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
+                    output += activatedInputs[i] * hiddenWeights[i];
+                }
+
+                for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
+                    output += activatedInputs[constants::HIDDEN_SIZE + i] * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
 
                 return output / constants::INPUT_QUANTIZATION / constants::HIDDEN_QUANTIZATON;
