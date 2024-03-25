@@ -48,7 +48,7 @@ void print_parameter_inputs(const std::string& name,
                     T current_val, float min_val, float max_val,
                     float start_lr, float end_lr) {
     if constexpr(uci){
-        std::cout << "option name " << name << " type spin default " << current_val << " min " << min_val << " max " << max_val << std::endl;
+        std::cout << "option name " << name << " type string default " << current_val << std::endl;
     }else{
         std::cout << name << ", " << TypeName<T>::get() << ", " << current_val << ", " << min_val << ", " << max_val << ", "
          << start_lr << ", " << end_lr << std::endl;
