@@ -94,7 +94,6 @@ int main(int argc, char** argv) {
 
     std::cout << NAME << " " << VERSION << std::endl;
     std::cout << "Copyright (C) 2023  " << AUTHOR << std::endl;
-    print_parameter_inputs(true);
     search::TranspositionTable.initialize<false>(16);
 
     auto   heapSt = std::make_unique<SearchThread>();
@@ -112,6 +111,8 @@ int main(int argc, char** argv) {
         StartBenchmark(st);
         return 0;
     }
+    
+    print_parameter_inputs(true);
 
     while (std::getline(std::cin, line)) {
         token.clear();

@@ -18,33 +18,33 @@ namespace jet {
     namespace search {
 
         namespace search_params {
-            float lmr_base = 0.75;
-            float lmr_division = 2.5;
-            int lmr_see_margin = -100;
+            float lmr_base       = 0.6328934630339242;
+            float lmr_division   = 2.1373663790595563;
+            int   lmr_see_margin = -103;
 
-            int qs_see_ordering_threshold = -100;
+            int qs_see_ordering_threshold = -89;
 
-            int nmp_base = 3;
-            int nmp_depth_divisor = 3;
-            int nmp_max_scaled_depth = 3;
-            int nmp_divisor = 180;
+            int nmp_base             = 5;
+            int nmp_depth_divisor    = 5;
+            int nmp_max_scaled_depth = 2;
+            int nmp_divisor          = 176;
 
-            int rfp_margin = 70;
-            int rfp_depth = 7;
+            int rfp_margin = 67;
+            int rfp_depth  = 7;
 
-            int lmp_depth = 7;
-            int lmp_base = 4;
-            int lmp_scalar = 4;
+            int lmp_depth  = 5;
+            int lmp_base   = 2;
+            int lmp_scalar = 3;
 
-            int se_depth = 8;
-            int se_depth_offset = 3;
-            int singular_scalar = 1;
-            int singular_divisor = 1;
-            int singular_depth_divisor = 2;
+            int se_depth                 = 5;
+            int se_depth_offset          = 1;
+            int singular_scalar          = 3;
+            int singular_divisor         = 3;
+            int singular_depth_divisor   = 3;
             int singular_depth_intercept = 0;
 
-            int asp_delta = 10;
-        }
+            int asp_delta = 12;
+        } // namespace search_params
 
         using namespace search_params;
 
@@ -189,7 +189,8 @@ namespace jet {
                     // Null move pruning
                     if (depth >= 3 && (ss - 1)->move != Move::nullmove() && board.hasNonPawnMat() && ss->static_eval >= beta &&
                         (!ttHit || entry.flag() != TT::Flag::UPPER || eval >= beta)) {
-                        Depth reduction = nmp_base + depth / nmp_depth_divisor + std::min(nmp_max_scaled_depth, (eval - beta) / nmp_divisor);
+                        Depth reduction =
+                            nmp_base + depth / nmp_depth_divisor + std::min(nmp_max_scaled_depth, (eval - beta) / nmp_divisor);
 
                         board.makeNullMove();
                         ss->move      = Move::nullmove();
@@ -243,7 +244,8 @@ namespace jet {
                 if constexpr (nt != NodeType::ROOT) {
                     // Singular extensions
                     if (depth >= se_depth && move == entry.move() && entry.flag() == TT::Flag::LOWER &&
-                        std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - se_depth_offset && !ss->excluded.isValid()) {
+                        std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - se_depth_offset &&
+                        !ss->excluded.isValid()) {
                         Value singularBeta  = entry.score() - singular_scalar * depth / singular_divisor;
                         Depth singularDepth = depth / singular_depth_divisor + singular_depth_intercept;
 
@@ -258,7 +260,8 @@ namespace jet {
 
                     // Late move pruning
                     if (isQuiet && bestscore > -constants::IS_MATE && hasNonPawnMat) {
-                        if (!inCheck && !isPvNode && depth <= lmp_depth && quietlist.size() >= (lmp_base + depth * lmp_scalar)) {
+                        if (!inCheck && !isPvNode && depth <= lmp_depth &&
+                            quietlist.size() >= (lmp_base + depth * lmp_scalar)) {
                             break;
                         }
                     }
