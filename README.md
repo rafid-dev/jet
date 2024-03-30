@@ -54,7 +54,6 @@ And my great friends:
 - **Rafsan60**
 - **Uganiga**
 - **Daredevil1618**
-- **Rafsan60**
 
 ## Acknowledgements 🙏
 
