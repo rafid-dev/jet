@@ -386,11 +386,11 @@ namespace jet {
             Value score = 0;
 
             for (Depth d = 1; d <= info.depth(); d++) {
+                score = aspiration_window(st, ss, d, score);
+
                 if (st.stop()) {
                     break;
                 }
-
-                score = aspiration_window(st, ss, d, score);
 
                 if (info.shouldPrintInfo()) {
                     auto time_elapsed = misc::tick() - start;
