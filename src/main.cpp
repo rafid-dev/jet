@@ -12,6 +12,7 @@
 #include <istream>
 #include <memory>
 #include <sstream>
+#include <type_traits>
 
 using namespace chess;
 using namespace jet;
@@ -20,6 +21,71 @@ using namespace jet::search;
 static constexpr std::string_view NAME    = "Jet";
 static constexpr std::string_view VERSION = "1.2";
 static constexpr std::string_view AUTHOR  = "Rafid Ahsan";
+
+template<typename T>
+void set_option(std::istream &is, std::string &token, const std::string& name, T &value) {
+    if (token == name) {
+        is >> std::skipws >> token;
+        is >> std::skipws >> token;
+
+        if constexpr (std::is_floating_point_v<T>) {
+            value = std::stof(token);
+        } else {
+            value = std::stoi(token);
+        }
+    }
+}
+
+template<typename T>
+struct TypeName {
+    static std::string get() {
+        return typeid(T).name();
+    }
+};
+
+template<bool uci = false, typename T>
+void print_parameter_inputs(const std::string& name,
+                    T current_val, float min_val, float max_val,
+                    float start_lr, float end_lr) {
+    if constexpr(uci){
+        std::cout << "option name " << name << " type string default " << current_val << std::endl;
+    }else{
+        std::cout << name << ", " << TypeName<T>::get() << ", " << current_val << ", " << min_val << ", " << max_val << ", "
+         << start_lr << ", " << end_lr << std::endl;
+    }
+}
+
+#define TUNING_OPTION(param) set_option(iss, token, #param, param)
+#define PARAM_INPUT(param, min, max, start, end) if (!uci) { print_parameter_inputs(#param, param, min, max, start, end); } else { print_parameter_inputs<true>(#param, param, min, max, start, end); }  
+
+void print_parameter_inputs(bool uci) {
+    using namespace search::search_params;
+
+    PARAM_INPUT(lmr_base, 0.5, 3.0, 0.1, 0.002);
+    PARAM_INPUT(lmr_division, 0.5, 3.0, 0.1, 0.002);
+    PARAM_INPUT(lmr_see_margin, -1000, 0, 2.25, 0.002);
+    PARAM_INPUT(qs_see_ordering_threshold, -1000, 0, 2.25, 0.002);
+
+    PARAM_INPUT(nmp_base, 3, 5, 1, 0.002);
+    PARAM_INPUT(nmp_depth_divisor, 1, 5, 1, 0.002);
+    PARAM_INPUT(nmp_max_scaled_depth, 2, 5, 1, 0.002);
+    PARAM_INPUT(nmp_divisor, 100, 300, 2, 0.002);
+
+    PARAM_INPUT(rfp_margin, 10, 100, 1, 0.002);
+    PARAM_INPUT(rfp_depth, 6, 9, 1, 0.002);
+
+    PARAM_INPUT(lmp_depth, 5, 9, 1, 0.002);
+    PARAM_INPUT(lmp_base, 2, 5, 1, 0.002);
+    PARAM_INPUT(lmp_scalar, 1, 5, 1, 0.002);
+
+    PARAM_INPUT(se_depth, 5, 10, 1, 0.002);
+    PARAM_INPUT(se_depth_offset, 1, 4, 1, 0.002);
+    PARAM_INPUT(singular_scalar, 1, 10, 1, 0.002);
+    PARAM_INPUT(singular_divisor, 1, 10, 1, 0.002);
+    PARAM_INPUT(singular_depth_divisor, 1, 3, 1, 0.002);
+
+    PARAM_INPUT(asp_delta, 5, 15, 1, 0.002);
+}
 
 int main(int argc, char** argv) {
     Attacks::init();
@@ -45,6 +111,8 @@ int main(int argc, char** argv) {
         StartBenchmark(st);
         return 0;
     }
+    
+    print_parameter_inputs(true);
 
     while (std::getline(std::cin, line)) {
         token.clear();
@@ -53,7 +121,16 @@ int main(int argc, char** argv) {
 
         iss >> token;
 
-        if (token == "uci") {
+        if (token == "export"){
+            iss >> token;
+            if (token == "searchparams"){
+                print_parameter_inputs(false);
+            } else {
+                std::cout << "Unknown export option: " << token << std::endl;
+                std::cout << "Did you mean: export searchparams" << std::endl;
+            }
+        }
+        else if (token == "uci") {
             std::cout << "id name " << NAME << " " << VERSION << std::endl;
             std::cout << "id author " << AUTHOR << std::endl;
             std::cout << "option name Hash type spin default 8 min 8 max 32768" << std::endl;
@@ -81,6 +158,9 @@ int main(int argc, char** argv) {
             std::cout << "Capture moves: " << list.size() << '\n';
             std::cout << list << std::endl;
 
+        } else if (token == "bench"){
+            StartBenchmark(st);
+            exit(0);
         } else if (token == "position") {
             iss >> token;
 
@@ -183,15 +263,44 @@ int main(int argc, char** argv) {
             jet::search::search(st, info);
         } else if (token == "setoption") {
             iss >> token;
+            iss >> token;
 
-            if (token == "name") {
+            using namespace search::search_params;
+
+            TUNING_OPTION(lmr_base);
+            TUNING_OPTION(lmr_division);
+            TUNING_OPTION(lmr_see_margin);
+
+            TUNING_OPTION(qs_see_ordering_threshold);
+
+            TUNING_OPTION(nmp_base);
+            TUNING_OPTION(nmp_depth_divisor);
+            TUNING_OPTION(nmp_max_scaled_depth);
+            TUNING_OPTION(nmp_divisor);
+
+            TUNING_OPTION(rfp_margin);
+            TUNING_OPTION(rfp_depth);
+
+            TUNING_OPTION(lmp_depth);
+            TUNING_OPTION(lmp_base);
+            TUNING_OPTION(lmp_scalar);
+
+            TUNING_OPTION(se_depth);
+            TUNING_OPTION(se_depth_offset);
+            TUNING_OPTION(singular_scalar);
+            TUNING_OPTION(singular_divisor);
+            TUNING_OPTION(singular_depth_divisor);
+            TUNING_OPTION(singular_depth_intercept);
+
+            TUNING_OPTION(asp_delta);
+
+            if (token == "Hash") {
                 iss >> token;
-                if (token == "Hash") {
-                    iss >> token;
-                    iss >> token;
-                    search::TranspositionTable.initialize<true>(std::clamp(std::stoi(token), 8, 32768));
-                }
+                iss >> token;
+                search::TranspositionTable.initialize<true>(std::clamp(std::stoi(token), 8, 32768));
             }
+
+            search::init();
         } else if (token == "print") {
             std::cout << board << std::endl;
             st.refresh();
