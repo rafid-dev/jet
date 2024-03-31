@@ -426,7 +426,6 @@ namespace jet {
                     break;
                 }
 
-
                 if (info.shouldPrintInfo()) {
                     auto time_elapsed = misc::tick() - start;
 
