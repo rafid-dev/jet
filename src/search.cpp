@@ -250,7 +250,7 @@ namespace jet {
 
                     // See pruning
                     if (depth <= 7 && !MoveOrdering::see(board, move, isQuiet ? -40 * depth : -15 * depth * depth)) {
-                        break;;
+                        continue;
                     }
                 }
 
