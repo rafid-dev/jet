@@ -241,41 +241,32 @@ namespace jet {
                     continue;
                 }
 
-                if constexpr (nt != NodeType::ROOT) {
-                    // Singular extensions
-                    if (depth >= se_depth && move == entry.move() && entry.flag() == TT::Flag::LOWER &&
-                        std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - se_depth_offset &&
-                        !ss->excluded.isValid()) {
-                        Value singularBeta  = entry.score() - singular_scalar * depth / singular_divisor;
-                        Depth singularDepth = depth / singular_depth_divisor + singular_depth_intercept;
-
-                        ss->excluded        = move;
-                        Value singularScore = negamax<NodeType::NONPV>(singularBeta - 1, singularBeta, singularDepth, st, ss);
-                        ss->excluded        = Move::none();
-
-                        if (singularScore < singularBeta) {
-                            extension = 1;
-                        }
+                if (nt != NodeType::ROOT && bestscore > -constants::IS_MATE && hasNonPawnMat) {
+                    // Late move pruning
+                    if (isQuiet && !inCheck && !isPvNode && depth <= lmp_depth &&
+                        quietlist.size() >= (lmp_base + depth * lmp_scalar)) {
+                        break;
                     }
 
-                    if (isQuiet && bestscore > -constants::IS_MATE && hasNonPawnMat) {
-                        // Late move pruning
-                        if (!inCheck && !isPvNode && depth <= lmp_depth &&
-                            quietlist.size() >= (lmp_base + depth * lmp_scalar)) {
-                            break;
-                        }
+                    // See pruning
+                    if (depth <= 7 && !MoveOrdering::see(board, move, isQuiet ? -40 * depth : -15 * depth * depth)) {
+                        break;;
+                    }
+                }
 
-                        // See pruning for quiets 
-                        if (depth <= 8 && !MoveOrdering::see(board, move, -70 * depth))
-                        {
-                            continue;
-                        }
-                    } else if (bestscore > -constants::IS_MATE && hasNonPawnMat) {
-                        // See pruning for noisy
-                        if (depth <= 6 && !MoveOrdering::see(board, move, -15 * depth * depth))
-                        {
-                            continue;
-                        }
+                // Singular extensions
+                if (nt != NodeType::ROOT && depth >= se_depth && move == entry.move() && entry.flag() == TT::Flag::LOWER &&
+                    std::abs(entry.score()) < constants::IS_MATE && entry.depth() >= depth - se_depth_offset &&
+                    !ss->excluded.isValid()) {
+                    Value singularBeta  = entry.score() - singular_scalar * depth / singular_divisor;
+                    Depth singularDepth = depth / singular_depth_divisor + singular_depth_intercept;
+
+                    ss->excluded        = move;
+                    Value singularScore = negamax<NodeType::NONPV>(singularBeta - 1, singularBeta, singularDepth, st, ss);
+                    ss->excluded        = Move::none();
+
+                    if (singularScore < singularBeta) {
+                        extension = 1;
                     }
                 }
 
