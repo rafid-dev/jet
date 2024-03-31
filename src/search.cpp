@@ -270,7 +270,7 @@ namespace jet {
                         {
                             continue;
                         }
-                    } else {
+                    } else if (bestscore > -constants::IS_MATE && hasNonPawnMat) {
                         // See pruning for noisy
                         if (depth <= 6 && !MoveOrdering::see(board, move, -15 * depth * depth))
                         {
