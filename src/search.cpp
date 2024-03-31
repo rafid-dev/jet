@@ -18,8 +18,8 @@ namespace jet {
     namespace search {
 
         namespace search_params {
-            float lmr_base       = 0.6422965278632353;
-            float lmr_division   = 2.2050718666372795;
+            float lmr_base       = 0.6422965;
+            float lmr_division   = 2.2050718;
             int   lmr_see_margin = -104;
 
             int qs_see_ordering_threshold = -88;
