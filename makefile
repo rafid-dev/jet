@@ -3,7 +3,7 @@ CXX := clang++
 ARCH := -march=native
 CXXFLAGS := -std=c++20 -flto $(ARCH) -fexceptions -Wall -Wextra
 LDFLAGS :=
-EVALFILE := src/jet_a1_512.net
+EVALFILE := src/hexadecane_512_v3.net
 
 CXXFLAGS += -DNNFILE=\"$(EVALFILE)\"
 
