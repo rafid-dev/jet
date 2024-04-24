@@ -18,23 +18,8 @@ namespace jet {
     namespace search {
 
         namespace search_params {
-            float lmr_base       = 0.6422965;
-            float lmr_division   = 2.2050718;
-            int   lmr_see_margin = -104;
-
-            int qs_see_ordering_threshold = -88;
-
-            int nmp_base             = 5;
             int nmp_depth_divisor    = 5;
             int nmp_max_scaled_depth = 2;
-            int nmp_divisor          = 175;
-
-            int rfp_margin = 68;
-            int rfp_depth  = 7;
-
-            int lmp_depth  = 5;
-            int lmp_base   = 2;
-            int lmp_scalar = 3;
 
             int se_depth                 = 5;
             int se_depth_offset          = 1;
@@ -42,8 +27,24 @@ namespace jet {
             int singular_divisor         = 3;
             int singular_depth_divisor   = 3;
             int singular_depth_intercept = 0;
+            
+            float lmr_base       = 0.794270;
+            float lmr_division   = 2.396094;
+            int   lmr_see_margin = -102;
 
-            int asp_delta = 12;
+            int qs_see_ordering_threshold = -100;
+
+            int nmp_base    = 5;
+            int nmp_divisor = 179;
+
+            int rfp_margin = 70;
+            int rfp_depth  = 7;
+
+            int lmp_depth  = 7;
+            int lmp_base   = 3;
+            int lmp_scalar = 4;
+
+            int asp_delta = 10;
         } // namespace search_params
 
         using namespace search_params;
