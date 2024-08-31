@@ -66,11 +66,11 @@ namespace jet {
                 int32_t output = 0;
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += CReLU2(accumulator.data<side>()[i]) * hiddenWeights[i];
+                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
                 }
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += CReLU2(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
+                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
 
                 output /=  constants::INPUT_QUANTIZATION;
