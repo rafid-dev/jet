@@ -14,7 +14,7 @@ namespace jet {
             constexpr int HIDDEN_LAYER_SIZE = HIDDEN_SIZE * 2;
             constexpr int OUTPUT_LAYER_SIZE = OUTPUT_SIZE;
 
-            constexpr int INPUT_QUANTIZATION = 32;
+            constexpr int INPUT_QUANTIZATION = 181;
             constexpr int HIDDEN_QUANTIZATON = 128;
 
             // clang-format off

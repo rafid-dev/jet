@@ -6,6 +6,8 @@
 #include "accumulator.hpp"
 #include "types.hpp"
 
+#include <algorithm>
+
 namespace jet {
 
     namespace nnue {
@@ -25,6 +27,16 @@ namespace jet {
 
             static int16_t ReLU(int16_t x) {
                 return std::max(x, static_cast<int16_t>(0));
+            }
+
+            static int16_t CReLU(int16_t x){
+                return std::clamp(x, static_cast<int16_t>(0), static_cast<int16_t>(constants::INPUT_QUANTIZATION));
+            }
+
+            static int16_t CReLU2(int16_t x){
+                auto val = CReLU(x);
+
+                return val * val;
             }
 
         public:
@@ -51,15 +63,18 @@ namespace jet {
             int32_t eval() const {
                 const auto& accumulator = accumulatorStack[currentAccumulator];
 
-                int32_t output = hiddenBias[0];
+                int32_t output = 0;
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<side>()[i]) * hiddenWeights[i];
+                    output += CReLU2(accumulator.data<side>()[i]) * hiddenWeights[i];
                 }
 
                 for (int i = 0; i < constants::HIDDEN_SIZE; ++i) {
-                    output += ReLU(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
+                    output += CReLU2(accumulator.data<~side>()[i]) * hiddenWeights[constants::HIDDEN_SIZE + i];
                 }
+
+                output /=  constants::INPUT_QUANTIZATION;
+                output +=  hiddenBias[0];
 
                 return output / constants::INPUT_QUANTIZATION / constants::HIDDEN_QUANTIZATON;
             }
