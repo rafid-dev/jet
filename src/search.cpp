@@ -178,9 +178,14 @@ namespace jet {
             if constexpr (!isPvNode) {
                 if (ttHit) {
                     eval = entry.score();
+
+                    if (board.isSymmetrical()){
+                        return eval;
+                    }
                 }
 
                 if (!inCheck && !ss->excluded.isValid()) {
+
                     // Reverse futility pruning
                     if (depth <= rfp_depth && eval >= beta && eval - ((depth - improving) * rfp_margin) >= beta) {
                         return eval;
@@ -297,7 +302,6 @@ namespace jet {
 
                     reduction += !isPvNode;
                     reduction += !improving;
-                    reduction += board.isSymmetrical();
 
                     reduction = std::clamp(reduction, 0, depth - 1);
 
