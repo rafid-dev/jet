@@ -111,8 +111,9 @@ int main(int argc, char** argv) {
         StartBenchmark(st);
         return 0;
     }
-    
-    print_parameter_inputs(true);
+
+        
+    // print_parameter_inputs(true);
 
     while (std::getline(std::cin, line)) {
         token.clear();
@@ -142,6 +143,8 @@ int main(int argc, char** argv) {
             // Re initialize the transposition table upon a new game
             search::TranspositionTable.initialize<false>(16);
             st.setFen(FENS::STARTPOS);
+        } else if (token == "nullmove") {
+            board.makeNullMove();
         } else if (token == "movegen") {
             Movelist list;
             MoveGen::legalmoves<MoveGenType::ALL>(board, list);
@@ -309,6 +312,8 @@ int main(int argc, char** argv) {
             break;
         } else if (token == "\n") {
             continue;
+        } else if (token == "symmetry") {
+            std::cout << (board.isSymmetrical() ? "Symmetrical" : "Not Symmetrical") << std::endl;
         } else {
             std::cout << "Unknown command: " << token << '\n';
         }

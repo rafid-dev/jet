@@ -215,6 +215,10 @@ namespace chess {
             return 1ULL << m_sq;
         }
 
+        constexpr inline Square flip() const {
+            return Square(m_sq ^ 56);
+        }
+
         constexpr inline File file() const {
             return squareToFile[m_sq];
         }

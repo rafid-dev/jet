@@ -7,6 +7,7 @@
 #include <bitset>
 #include <immintrin.h>
 #include <iostream>
+#include <bit>
 
 namespace chess {
 
@@ -43,6 +44,11 @@ namespace chess {
 
     class Bitboard {
     public:
+        constexpr Bitboard flipRanks() const {
+            U64 flipped = __builtin_bswap64(m_squares);
+            return Bitboard(flipped);
+        }
+
         constexpr Bitboard() : m_squares(0){};
         constexpr Bitboard(U64 squares) : m_squares(squares) {
         }

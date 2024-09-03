@@ -297,6 +297,7 @@ namespace jet {
 
                     reduction += !isPvNode;
                     reduction += !improving;
+                    reduction += board.isSymmetrical();
 
                     reduction = std::clamp(reduction, 0, depth - 1);
 

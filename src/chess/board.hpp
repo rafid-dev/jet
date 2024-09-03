@@ -215,6 +215,16 @@ namespace chess {
             return pieceToColor(at(sq));
         }
 
+        bool isSymmetrical() const {
+            for (int pt = 0; pt < NUM_PIECE_TYPES; ++pt) {
+                if (m_bitboards[static_cast<int>(m_sideToMove)][pt] != m_bitboards[static_cast<int>(~m_sideToMove)][pt].flipRanks()) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         void makeMove(const Move& move);
         void unmakeMove(const Move& move);
 
