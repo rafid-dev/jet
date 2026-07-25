@@ -263,7 +263,7 @@ namespace chess {
             return m_moves.data() + m_size;
         }
 
-        static constexpr int MAX_SIZE = 128;
+        static constexpr int MAX_SIZE = MAX_MOVES;
 
     private:
         int                        m_size = 0;

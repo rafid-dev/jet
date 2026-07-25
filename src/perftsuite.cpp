@@ -10,31 +10,29 @@ namespace perft {
 
     template <bool print = false>
     uint64_t bulkPerft(chess::Board& board, int depth) {
+        if (depth == 0) {
+            return 1;
+        }
+
         if (depth == 1) {
-            return chess::MoveGenCountOnly::legalmoves<chess::MoveGenType::ALL>(board);
+            return static_cast<uint64_t>(chess::MoveGen::countLegalMoves<chess::MoveGenType::ALL>(board));
         }
 
         chess::Movelist moves;
         chess::MoveGen::legalmoves<chess::MoveGenType::ALL>(board, moves);
 
-        // if (depth == 1) {
-        //     return moves.size();
-        // }
-
         uint64_t nodes = 0;
 
-        for (const auto& move : moves) {
+        for (const chess::Move move : moves) {
+            board.makeMove(move);
+            const uint64_t child = bulkPerft<false>(board, depth - 1);
+            board.unmakeMove(move);
+
             if constexpr (print) {
-                board.makeMove(move);
-                auto child = bulkPerft<false>(board, depth - 1);
-                board.unmakeMove(move);
-                std::cout << move << ": " << child << std::endl;
-                nodes += child;
-            } else {
-                board.makeMove(move);
-                nodes += bulkPerft<false>(board, depth - 1);
-                board.unmakeMove(move);
+                std::cout << move << ": " << child << '\n';
             }
+
+            nodes += child;
         }
 
         return nodes;
@@ -108,8 +106,7 @@ namespace perft {
                 std::string color = (nodes == required) ? "\033[32m" : "\033[31m";
                 if (nodes != required) {
                     std::cout << "\r" << color << "#" << count << " D" << depth << " Failed: [" << info.fen()
-                              << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed
-                              << " NPS" << std::endl;
+                              << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed << " NPS" << std::endl;
 
                     testPositionBulk<true>(board, depth, nodes);
                     std::cout << board << std::endl;
@@ -117,8 +114,7 @@ namespace perft {
                     fails++;
                 } else {
                     std::cout << "\r" << color << "#" << count << " D" << depth << " Passed: [" << info.fen()
-                              << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed
-                              << " NPS" << std::endl;
+                              << "] Expected: " << required << " Got: " << nodes << " Speed: " << speed << " NPS" << std::endl;
                     passes++;
                 }
 
@@ -134,8 +130,7 @@ namespace perft {
         std::cout << "Total passes: " << passes << std::endl;
         std::cout << "Total fails: " << fails << std::endl;
         std::cout << "Total time: " << totalTime << "ms" << std::endl;
-        std::cout << "Average speed: " << static_cast<uint64_t>(1000.0f * totalNodes / (totalTime + 1))
-                  << " NPS" << std::endl;
+        std::cout << "Average speed: " << static_cast<uint64_t>(1000.0f * totalNodes / (totalTime + 1)) << " NPS" << std::endl;
     }
 
     void startBulk(const std::string& fen, const int depth) {
@@ -172,8 +167,7 @@ namespace perft {
 
         std::cout << "Nodes: " << nodes << std::endl;
         std::cout << "Time: " << time_elapsed << "ms" << std::endl;
-        std::cout << "Speed: " << static_cast<uint64_t>(1000.0f * nodes / (time_elapsed + 1)) << " NPS"
-                  << std::endl;
+        std::cout << "Speed: " << static_cast<uint64_t>(1000.0f * nodes / (time_elapsed + 1)) << " NPS" << std::endl;
     }
 
     void bulkSpeedTest(const chess::Board& brd, const int depth) {
@@ -191,8 +185,7 @@ namespace perft {
 
         std::cout << "Nodes: " << nodes << std::endl;
         std::cout << "Time: " << time_elapsed << "ms" << std::endl;
-        std::cout << "Speed: " << static_cast<uint64_t>(1000.0f * nodes / (time_elapsed + 1)) << " NPS"
-                  << std::endl;
+        std::cout << "Speed: " << static_cast<uint64_t>(1000.0f * nodes / (time_elapsed + 1)) << " NPS" << std::endl;
     }
 
 } // namespace perft

@@ -22,8 +22,8 @@ static constexpr std::string_view NAME    = "Jet";
 static constexpr std::string_view VERSION = "1.2";
 static constexpr std::string_view AUTHOR  = "Rafid Ahsan";
 
-template<typename T>
-void set_option(std::istream &is, std::string &token, const std::string& name, T &value) {
+template <typename T>
+void set_option(std::istream& is, std::string& token, const std::string& name, T& value) {
     if (token == name) {
         is >> std::skipws >> token;
         is >> std::skipws >> token;
@@ -36,27 +36,31 @@ void set_option(std::istream &is, std::string &token, const std::string& name, T
     }
 }
 
-template<typename T>
+template <typename T>
 struct TypeName {
     static std::string get() {
         return typeid(T).name();
     }
 };
 
-template<bool uci = false, typename T>
-void print_parameter_inputs(const std::string& name,
-                    T current_val, float min_val, float max_val,
-                    float start_lr, float end_lr) {
-    if constexpr(uci){
+template <bool uci = false, typename T>
+void print_parameter_inputs(const std::string& name, T current_val, float min_val, float max_val, float start_lr,
+                            float end_lr) {
+    if constexpr (uci) {
         std::cout << "option name " << name << " type string default " << current_val << std::endl;
-    }else{
+    } else {
         std::cout << name << ", " << TypeName<T>::get() << ", " << current_val << ", " << min_val << ", " << max_val << ", "
-         << start_lr << ", " << end_lr << std::endl;
+                  << start_lr << ", " << end_lr << std::endl;
     }
 }
 
 #define TUNING_OPTION(param) set_option(iss, token, #param, param)
-#define PARAM_INPUT(param, min, max, start, end) if (!uci) { print_parameter_inputs(#param, param, min, max, start, end); } else { print_parameter_inputs<true>(#param, param, min, max, start, end); }  
+#define PARAM_INPUT(param, min, max, start, end)                           \
+    if (!uci) {                                                            \
+        print_parameter_inputs(#param, param, min, max, start, end);       \
+    } else {                                                               \
+        print_parameter_inputs<true>(#param, param, min, max, start, end); \
+    }
 
 void print_parameter_inputs(bool uci) {
     using namespace search::search_params;
@@ -111,7 +115,7 @@ int main(int argc, char** argv) {
         StartBenchmark(st);
         return 0;
     }
-    
+
     print_parameter_inputs(true);
 
     while (std::getline(std::cin, line)) {
@@ -121,16 +125,15 @@ int main(int argc, char** argv) {
 
         iss >> token;
 
-        if (token == "export"){
+        if (token == "export") {
             iss >> token;
-            if (token == "searchparams"){
+            if (token == "searchparams") {
                 print_parameter_inputs(false);
             } else {
                 std::cout << "Unknown export option: " << token << std::endl;
                 std::cout << "Did you mean: export searchparams" << std::endl;
             }
-        }
-        else if (token == "uci") {
+        } else if (token == "uci") {
             std::cout << "id name " << NAME << " " << VERSION << std::endl;
             std::cout << "id author " << AUTHOR << std::endl;
             std::cout << "option name Hash type spin default 8 min 8 max 32768" << std::endl;
@@ -158,7 +161,7 @@ int main(int argc, char** argv) {
             std::cout << "Capture moves: " << list.size() << '\n';
             std::cout << list << std::endl;
 
-        } else if (token == "bench"){
+        } else if (token == "bench") {
             StartBenchmark(st);
             exit(0);
         } else if (token == "position") {
@@ -227,6 +230,27 @@ int main(int argc, char** argv) {
 
             // Search things
         } else if (token == "go") {
+            // Handle non-search "go" commands first.
+            if (iss >> token && token == "perft") {
+                int depth = 1;
+
+                if (!(iss >> depth) || depth < 0) {
+                    std::cout << "Invalid perft depth\n";
+                    continue;
+                }
+
+                perft::startBulk(board, depth);
+                continue;
+            }
+
+            // Reset the stream so ordinary commands such as
+            // "go depth 10" still parse from the beginning.
+            iss.clear();
+            iss.str(line);
+
+            // Skip "go".
+            iss >> token;
+
             jet::search::TimeManager& tm = st.timeManager();
 
             tm.setNodes(0);

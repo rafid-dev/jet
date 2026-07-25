@@ -290,7 +290,8 @@ namespace chess {
         bool isRepetition(int count = 2) const {
             int n = 0;
 
-            for (int i = static_cast<int>(m_history.size()) - 2; i >= 0 && i >= static_cast<int>(m_history.size()) - m_halfmoveClock - 1; i -= 2) {
+            for (int i = static_cast<int>(m_history.size()) - 2;
+                 i >= 0 && i >= static_cast<int>(m_history.size()) - m_halfmoveClock - 1; i -= 2) {
                 if (m_history[i].hash == m_hash) {
                     n++;
                 }
@@ -428,90 +429,170 @@ namespace chess {
     }
 
     inline void Board::makeMove(const Move& move) {
-        const Color     side           = sideToMove();
-        const Piece     piece          = movedPiece(move);
-        const PieceType pt             = pieceToPieceType(piece);
-        const bool      is_capture     = isCapture(move) && move.type() != MoveType::CASTLING;
-        const Piece     captured_piece = capturedPiece(move);
+        const Color side = sideToMove();
 
-        _recordState(captured_piece);
+        const Piece piece = movedPiece(move);
+        assert(piece != Piece::NONE);
 
-        m_halfmoveClock++;
-        m_ply++;
+        const PieceType pt = pieceToPieceType(piece);
 
+        // In this engine, castling is represented as king -> rook square.
+        // Therefore, the rook on move.to() must not be treated as a capture.
+        const bool isCapture = move.type() != MoveType::CASTLING && at(move.to()) != Piece::NONE;
+
+        const Piece capturedPiece = isCapture ? at(move.to()) : Piece::NONE;
+
+        _recordState(capturedPiece);
+
+        ++m_ply;
+
+        /*
+         * Halfmove clock
+         *
+         * Reset after a pawn move or capture.
+         * Otherwise increment it.
+         */
+        if (pt == PieceType::PAWN || isCapture) {
+            m_halfmoveClock = 0;
+        } else {
+            ++m_halfmoveClock;
+        }
+
+        /*
+         * Remove the previous en-passant hash and clear the square.
+         */
         if (m_enPassantSq.isValid()) {
             m_hash ^= Zobrist::enpassantKey(m_enPassantSq.file());
         }
 
-        m_enPassantSq = Square();
+        m_enPassantSq = Square::NO_SQ;
 
-        m_halfmoveClock *= (is_capture || pt == PieceType::PAWN);
-
-        if (is_capture) {
-            m_halfmoveClock = 0;
-
-            removePiece(captured_piece, move.to());
-        }
-
-        if (is_capture && pieceToPieceType(captured_piece) == PieceType::ROOK && Square::isTheirBackRank(move.to(), side)) {
-            const CastlingSide castleSide = CastlingRights::getCastlingSide(move.to(), kingSq(~side));
-            m_castlingRights.setCastlingRights(~side, castleSide, 0);
-
-            m_hash ^= Zobrist::castlingIndex(2 * static_cast<int>(~side) + static_cast<int>(castleSide));
-        }
-
-        if (pt == PieceType::KING && m_castlingRights.hasCastlingRights(side)) {
-            m_hash ^= Zobrist::castlingKey(m_castlingRights.index());
-
-            m_castlingRights.setCastlingRights(side, CastlingSide::KING_SIDE, 0);
-            m_castlingRights.setCastlingRights(side, CastlingSide::QUEEN_SIDE, 0);
+        /*
+         * Helper for changing one castling right while keeping the
+         * castling Zobrist key consistent.
+         */
+        const auto clearCastlingRight = [this](Color color, CastlingSide castlingSide) {
+            if (!m_castlingRights.hasCastlingRights(color, castlingSide)) {
+                return;
+            }
 
             m_hash ^= Zobrist::castlingKey(m_castlingRights.index());
 
-        } else if (pt == PieceType::ROOK && Square::isOurBackRank(move.from(), side)) {
-            const CastlingSide castleSide = CastlingRights::getCastlingSide(move.from(), kingSq(side));
+            m_castlingRights.setCastlingRights(color, castlingSide, false);
 
-            m_castlingRights.setCastlingRights(side, castleSide, 0);
-            m_hash ^= Zobrist::castlingIndex(2 * static_cast<int>(side) + static_cast<int>(castleSide));
+            m_hash ^= Zobrist::castlingKey(m_castlingRights.index());
+        };
+
+        /*
+         * If a rook is captured on its original castling square,
+         * remove the corresponding castling right.
+         *
+         * Do this before removing the captured piece from the board.
+         */
+        if (isCapture && pieceToPieceType(capturedPiece) == PieceType::ROOK) {
+            const Color capturedColor = ~side;
+
+            const Square kingSideRookSquare = CastlingRights::rookFrom(capturedColor, CastlingSide::KING_SIDE);
+
+            const Square queenSideRookSquare = CastlingRights::rookFrom(capturedColor, CastlingSide::QUEEN_SIDE);
+
+            if (move.to() == kingSideRookSquare) {
+                clearCastlingRight(capturedColor, CastlingSide::KING_SIDE);
+            }
+
+            if (move.to() == queenSideRookSquare) {
+                clearCastlingRight(capturedColor, CastlingSide::QUEEN_SIDE);
+            }
         }
 
+        /*
+         * Remove an ordinary captured piece.
+         *
+         * En-passant is handled separately because the captured pawn
+         * is not located on move.to().
+         */
+        if (isCapture) {
+            removePiece(capturedPiece, move.to());
+
+            m_hash ^= Zobrist::pieceKey(capturedPiece, move.to());
+        }
+
+        /*
+         * Update castling rights after moving a king or rook.
+         */
+        if (pt == PieceType::KING) {
+            clearCastlingRight(side, CastlingSide::KING_SIDE);
+
+            clearCastlingRight(side, CastlingSide::QUEEN_SIDE);
+        } else if (pt == PieceType::ROOK) {
+            const Square kingSideRookSquare = CastlingRights::rookFrom(side, CastlingSide::KING_SIDE);
+
+            const Square queenSideRookSquare = CastlingRights::rookFrom(side, CastlingSide::QUEEN_SIDE);
+
+            if (move.from() == kingSideRookSquare) {
+                clearCastlingRight(side, CastlingSide::KING_SIDE);
+            }
+
+            if (move.from() == queenSideRookSquare) {
+                clearCastlingRight(side, CastlingSide::QUEEN_SIDE);
+            }
+        }
+
+        /*
+         * Set an en-passant square after a double pawn push, but only
+         * when an opposing pawn can actually capture en passant.
+         */
         if (pt == PieceType::PAWN && Square::squareDistance(move.from(), move.to()) == 2) {
-            Square   possible_ep = static_cast<Square>(int(move.to()) ^ 8);
-            Bitboard ep_mask     = Attacks::pawnAttacks(possible_ep, side);
+            const Square possibleEnPassant = static_cast<Square>(static_cast<int>(move.to()) ^ 8);
 
-            if (ep_mask & bitboard(~side, PieceType::PAWN)) {
-                m_enPassantSq = possible_ep;
+            const Bitboard potentialCapturers = Attacks::pawnAttacks(possibleEnPassant, side);
+
+            if (potentialCapturers & bitboard(~side, PieceType::PAWN)) {
+                m_enPassantSq = possibleEnPassant;
 
                 m_hash ^= Zobrist::enpassantKey(m_enPassantSq.file());
             }
         }
 
+        /*
+         * Apply the move.
+         */
         if (move.type() == MoveType::CASTLING) {
             assert(at(move.from()) == makePiece(side, PieceType::KING));
+
             assert(at(move.to()) == makePiece(side, PieceType::ROOK));
 
-            const CastlingSide castleSide = CastlingRights::getCastlingSide(move.to(), move.from());
+            const CastlingSide castlingSide = CastlingRights::getCastlingSide(move.to(), move.from());
 
-            const Square rookTo = CastlingRights::rookTo(side, castleSide);
-            const Square kingTo = CastlingRights::kingTo(side, castleSide);
+            const Square kingFrom = move.from();
+            const Square rookFrom = move.to();
 
-            // captured piece = rook //
-            // moved piece = king //
+            const Square kingTo = CastlingRights::kingTo(side, castlingSide);
 
-            removePiece(piece, move.from());
-            removePiece(captured_piece, move.to());
+            const Square rookTo = CastlingRights::rookTo(side, castlingSide);
 
-            placePiece(piece, kingTo);
-            placePiece(captured_piece, rookTo);
+            const Piece king = makePiece(side, PieceType::KING);
 
-            m_hash ^= Zobrist::pieceKey(piece, move.from()) ^ Zobrist::pieceKey(piece, kingTo);
-            m_hash ^= Zobrist::pieceKey(captured_piece, move.to()) ^ Zobrist::pieceKey(piece, rookTo);
+            const Piece rook = makePiece(side, PieceType::ROOK);
+
+            removePiece(king, kingFrom);
+            removePiece(rook, rookFrom);
+
+            placePiece(king, kingTo);
+            placePiece(rook, rookTo);
+
+            m_hash ^= Zobrist::pieceKey(king, kingFrom) ^ Zobrist::pieceKey(king, kingTo);
+
+            m_hash ^= Zobrist::pieceKey(rook, rookFrom) ^ Zobrist::pieceKey(rook, rookTo);
+
         } else if (move.type() == MoveType::PROMOTION) {
-            const Piece promoted = makePiece(side, move.promoted());
-            removePiece(piece, move.from());
-            placePiece(promoted, move.to());
+            const Piece promotedPiece = makePiece(side, move.promoted());
 
-            m_hash ^= Zobrist::pieceKey(piece, move.from()) ^ Zobrist::pieceKey(promoted, move.to());
+            removePiece(piece, move.from());
+            placePiece(promotedPiece, move.to());
+
+            m_hash ^= Zobrist::pieceKey(piece, move.from()) ^ Zobrist::pieceKey(promotedPiece, move.to());
+
         } else {
             removePiece(piece, move.from());
             placePiece(piece, move.to());
@@ -519,12 +600,19 @@ namespace chess {
             m_hash ^= Zobrist::pieceKey(piece, move.from()) ^ Zobrist::pieceKey(piece, move.to());
         }
 
+        /*
+         * Remove the captured pawn for en passant.
+         */
         if (move.type() == MoveType::ENPASSANT) {
-            const Piece  piece = makePiece(~side, PieceType::PAWN);
-            const Square sq    = Square(int(move.to()) ^ 8);
-            removePiece(piece, sq);
+            const Square capturedPawnSquare = Square(static_cast<int>(move.to()) ^ 8);
 
-            m_hash ^= Zobrist::pieceKey(piece, sq);
+            const Piece capturedPawn = makePiece(~side, PieceType::PAWN);
+
+            assert(at(capturedPawnSquare) == capturedPawn);
+
+            removePiece(capturedPawn, capturedPawnSquare);
+
+            m_hash ^= Zobrist::pieceKey(capturedPawn, capturedPawnSquare);
         }
 
         m_hash ^= Zobrist::sideKey();
@@ -532,44 +620,70 @@ namespace chess {
     }
 
     inline void Board::unmakeMove(const Move& move) {
-        Piece previouslyCaptured = _restoreState();
+        const Piece previouslyCaptured = _restoreState();
 
         m_sideToMove = ~m_sideToMove;
-        m_ply--;
+        --m_ply;
 
+        const Color side = m_sideToMove;
+
+        /*
+         * Hash, castling rights, en-passant square, and halfmove clock
+         * have already been restored by _restoreState().
+         *
+         * Only restore the pieces here.
+         */
         if (move.type() == MoveType::CASTLING) {
-            const CastlingSide castleSide = CastlingRights::getCastlingSide(move.to(), move.from());
+            const CastlingSide castlingSide = CastlingRights::getCastlingSide(move.to(), move.from());
 
-            const Square rookFrom = CastlingRights::rookTo(m_sideToMove, castleSide);
-            const Square kingTo   = CastlingRights::kingTo(m_sideToMove, castleSide);
+            const Square kingTo = CastlingRights::kingTo(side, castlingSide);
 
-            const Piece rook = at(rookFrom);
-            const Piece king = at(kingTo);
+            const Square rookTo = CastlingRights::rookTo(side, castlingSide);
 
-            removePiece(rook, rookFrom);
+            const Piece king = makePiece(side, PieceType::KING);
+
+            const Piece rook = makePiece(side, PieceType::ROOK);
+
+            assert(at(kingTo) == king);
+            assert(at(rookTo) == rook);
+
             removePiece(king, kingTo);
+            removePiece(rook, rookTo);
 
-            placePiece(rook, move.to());
             placePiece(king, move.from());
+            placePiece(rook, move.to());
 
             return;
-        } else if (move.type() == MoveType::PROMOTION) {
-            removePiece(at(move.to()), move.to());
-            placePiece(makePiece(m_sideToMove, PieceType::PAWN), move.from());
+        }
+
+        if (move.type() == MoveType::PROMOTION) {
+            const Piece promotedPiece = at(move.to());
+
+            assert(pieceToPieceType(promotedPiece) == move.promoted());
+
+            removePiece(promotedPiece, move.to());
+
+            placePiece(makePiece(side, PieceType::PAWN), move.from());
 
             if (previouslyCaptured != Piece::NONE) {
                 placePiece(previouslyCaptured, move.to());
             }
 
             return;
-        } else {
-            const Piece movedPiece = at(move.to());
-            removePiece(movedPiece, move.to());
-            placePiece(movedPiece, move.from());
         }
 
+        const Piece movedPiece = at(move.to());
+
+        assert(movedPiece != Piece::NONE);
+
+        removePiece(movedPiece, move.to());
+
+        placePiece(movedPiece, move.from());
+
         if (move.type() == MoveType::ENPASSANT) {
-            placePiece(makePiece(~m_sideToMove, PieceType::PAWN), Square(int(move.to()) ^ 8));
+            const Square capturedPawnSquare = Square(static_cast<int>(move.to()) ^ 8);
+
+            placePiece(makePiece(~side, PieceType::PAWN), capturedPawnSquare);
         } else if (previouslyCaptured != Piece::NONE) {
             placePiece(previouslyCaptured, move.to());
         }
